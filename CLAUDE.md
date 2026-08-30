@@ -14,6 +14,10 @@ Stand: Planung. Spezifikation in `docs/`, Einstieg über `README.md`.
 2. **P0 ist ein Vertical Slice**, keine Feature-Sammlung. Was nicht zum
    Core Loop gehört, ist P1 oder P2 — siehe `docs/03-feature-matrix.md`.
    Features aus P1/P2 werden nie ungefragt nach P0 gezogen.
+3. **Release-Gates** nach `docs/11-release-gates.md`. Interner TestFlight
+   darf reduziert sein; vor jeder externen Verteilung müssen Privacy Policy,
+   Account-Löschung, Moderation und die Apple-Anforderungen vollständig
+   umgesetzt und geprüft sein. Diese Liste wird abgehakt, nicht erinnert.
 
 ## Handoff an den Projektmanager — Pflicht in jeder Session
 

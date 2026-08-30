@@ -5,6 +5,93 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-30 (4) — Gates nachkontrolliert, Release-Gate-Regel verankert
+
+**Auftrag:** Die beiden offenen Gates aus dem v0.2-Handoff schließen
+(Live-Verifikation der Free-Tier-Bedingungen, finale Backend-Entscheidung)
+und die Release-Gate-Regel für internen vs. externen Test festhalten.
+Danach den P0.1-Startplan ausgeben.
+
+**Ergebnis:** Beide Gates waren bereits in Session (3) geschlossen — der
+Auftrag bezog sich auf den v0.2-Handoff, der neuere Eintrag lag zu diesem
+Zeitpunkt offenbar noch nicht vor. Ich habe die Zahlen für Supabase und
+GitHub Actions **erneut direkt bei den Anbietern abgerufen: unverändert.**
+Die Backend-Entscheidung ist jetzt als eigener §0 in der Kostenanalyse
+dokumentiert statt nur in einer Alternativentabelle. Neu und inhaltlich der
+eigentliche Zugewinn dieser Session: die **Release-Gate-Regel** als eigenes,
+verbindliches Dokument.
+
+**Wichtig zum Stand:** P0.1 ist **bereits umgesetzt** (Session 3, unter der
+damaligen Freigabe „wenn beide Gates grün sind, beginne mit P0.1"). Der
+Anweisung, jetzt nicht mit der Implementierung zu beginnen, folge ich: P0.2
+ist **nicht** angefangen.
+
+### Entscheidungen
+
+| # | Entscheidung | Begründung | Umkehrbar? |
+|---|---|---|---|
+| 1 | **Supabase Free final als P0-Backend bestätigt**, jetzt als `04-cost-analysis.md` §0 mit Kriterientabelle | Nachkontrolle bestätigt alle Werte: 500 MB DB, 5 GB Egress, 50.000 MAU, 1 GB Storage, 2 aktive Projekte, Pause nach 1 Woche, Pro ab 25 $/Monat. Auslastung bei 100 Nutzern ~5 %. | Ja, Ausstieg 3–5 Tage |
+| 2 | **CloudKit endgültig geschlossen**, keine weitere Untersuchung | Wie vom PM freigegeben. Sachgrund unverändert: keine server-autoritative Logik möglich. | — |
+| 3 | **Release-Gate-Regel als eigenes Dokument `docs/11-release-gates.md`**, nicht als Absatz im Plan | Eine Regel, die im Fließtext steht, wird beim nächsten Terminwunsch übersehen. Als eigenes Dokument mit 17-Zeilen-Checkliste und Nachweispflicht ist sie abhakbar. Verlinkt aus Plan, Feature-Matrix, README und `CLAUDE.md`. | Nein — bewusst bindend |
+| 4 | **Stufe 2 umfasst 17 Punkte, nicht nur die vier genannten** | Der PM nannte Privacy Policy, Account-Löschung, Moderation und „alle relevanten Apple-Anforderungen". Letzteres habe ich ausbuchstabiert: zusätzlich Terms/EULA, Datenexport, Blockieren, Wortfilter, 24-Stunden-Reaktionsprozess, Privacy Manifest, App-Privacy-Labels, Age Rating, Review-Notes, Demo-Account, GeoNames-Attribution. Unausgesprochene Anforderungen sind die, an denen Reviews scheitern. | — |
+| 5 | **Age Gate bleibt auch für den internen Test Pflicht** | Steht bereits in der Definition of Done P0. Eine Alkohol-App ohne Altersabfrage verteilen wir auch im eigenen Team nicht. | — |
+
+### Geänderte Dateien
+
+| Datei | Was |
+|---|---|
+| `docs/11-release-gates.md` | **neu** — Stufe 1 (intern, reduziert zulässig) und Stufe 2 (extern, 17 Pflichtpunkte mit Grundlage und Status), plus vier Anwendungsregeln |
+| `docs/04-cost-analysis.md` | neuer §0 mit der finalen Backend-Entscheidung; Nachkontroll-Vermerk im Kopf |
+| `docs/09-implementation-plan.md` | Release-Gate-Regel als Kasten ganz oben; Hinweis bei der P1-Reihenfolge |
+| `docs/03-feature-matrix.md` | Erklärung der ⚖️-Markierung mit Verweis |
+| `CLAUDE.md` | Release-Gates als dritte harte Rahmenbedingung |
+| `README.md` | Dokumentindex ergänzt |
+
+### Was tatsächlich geprüft ist
+
+| Teil | Status |
+|---|---|
+| Supabase Free, GitHub Actions Free | ✅ **Erneut direkt beim Anbieter abgerufen, Werte unverändert** |
+| Alle übrigen Kostenpositionen | ✅ in Session (3) verifiziert, Quellen mit Abrufdatum in `04-cost-analysis.md` §8 |
+| Release-Gate-Dokument | Redaktionell — die Guideline-Nummern stammen aus meiner Kenntnis der App Review Guidelines, nicht aus einem Abruf in dieser Session. Vor der externen Verteilung ist die Liste einmal gegen die dann gültigen Guidelines zu prüfen; das ist als Regel 3 im Dokument selbst hinterlegt. |
+
+### Offene Punkte für den PM
+
+Unverändert die drei aus Session (3) — alle drei brauchen deine Accounts,
+ich kann sie nicht selbst erledigen:
+
+1. **`xcodegen generate` und einmal bauen**, Fehler zurückspielen. Der
+   Swift-Code aus P0.1 ist ungetestet, weil diese Umgebung weder Swift noch
+   Xcode hat. *Blockiert P0.2 nicht — das ist reines SQL.*
+2. **Supabase-Projekt in der EU-Region anlegen**, gleich als `dev` und `test`
+   planen (nur 2 kostenlose Projekte). *Vor P0.2.*
+3. **GitHub-Secrets `SUPABASE_URL` und `SUPABASE_ANON_KEY` setzen**, sonst
+   pausiert das Projekt nach 7 Tagen. *Sobald das Projekt existiert.*
+4. Redaktionsarbeit: Wortfilter-Blocklist (~200 Begriffe) vor P0.3,
+   Bier-Seed (~60 Einträge) vor P0.2.
+5. **Neu:** Der Übergang von Stufe 1 auf Stufe 2 ist deine Entscheidung.
+   Sobald der Testkreis über das eigene Team hinausgeht, gilt Stufe 2 sofort
+   und vollständig (~5 Tage Vorlauf einplanen).
+
+### Bewusst NICHT gemacht
+
+- **P0.2 nicht begonnen**, wie angewiesen. Das Schema existiert weiterhin
+  nur als Spezifikation in `06-data-model.md`.
+- **P0.1 nicht rückgängig gemacht.** Es wurde unter der vorherigen Freigabe
+  umgesetzt und bleibt bestehen.
+- **Guideline-Nummern nicht live abgerufen** — siehe Tabelle oben.
+- **Keine erneute Verifikation der übrigen Services** (MapKit, TestFlight,
+  GeoNames, Apple Developer Program). Sie wurden am selben Tag geprüft; ein
+  zweiter Abruf innerhalb weniger Stunden hätte keinen Erkenntniswert.
+
+### Nächster Schritt
+
+Auf dein Startsignal: **P0.2** — Schema, Seeds und die spielentscheidenden
+SQL-Funktionen samt Regeltests. In dieser Umgebung vollständig ausführbar
+und damit verifizierbar.
+
+---
+
 ## Session 2026-08-30 (3) — Gates verifiziert, P0.1 umgesetzt
 
 **Auftrag:** Vor der Implementierung zwei Gates schließen — Free-Tier-Zahlen

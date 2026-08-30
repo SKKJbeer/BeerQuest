@@ -1,5 +1,18 @@
 # Implementierungsplan (v0.2 — P0)
 
+> ## 🚧 Release-Gate-Regel — verbindlich
+>
+> **Interner TestFlight** (bis 100 Mitglieder des eigenen Teams, kein Beta
+> App Review): reduzierter P0-Scope ist zulässig.
+>
+> **Externer Beta-Test oder App-Store-Release:** Privacy Policy,
+> Account-Löschung, Datenexport, Melden, Blockieren, Wortfilter,
+> Privacy Manifest, Age Rating und Review-Notes müssen **vollständig
+> umgesetzt und geprüft** sein. Kein Build geht extern, solange eine Zeile
+> offen ist.
+>
+> Vollständige Liste mit Nachweispflicht: **`11-release-gates.md`**
+
 Prinzip: Jede Phase endet mit etwas, das **auf einem echten Gerät benutzbar**
 ist. Keine Phase baut Infrastruktur auf Vorrat.
 
@@ -150,6 +163,10 @@ liefern jeweils eine verständliche Meldung.
 ---
 
 ## P1 — vor jedem externen Test (Reihenfolge, ~14 Tage)
+
+Die mit ⚖️ markierten Punkte sind die Umsetzung von Stufe 2 der
+Release-Gate-Regel (`11-release-gates.md`). Sie sind nicht priorisierbar —
+ohne sie gibt es keinen externen Build.
 
 Sobald der Core Loop bestätigt ist. Die mit ⚖️ markierten Punkte sind
 **zwingende Voraussetzung** für externes TestFlight bzw. App-Store-Einreichung.

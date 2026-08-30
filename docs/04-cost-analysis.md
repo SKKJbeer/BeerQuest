@@ -18,6 +18,31 @@ Das Apple Developer Program (99 $/Jahr) ist laut Vorgabe ausgenommen.
 > 3. **Supabase-Pausierung ist weniger gefährlich als angenommen:**
 >    pausierte Projekte sind 90 Tage lang wiederherstellbar, Daten bleiben
 >    erhalten. Das Risiko ist Ausfallzeit, nicht Datenverlust.
+>
+> **Nachkontrolle am 2026-08-30 (zweiter Abruf, auf PM-Anforderung):**
+> Supabase Free und GitHub Actions Free wurden erneut direkt bei den
+> Anbietern abgerufen. **Alle Werte unverändert.** Keine Anpassung nötig.
+
+---
+
+## 0. Entscheidung: Backend für P0
+
+**Supabase Free ist als P0-Backend bestätigt.** Grundlage sind die unten
+verifizierten Werte, nicht Schätzungen.
+
+| Kriterium | Anforderung | Supabase Free | Bewertung |
+|---|---|---|---|
+| Laufende Kosten in der frühen Testphase | 0 € | 0 € | ✅ |
+| Auslastung bei 100 Nutzern | deutlicher Abstand zum Limit | ~25 MB von 500 MB (5 %), ~240 MB von 5 GB Egress (5 %), 100 von 50.000 MAU | ✅ großer Puffer |
+| Server-autoritative XP | zwingend (Anforderung 7) | Postgres-Funktionen mit `SECURITY DEFINER` | ✅ |
+| Ausstiegsaufwand | so klein wie möglich | 3–5 Tage (`pg_dump`, Postgres bleibt Postgres) | ✅ kein Lock-in |
+| Erster Kostenpunkt | planbar | Pro 25 $/Monat, rechnerisch ab ~1.000–2.000 aktiven Nutzern | ✅ |
+
+**CloudKit ist damit abgeschlossen und wird nicht weiter untersucht.** Die
+Begründung bleibt die aus §4: CloudKit wäre Apple-nativ und dauerhaft
+kostenlos, kann aber keine server-autoritative Logik — XP, Level und
+Leaderboards wären in der Public Database frei fälschbar. Das kollidiert mit
+einer harten Produktanforderung, nicht mit einer Vorliebe.
 
 ---
 

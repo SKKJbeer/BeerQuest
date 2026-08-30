@@ -8,6 +8,10 @@
 
 **Regel:** Nichts aus P1/P2 wandert ohne ausdrückliche Entscheidung nach P0.
 
+**Zur Bedeutung von ⚖️:** Diese Punkte sind für den **internen** TestFlight
+verzichtbar, für jede **externe** Verteilung dagegen zwingend und vollständig.
+Die verbindliche Liste steht in `11-release-gates.md`.
+
 ---
 
 ## Account & Profil
