@@ -1,36 +1,50 @@
 # 🍺 Beer Quest
 
-Gamifizierte Social-App für Bierliebhaber (iOS). Aktueller Stand:
-**Product Discovery abgeschlossen, Spezifikation fertig, Implementierung noch
-nicht begonnen.**
+Gamifizierte iOS-Social-App für Bierliebhaber. Stand: **Planung abgeschlossen
+(v0.2), Implementierung noch nicht begonnen.**
+
+Zwei harte Rahmenbedingungen binden jede Entscheidung:
+**0 € laufende Infrastrukturkosten** und **P0 als Vertical Slice**.
+
+## Für den Einstieg
+
+| Wenn du wissen willst … | lies |
+|---|---|
+| was zuletzt passiert ist und was offen ist | [`docs/HANDOFF.md`](docs/HANDOFF.md) |
+| was in den ersten Test kommt und was nicht | [`docs/03-feature-matrix.md`](docs/03-feature-matrix.md) |
+| warum das nichts kostet | [`docs/04-cost-analysis.md`](docs/04-cost-analysis.md) |
+| wann was gebaut wird | [`docs/09-implementation-plan.md`](docs/09-implementation-plan.md) |
 
 ## Dokumentation
 
 | Dokument | Inhalt |
 |---|---|
-| [`docs/00-product-vision.md`](docs/00-product-vision.md) | Product Vision & MVP Specification v0.1 (Quelldokument, §1–§36) |
-| [`docs/01-analysis.md`](docs/01-analysis.md) | **STEP 1** — Kritische Analyse: Widersprüche, fehlende Anforderungen, Risiken, UX, App Store, Vereinfachungen, offene Entscheidungen |
-| [`docs/02-architecture.md`](docs/02-architecture.md) | **STEP 2a** — Architektur, Stack, Auth, Location/Maps, Deep Links, State, Navigation, Security, Datenschutz |
-| [`docs/03-data-model.md`](docs/03-data-model.md) | **STEP 2b** — Datenmodell (DDL), Spielökonomie, Quest-DSL, Badges, API-Oberfläche, RLS, Seeds |
-| [`docs/04-user-flows.md`](docs/04-user-flows.md) | **STEP 3** — Alle MVP User Flows inkl. Fehler- und Offline-Pfade |
-| [`docs/05-screens.md`](docs/05-screens.md) | **STEP 4** — 43 Views mit Elementen, Aktionen, Loading-/Empty-/Error-States, Navigation |
-| [`docs/06-implementation-plan.md`](docs/06-implementation-plan.md) | **STEP 5** — Phasenplan P0–P12, ~65 Entwicklertage, Meilensteine M1–M6 |
+| [`00-product-vision.md`](docs/00-product-vision.md) | Product Vision & MVP Specification v0.1 (Quelldokument, §1–§36) |
+| [`01-analysis.md`](docs/01-analysis.md) | Kritische Analyse der Vision — Befunde gültig, Scope-Entscheidungen durch v0.2 überholt |
+| [`02-product-gate.md`](docs/02-product-gate.md) | **Product-/Architecture-Gate:** Review A–F, Vertical Slice, Definition of Done P0 |
+| [`03-feature-matrix.md`](docs/03-feature-matrix.md) | **P0 / P1 / P2** über alle Features, Bilanz der Streichungen |
+| [`04-cost-analysis.md`](docs/04-cost-analysis.md) | Kostentabelle, Free-Tier-Grenzen, geprüfte Alternativen, Ausstiegsplan |
+| [`05-architecture.md`](docs/05-architecture.md) | Stack, Module, Auth, Location/Maps, Invites, State, Navigation, Security, Datenschutz |
+| [`06-data-model.md`](docs/06-data-model.md) | DDL mit P0/P1-Markierung, Spielökonomie, Quest-DSL, Badges, RPC-API, RLS, Seeds |
+| [`07-user-flows.md`](docs/07-user-flows.md) | P0-Flows inkl. Fehler- und Wiederholungspfaden |
+| [`08-screens.md`](docs/08-screens.md) | 28 Views mit Loading-, Empty- und Error-States |
+| [`09-implementation-plan.md`](docs/09-implementation-plan.md) | P0.1–P0.11 (36 Tage) und die P1-Reihenfolge danach |
+| [`10-risks.md`](docs/10-risks.md) | 15 technische Risiken mit Gegenmaßnahmen |
 
-## Kurzfassung der Entscheidungen
+## Die Entscheidungen in Kurzform
 
-- **Client:** iOS 17+, SwiftUI, MapKit, modulares Swift Package
-- **Backend:** Supabase (Postgres + RLS + Auth + RPC-Funktionen), gesamte
-  Spiel-Logik serverseitig und transaktional
+- **Client:** iOS 17+, SwiftUI, MapKit, modulares Swift Package, **kein
+  Drittanbieter-SDK**
+- **Backend:** Supabase Free (Postgres + RLS + Auth), gesamte Spiel-Logik
+  serverseitig und transaktional
 - **Auth:** ausschließlich Sign in with Apple
+- **Geocoding:** keine API — eigene GeoNames-Tabelle, dauerhaft 0 €
+- **Storage:** keiner — Avatare sind Bundle-Assets
+- **Invites:** Code per Share Sheet; Universal Links erst in P1
 - **XP:** append-only Ledger, Tages-Cap, keine Belohnung von Trinkmenge
-- **Referenzdaten:** kanonische Städte (GeoNames), nutzergenerierte Venues mit
-  Dedupe, kuratierter Bier-Seed + freie Anlage
-
-Offene Entscheidungen für den Product Owner stehen am Ende von
-[`docs/01-analysis.md`](docs/01-analysis.md) (D1–D10). Zwei davon sind echte
-Blocker für spätere Phasen: eine Domain für Universal Links (D9) und ein
-aktives Apple Developer Program (D10).
+- **Laufende Kosten:** 0 €/Monat bei 10 wie bei 100 Nutzern
 
 ## Nächster Schritt
 
-STEP 6 — Implementierung, beginnend mit Phase P0/P1 aus dem Implementierungsplan.
+Phase **P0.1** — Projekt-Setup und Verifikation der Free-Tier-Zahlen.
+Offene Punkte für den Projektmanager stehen in [`docs/HANDOFF.md`](docs/HANDOFF.md).

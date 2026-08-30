@@ -2,6 +2,16 @@
 
 Status: Product Discovery · Bezug: Product Vision & MVP Specification v0.1
 
+> **Hinweis (v0.2):** Dieses Dokument ist die Analyse der ersten Session und
+> bleibt inhaltlich gültig — die Befunde (fehlendes Age Gate, nicht berechenbarer
+> Prozent-Fortschritt, Widerspruch um die Bierdatenbank, undefinierte Clan-XP)
+> sind unverändert richtig. **Die Scope- und Kostenentscheidungen darin sind
+> jedoch überholt.** Maßgeblich sind `02-product-gate.md` (Neuschnitt auf einen
+> Vertical Slice), `03-feature-matrix.md` (P0/P1/P2) und `04-cost-analysis.md`
+> (0-€-Anforderung). Wo dieses Dokument „MVP" sagt, ist heute meist **P0 + P1**
+> gemeint. Die offenen Entscheidungen D1–D10 am Ende sind in
+> `HANDOFF.md` fortgeschrieben.
+
 Die Analyse ist bewusst hart. Das Konzept ist stark — der Core Loop trägt, die
 Abgrenzung gegen "mehr trinken = mehr Punkte" ist richtig und verkaufbar. Die
 Probleme liegen fast alle in drei Bereichen: **fehlende Referenzdaten**,
