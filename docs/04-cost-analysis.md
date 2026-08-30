@@ -3,10 +3,21 @@
 **Ziel: 0 € laufende Infrastrukturkosten** bei bis zu ~100 Testnutzern.
 Das Apple Developer Program (99 $/Jahr) ist laut Vorgabe ausgenommen.
 
-> **Stand der Angaben: Mai 2026.** Free-Tier-Konditionen ändern sich.
-> Vor Projektstart (Phase P0/P1 des Implementierungsplans) sind alle
-> Limits einmal gegen die aktuellen Anbieterseiten zu verifizieren; das
-> ist eine Aufgabe im Implementierungsplan.
+> ## ✅ Live verifiziert am 2026-08-30
+>
+> Alle Werte wurden direkt bei den Anbietern geprüft (keine Drittquellen).
+> Quellenliste am Ende des Dokuments. **Ergebnis: Gate grün** — der
+> 0-€-Plan trägt mit großem Abstand.
+>
+> Drei Korrekturen gegenüber der Schätzung, alle im Dokument eingearbeitet:
+> 1. **Keep-alive muss täglich laufen, nicht alle 3 Tage.** Supabase
+>    verlangt „a few user requests to the database each day over the
+>    previous week" — ein 3-Tages-Rhythmus ist zu knapp.
+> 2. **macOS-CI-Minuten sind der einzige Posten, der 0 € gefährden kann**
+>    (Faktor ~10 im privaten Repo). Konsequenz: keine macOS-CI in P0.
+> 3. **Supabase-Pausierung ist weniger gefährlich als angenommen:**
+>    pausierte Projekte sind 90 Tage lang wiederherstellbar, Daten bleiben
+>    erhalten. Das Risiko ist Ausfallzeit, nicht Datenverlust.
 
 ---
 
@@ -14,12 +25,12 @@ Das Apple Developer Program (99 $/Jahr) ist laut Vorgabe ausgenommen.
 
 | Service | Lösung | Free Tier | Kosten bei 10 Usern | Kosten bei 100 Usern | Späteres Risiko / Migration |
 |---|---|---|---|---|---|
-| **Auth** | Sign in with Apple über Supabase Auth | 50.000 MAU | **0 €** | **0 €** | Sehr gering. Apple-Identität bleibt bei einem Backend-Wechsel gültig (`sub` als stabile ID). Migration = Nutzertabelle umziehen. |
-| **Database** | Supabase Postgres (Free) | 500 MB DB, 5 GB Egress/Monat, 2 Projekte | **0 €** | **0 €** (Schätzung ~40 MB, davon 15 MB Städte-Seed) | Gering. Ab Free-Limit 25 $/Monat (Pro). `pg_dump` läuft auf Neon, Railway, Fly, Hetzner, RDS. **Kein Lock-in.** |
-| **Backend-Logik** | Postgres-Funktionen (RPC) im selben Projekt | inklusive | **0 €** | **0 €** | Gering — reines SQL, portabel. Bewusst **keine** Edge Functions in P0. |
-| **Maps** | MapKit (nativ, SwiftUI) | unbegrenzt für App-Nutzung | **0 €** | **0 €** | Keines. Nicht zu verwechseln mit MapKit JS (Web, kontingentiert) — wird nicht genutzt. |
-| **Geocoding** | **Keine API.** Eigene `cities`-Tabelle (GeoNames `cities15000`, CC BY 4.0) + SQL-Umkreissuche | entfällt | **0 €** | **0 €** | Keines. Einmaliger Datenimport (~15 MB). Kein Anbieter, kein Preis pro Anfrage — dauerhaft. |
-| **POI-Vorschläge** | `MKLocalSearch` (nativ, geräteseitig) | unbegrenzt, geräteseitig gedrosselt | **0 €** | **0 €** | Nutzungsbedingungen beachten (nur Eingabehilfe, keine Speicherung von Apple-Daten) — siehe `10-risks.md` R2. |
+| **Auth** | Sign in with Apple über Supabase Auth | ✅ 50.000 MAU | **0 €** | **0 €** | Sehr gering. Apple-Identität bleibt bei einem Backend-Wechsel gültig (`sub` als stabile ID). Migration = Nutzertabelle umziehen. |
+| **Database** | Supabase Postgres (Free) | ✅ 500 MB DB, 5 GB Egress + 5 GB cached Egress/Monat, 2 aktive Projekte | **0 €** | **0 €** (gemessene Schätzung ~25 MB, davon 15 MB Städte-Seed) | Gering. Ab Free-Limit 25 $/Monat (Pro, 8 GB DB / 250 GB Egress). `pg_dump` läuft auf Neon, Railway, Fly, Hetzner, RDS. **Kein Lock-in.** |
+| **Backend-Logik** | Postgres-Funktionen (RPC) im selben Projekt | inklusive | **0 €** | **0 €** | Gering — reines SQL, portabel. Bewusst **keine** Edge Functions in P0 (Free Tier hätte 500.000 Aufrufe/Monat). |
+| **Maps** | MapKit (nativ, SwiftUI) | ✅ keine veröffentlichte Preis- oder Kontingentangabe; Bestandteil des SDK und der Developer-Program-Mitgliedschaft | **0 €** | **0 €** | Kein Kostenrisiko. **Aber ein Nutzungsbedingungs-Risiko — siehe §7.** MapKit **JS** (Web) hat ein Kontingent von 250.000 Map Views + 25.000 Service Calls pro Tag; wird von uns nicht genutzt. |
+| **Geocoding** | **Keine API.** Eigene `cities`-Tabelle (GeoNames `cities15000`, ✅ CC BY 4.0, kommerziell nutzbar bei Namensnennung) + SQL-Umkreissuche | entfällt | **0 €** | **0 €** | Keines. Einmaliger Datenimport (~15 MB). Kein Anbieter, kein Preis pro Anfrage — dauerhaft. |
+| **POI-Vorschläge** | ~~`MKLocalSearch`~~ **in P0 gestrichen** | — | **0 €** | **0 €** | **Aus den Apple-Nutzungsbedingungen gestrichen, nicht aus Kostengründen — siehe §7 und `10-risks.md` R2.** |
 | **Storage** | **Keiner.** Avatare sind Bundle-Assets | entfällt | **0 €** | **0 €** | Keines. Der einzige Posten, der mit Nutzung linear skaliert, existiert schlicht nicht. |
 | **Push Notifications** | **Keine in P0** | APNs selbst ist kostenlos | **0 €** | **0 €** | P1: APNs kostenlos, Versand über eine Supabase Edge Function (Free-Tier 500k Aufrufe/Monat). Bleibt 0 €. |
 | **Analytics** | Eigene `app_events`-Tabelle + App Store Connect | inklusive | **0 €** | **0 €** | Keines. Kein SDK, kein Drittanbieter, keine zusätzlichen Privacy-Labels. Kostet ~30 Zeilen Code. |
@@ -27,7 +38,7 @@ Das Apple Developer Program (99 $/Jahr) ist laut Vorgabe ausgenommen.
 | **Deep Links** | **Keine in P0.** Invite-**Code** per Share Sheet | entfällt | **0 €** | **0 €** | P1: Universal Links über Cloudflare Pages (Free) auf `*.pages.dev` → weiterhin 0 €. Eigene Domain optional ~12 €/Jahr. |
 | **Hosting (Web)** | **Keines in P0** | — | **0 €** | **0 €** | P1: Cloudflare Pages Free (unbegrenzte Sites, 500 Builds/Monat, HTTPS, eigene Header via `_headers` → korrekter Content-Type für AASA). |
 | **E-Mail** | **Keine** (nur Sign in with Apple) | entfällt | **0 €** | **0 €** | Keines. Kein Passwort-Reset, keine Verifikationsmail, kein Versender nötig. |
-| **CI** | GitHub Actions | 2.000 Minuten/Monat (privat), unbegrenzt (öffentlich) | **0 €** | **0 €** | Gering. Optional; lokale Builds reichen auch. |
+| **CI** | GitHub Actions, **nur Linux-Runner** | ✅ 2.000 Min/Monat + 500 MB Artefakte (privates Repo); öffentliche Repos vollständig kostenlos | **0 €** | **0 €** | ⚠️ **Der einzige Posten, der 0 € kippen kann.** macOS-Runner kosten 0,062 $/min gegen 0,006 $/min Linux (Faktor ~10) ⇒ nur ~200 macOS-Minuten im Freikontingent. **Konsequenz: keine macOS-CI in P0**, der Xcode-Build läuft lokal. |
 | **Externe APIs** | **Keine** | — | **0 €** | **0 €** | Bewusst keine Bierdatenbank-API (Untappd, BreweryDB). |
 | | | **Summe** | **0 €/Monat** | **0 €/Monat** | |
 
@@ -56,19 +67,30 @@ Das ist der erste und einzige geplante Kostenpunkt.
 
 ---
 
-## 3. Das reale Risiko im Free Tier: Projekt-Pausierung
+## 3. Das reale Risiko im Free Tier: Projekt-Pausierung ✅ verifiziert
 
-Supabase pausiert **kostenlose Projekte nach 7 Tagen ohne Aktivität**. Ein
-pausiertes Projekt ist nicht erreichbar und muss manuell reaktiviert werden.
-Für eine TestFlight-App mit unregelmäßiger Nutzung ist das ein echtes
-Ausfallrisiko — der Tester öffnet die App und sie funktioniert nicht.
+Supabase pausiert kostenlose Projekte **nach 7 Tagen geringer Aktivität**.
+Die Dokumentation ist dabei präziser als erwartet:
 
-**Gegenmaßnahme (0 €):** Ein GitHub-Actions-Workflow ruft alle 3 Tage einen
-leichten Health-Endpunkt auf. Kostenlos, ~15 Zeilen YAML, in P0 enthalten.
+> „A Free plan project is considered inactive if it does not receive
+> sufficient user database activity over the past week … typically a few
+> user requests to the database each day over the previous week is enough
+> to keep the project from being paused."
 
-Zweite Einschränkung: **maximal 2 kostenlose Projekte** pro Organisation.
-Wir brauchen genau zwei (Entwicklung + TestFlight). Das passt — aber es ist
-kein Spielraum vorhanden. Ein drittes Projekt ist nicht kostenlos.
+**Korrektur gegenüber der Schätzung:** Gefordert sind Anfragen **an jedem
+Tag**, nicht alle paar Tage. Der Keep-alive-Workflow läuft deshalb
+**täglich**, nicht alle 3 Tage. Kosten: ~30 Linux-Minuten/Monat von 2.000.
+
+**Entwarnung bei den Folgen:** Ein pausiertes Projekt ist **90 Tage lang
+wiederherstellbar**, inklusive Daten und Konfiguration. Danach steht immer
+noch ein logisches Backup zum Download bereit. Das Risiko ist also
+**Ausfallzeit für den Tester, nicht Datenverlust** — deutlich harmloser
+als in v0.2 angenommen.
+
+Zweite Einschränkung, unverändert bestätigt: **maximal 2 aktive kostenlose
+Projekte**. Wir brauchen genau zwei (Entwicklung + TestFlight). Das passt,
+aber ohne Spielraum. Alternative bei Bedarf: lokale Entwicklung über die
+Supabase CLI, dann genügt ein Cloud-Projekt.
 
 ---
 
@@ -113,3 +135,68 @@ Jede neue Abhängigkeit muss vor der Einführung diese vier Fragen beantworten:
 
 Wird eine dieser Fragen nicht beantwortet, wird die Abhängigkeit nicht
 eingeführt. Diese Regel steht auch in `CLAUDE.md`.
+
+---
+
+## 7. ⚠️ Befund außerhalb der Kostenfrage: Apple-Maps-Nutzungsbedingungen
+
+Bei der Prüfung der MapKit-Bedingungen ist ein **Konflikt mit der geplanten
+Architektur** aufgefallen. Er betrifft nicht die Kosten, wohl aber die
+Zulässigkeit — und ist deshalb hier dokumentiert und in `10-risks.md` (R2)
+hochgestuft.
+
+**Die Klauseln (Apple Maps Terms of Use, wörtlich):**
+
+> §1.3 (vi) — „copy, extract, scrape or reutilize any portion of the Service,
+> including, but not limited to, unauthorized bulk downloads of content or
+> data, **creation of any databases based upon data or content provided
+> through the Service**"
+
+> §1.3 (xiii) — „cache, pre-fetch or store any part of the Service in any
+> unauthorized manner"
+
+**Der Konflikt:** Die Planung v0.2 sah vor, `MKLocalSearch`-Vorschläge als
+Eingabehilfe anzuzeigen und aus dem vom Nutzer bestätigten Treffer eine
+**eigene, dauerhafte, für alle Nutzer sichtbare Venue-Entität** anzulegen.
+Genau das ist „creation of a database based upon data provided through the
+Service" — die Nutzerbestätigung ändert daran nichts.
+
+Auf die identische Frage im Apple Developer Forum (Thread 708672) antwortete
+Apple ausweichend und verwies auf das Developer Program License Agreement und
+auf „consult your legal counsel". Es gibt also **keine Freigabe**, auf die man
+sich stützen könnte.
+
+**Entscheidung: `MKLocalSearch` entfällt in P0 ersatzlos.** Der Ort wird
+eingegeben, die Koordinate kommt aus **CoreLocation** (eigene Gerätedaten,
+kein Map Data). Vorschläge kommen ausschließlich aus **unseren eigenen**
+bereits erfassten Orten im Umkreis. Die Anzeige einer Apple-Karte bleibt
+selbstverständlich zulässig — das ist ihr bestimmungsgemäßer Zweck.
+
+**Auswirkung:** −0,5 Tage Aufwand, ein Abschnitt weniger auf Screen S21, ein
+rechtliches Risiko weniger. Der Preis ist etwas mehr Tipparbeit beim
+allerersten Check-in an einem Ort; ab dem zweiten Mal schlägt die App den Ort
+aus eigenen Daten vor.
+
+**Option für P1**, falls sich die Ortseingabe im Test als zu mühsam erweist:
+OpenStreetMap/Overpass (ODbL, kostenlos, Namensnennung nötig). Bringt eine
+externe Abhängigkeit zurück und ist deshalb nicht die erste Wahl.
+
+---
+
+## 8. Quellen der Verifikation (abgerufen 2026-08-30)
+
+| Angabe | Quelle |
+|---|---|
+| Supabase Free: 500 MB DB, 5 GB Egress, 50.000 MAU, 1 GB Storage, 2 aktive Projekte, 500.000 Edge-Function-Aufrufe, Pausierung nach 1 Woche; Pro ab 25 $/Monat | <https://supabase.com/pricing> |
+| Pausierung: Kriterium „a few user requests each day", 90 Tage wiederherstellbar, Daten bleiben erhalten | <https://supabase.com/docs/guides/platform/free-project-pausing> · <https://supabase.com/changelog/27497-paused-free-plan-projects-are-restorable-for-90-days> |
+| GitHub Actions Free: 2.000 Min/Monat + 500 MB, öffentliche Repos kostenlos | <https://docs.github.com/en/billing/concepts/product-billing/github-actions> |
+| Runner-Preise Linux 0,006 $/min vs. macOS 0,062 $/min (Faktor ~10) | <https://docs.github.com/en/billing/reference/actions-minute-multipliers> |
+| TestFlight: 100 interne Tester ohne Beta App Review, 10.000 externe mit Beta App Review | <https://developer.apple.com/testflight/> |
+| Apple Developer Program: 99 $/Jahr, TestFlight enthalten | <https://developer.apple.com/programs/> |
+| MapKit JS: 250.000 Map Views + 25.000 Service Calls pro Tag kostenlos | <https://developer.apple.com/maps/web/> |
+| Apple Maps Terms of Use §1.3 (vi) und (xiii) | <https://www.apple.com/legal/internet-services/maps/terms-en.html> |
+| Apple-Antwort zur Speicherung von Map-Daten | <https://developer.apple.com/forums/thread/708672> |
+| GeoNames: CC BY 4.0, kommerziell nutzbar bei Namensnennung | <https://www.geonames.org/about.html> |
+
+**Nächste Verifikation:** vor dem externen TestFlight bzw. vor der
+App-Store-Einreichung.

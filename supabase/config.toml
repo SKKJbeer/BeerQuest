@@ -1,0 +1,40 @@
+# Supabase-Projektkonfiguration fuer die lokale Entwicklung.
+# Das Cloud-Projekt wird per `supabase link` verbunden - siehe docs/SETUP.md.
+project_id = "beerquest"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 200          # Egress-Schutz: nie unbegrenzte Listen ausliefern
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "beerquest://"
+# P0 nutzt ausschliesslich Sign in with Apple (Guideline 4.8 damit automatisch
+# erfuellt, kein Passwort-Handling, kein Mailversand).
+enable_signup = true
+
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+
+[auth.external.apple]
+enabled = true
+client_id = "env(SUPABASE_AUTH_APPLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_APPLE_SECRET)"
+
+[storage]
+# Bewusst deaktiviert: keine User-Uploads in P0.
+# Siehe docs/04-cost-analysis.md §1 - das ist der einzige Posten, der mit
+# Nutzung UND Nutzerzahl skalieren wuerde.
+enabled = false

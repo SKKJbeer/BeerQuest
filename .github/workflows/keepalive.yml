@@ -1,0 +1,40 @@
+name: Supabase keep-alive
+
+# Supabase pausiert kostenlose Projekte nach 7 Tagen geringer Aktivitaet.
+# Die Dokumentation verlangt "a few user requests to the database each day
+# over the previous week" - deshalb TAEGLICH, nicht alle drei Tage.
+# Kosten: ~30 Linux-Minuten im Monat von 2.000. Siehe docs/10-risks.md R3.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Datenbank anfragen
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Secrets SUPABASE_URL / SUPABASE_ANON_KEY fehlen."
+            echo "Ohne sie pausiert das Projekt nach 7 Tagen. Siehe docs/SETUP.md."
+            exit 1
+          fi
+          # Muss eine echte Datenbankabfrage sein - ein Treffer auf die API
+          # allein zaehlt nicht zwingend als Aktivitaet.
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/app_config?select=key&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "HTTP $code"
+          cat /tmp/out.json
+          # 200 = ok. 401 ist ebenfalls ein Erfolg im Sinne des Keep-alive
+          # (die Anfrage hat die Datenbank erreicht), aber ein Konfigurations-
+          # fehler, den wir sehen wollen.
+          if [ "$code" != "200" ]; then
+            echo "::error::Unerwarteter Status $code"
+            exit 1
+          fi

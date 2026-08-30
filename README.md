@@ -1,7 +1,7 @@
 # 🍺 Beer Quest
 
-Gamifizierte iOS-Social-App für Bierliebhaber. Stand: **Planung abgeschlossen
-(v0.2), Implementierung noch nicht begonnen.**
+Gamifizierte iOS-Social-App für Bierliebhaber. Stand: **Planung freigegeben,
+Phase P0.1 (Projekt-Setup) abgeschlossen.**
 
 Zwei harte Rahmenbedingungen binden jede Entscheidung:
 **0 € laufende Infrastrukturkosten** und **P0 als Vertical Slice**.
@@ -14,6 +14,7 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | was in den ersten Test kommt und was nicht | [`docs/03-feature-matrix.md`](docs/03-feature-matrix.md) |
 | warum das nichts kostet | [`docs/04-cost-analysis.md`](docs/04-cost-analysis.md) |
 | wann was gebaut wird | [`docs/09-implementation-plan.md`](docs/09-implementation-plan.md) |
+| wie du das Projekt zum Laufen bringst | [`docs/SETUP.md`](docs/SETUP.md) |
 
 ## Dokumentation
 
@@ -29,7 +30,8 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | [`07-user-flows.md`](docs/07-user-flows.md) | P0-Flows inkl. Fehler- und Wiederholungspfaden |
 | [`08-screens.md`](docs/08-screens.md) | 28 Views mit Loading-, Empty- und Error-States |
 | [`09-implementation-plan.md`](docs/09-implementation-plan.md) | P0.1–P0.11 (36 Tage) und die P1-Reihenfolge danach |
-| [`10-risks.md`](docs/10-risks.md) | 15 technische Risiken mit Gegenmaßnahmen |
+| [`10-risks.md`](docs/10-risks.md) | 16 technische Risiken mit Gegenmaßnahmen |
+| [`SETUP.md`](docs/SETUP.md) | Lokales Setup: Xcode, Supabase, GitHub-Secrets |
 
 ## Die Entscheidungen in Kurzform
 
@@ -44,7 +46,16 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 - **XP:** append-only Ledger, Tages-Cap, keine Belohnung von Trinkmenge
 - **Laufende Kosten:** 0 €/Monat bei 10 wie bei 100 Nutzern
 
+## Stand der Umsetzung
+
+| Phase | Status |
+|---|---|
+| Kosten-Gate (Free-Tier live verifiziert) | ✅ 2026-08-30, Quellen in `04-cost-analysis.md` §8 |
+| Architektur-Gate (Supabase bestätigt) | ✅ vom PM freigegeben |
+| **P0.1** Projekt-Setup | ✅ Gerüst, CI, Keep-alive, erste Migration |
+| P0.2 Datenbank-Fundament | ⏭️ als Nächstes |
+
 ## Nächster Schritt
 
-Phase **P0.1** — Projekt-Setup und Verifikation der Free-Tier-Zahlen.
+Phase **P0.2** — Schema, Seeds und die spielentscheidenden SQL-Funktionen.
 Offene Punkte für den Projektmanager stehen in [`docs/HANDOFF.md`](docs/HANDOFF.md).

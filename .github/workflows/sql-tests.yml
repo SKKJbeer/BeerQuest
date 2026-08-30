@@ -1,0 +1,60 @@
+name: SQL tests
+
+# Nur Linux-Runner. Keine macOS-CI: macOS kostet 0,062 $/min gegen 0,006 $/min
+# und wuerde das Freikontingent von 2.000 Minuten auf ~200 zusammenschrumpfen.
+# Der Xcode-Build laeuft lokal. Siehe docs/10-risks.md R16.
+on:
+  push:
+    paths: ["supabase/**", ".github/workflows/sql-tests.yml"]
+  pull_request:
+    paths: ["supabase/**"]
+  workflow_dispatch:
+
+jobs:
+  sql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Version wie im Supabase-Projekt (siehe supabase/config.toml).
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+        ports: ["5432:5432"]
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Supabase-Rollen und Schemas nachbilden
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "create schema if not exists extensions;"
+          psql -v ON_ERROR_STOP=1 -c "create role anon nologin;"
+          psql -v ON_ERROR_STOP=1 -c "create role authenticated nologin;"
+          psql -v ON_ERROR_STOP=1 -c "create role service_role nologin;"
+
+      - name: Migrationen anwenden
+        run: |
+          for f in supabase/migrations/*.sql; do
+            echo "== $f"
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Migrationen erneut anwenden (Idempotenz)
+        run: |
+          for f in supabase/migrations/*.sql; do
+            psql -v ON_ERROR_STOP=1 -f "$f" > /dev/null
+          done
+
+      - name: Regeltests
+        run: |
+          shopt -s nullglob
+          for f in supabase/tests/*.sql; do
+            echo "== $f"
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done

@@ -15,7 +15,7 @@ Nebenprojekt mit ~10 h/Woche ⇒ grob Faktor 4 in Kalenderzeit.
 | P0.1 | Projekt-Setup + Kostencheck | 2,0 | Build läuft |
 | P0.2 | Datenbank-Fundament | 4,0 | Schema, Seeds, XP-Ledger |
 | P0.3 | Auth & Onboarding | 3,5 | **M1** — Account anlegbar |
-| P0.4 | Check-in-Kern | 6,0 | **M2** — Core Loop spielbar |
+| P0.4 | Check-in-Kern | 5,5 | **M2** — Core Loop spielbar |
 | P0.5 | Home, Profile, Passport | 3,5 | Fortschritt sichtbar |
 | P0.6 | Karte | 3,0 | **M3** — Solo-Erfahrung komplett |
 | P0.7 | Quests + Daily Quest | 3,5 | Spielziel vorhanden |
@@ -23,9 +23,9 @@ Nebenprojekt mit ~10 h/Woche ⇒ grob Faktor 4 in Kalenderzeit.
 | P0.9 | Clan + Aktivität | 2,5 | |
 | P0.10 | Friends-Leaderboard | 1,0 | Wettbewerb |
 | P0.11 | Politur, Balancing, TestFlight | 4,0 | **M5** — interner Test |
-| | **Summe P0** | **36,0** | |
+| | **Summe P0** | **35,5** | |
 
-Mit 25 % Puffer: **~45 Entwicklertage** (v0.1 lag bei ~65).
+Mit 25 % Puffer: **~44 Entwicklertage** (v0.1 lag bei ~65).
 
 **Laufende Kosten über die gesamte Laufzeit: 0 €.**
 
@@ -39,9 +39,11 @@ Mit 25 % Puffer: **~45 Entwicklertage** (v0.1 lag bei ~65).
   `ErrorCard`, `XPBar`, `AvatarView`. Richtung nach Vision §30: warm, dunkel,
   ein kräftiger Bernstein-Akzent, keine Dauer-Animationen.
 - Supabase-Projekt (EU-Region), Migrationskette über die Supabase CLI.
-- **Kostencheck:** Alle Free-Tier-Angaben aus `04-cost-analysis.md` gegen die
-  aktuellen Anbieterseiten verifizieren und das Dokument aktualisieren.
-- GitHub-Actions-Workflow: Build/Test **und** Keep-alive-Ping alle 3 Tage.
+- ✅ **Kostencheck erledigt** (2026-08-30): alle Free-Tier-Angaben direkt bei
+  den Anbietern verifiziert, Quellen in `04-cost-analysis.md` §8.
+- GitHub-Actions-Workflows: **nur Linux-Runner** — SQL-Tests und ein
+  **täglicher** Keep-alive-Ping. Keine macOS-CI (Faktor ~10 auf das
+  Freikontingent, siehe `10-risks.md` R16); der Xcode-Build läuft lokal.
 
 **Fertig, wenn:** App startet mit Platzhalter-Tabs, `supabase db reset` läuft
 reproduzierbar, der Keep-alive-Workflow ist grün.
@@ -72,11 +74,12 @@ korrekten Reward-Payload liefert — ohne App.
 60 Sekunden ein Profil an. Fehlerpfade (Abbruch, Name vergeben, zu jung)
 laufen sauber.
 
-## P0.4 — Check-in-Kern (6,0) → **M2, das wichtigste Zwischenziel**
+## P0.4 — Check-in-Kern (5,5) → **M2, das wichtigste Zwischenziel**
 
 - `create_check_in` vollständig: Entdeckungen, XP mit Cap, Badges,
   Quest-Hooks (in P0.7 aktiviert).
-- S20–S24, CoreLocation, `MKLocalSearch` als Eingabehilfe.
+- S20–S24, CoreLocation. **Keine Apple-POI-Suche** (R2) — Ortsvorschläge
+  kommen ausschließlich aus eigenen Daten.
 - Ort-Dedupe (Geohash + Trigram), Bier-Matching.
 - RetryQueue mit `client_uuid`-Idempotenz.
 - `app_events`-Logging ab hier mitlaufend.

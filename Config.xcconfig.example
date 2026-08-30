@@ -1,0 +1,6 @@
+// Kopieren nach Config.xcconfig (in .gitignore) und ausfuellen.
+// Es gehoert ausschliesslich der ANON KEY hierher - er ist oeffentlich und
+// durch Row Level Security abgesichert. Der Service-Role-Key darf niemals
+// in die App.
+SUPABASE_URL = https:/$()/your-project.supabase.co
+SUPABASE_ANON_KEY = your-anon-key

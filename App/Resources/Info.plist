@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDisplayName</key>
+  <string>Beer Quest</string>
+  <key>UILaunchScreen</key>
+  <dict/>
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+  </array>
+  <!-- Standort wird ausschliesslich im Moment des Check-ins abgefragt.
+       Purpose String nach App Store Guideline 5.1.1. -->
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>Beer Quest uses your location only when you check in, to find places nearby and add the city and country to your passport.</string>
+  <!-- Werte aus Config.xcconfig, nicht eingecheckt. Siehe docs/SETUP.md. -->
+  <key>SUPABASE_URL</key>
+  <string>$(SUPABASE_URL)</string>
+  <key>SUPABASE_ANON_KEY</key>
+  <string>$(SUPABASE_ANON_KEY)</string>
+</dict>
+</plist>

@@ -41,7 +41,7 @@
 | Wiederholungs-Queue bei Fehlschlag | ✅ | | |
 | Vollständige Offline-Synchronisation | | ✅ | |
 | Notizfeld | | ✅ | |
-| POI-Vorschläge über `MKLocalSearch` | ✅ | | |
+| ~~POI-Vorschläge über `MKLocalSearch`~~ | ❌ gestrichen (Apple Maps ToS §1.3 vi) | | |
 | Bewertung / Sterne | | | ❌ nie |
 | Foto zum Check-in | | | ✅ |
 | KI-Biererkennung | | | ✅ |

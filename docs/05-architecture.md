@@ -26,7 +26,7 @@ Vertical-Slice-Schnitt (`02-product-gate.md`).
 | Plattform | iOS 17+, iPhone only | — |
 | UI | Swift 5.9+, SwiftUI, `@Observable` | — |
 | Karte | **MapKit** (SwiftUI `Map`, iOS 17) | 0 € |
-| Ortssuche | `MKLocalSearch` — nur als Eingabehilfe | 0 € |
+| Ortssuche | **Keine Apple-POI-Suche** (Nutzungsbedingungen, siehe `10-risks.md` R2). Vorschläge nur aus eigenen Orten | 0 € |
 | Standort | CoreLocation, `WhenInUse`, kontextuell | — |
 | Persistenz | Nur Cache + Wiederholungs-Queue (Codable → Datei) | — |
 | Analytics | Eigene Ereignisse → `app_events`-Tabelle **[v0.2]** | 0 € |
@@ -139,14 +139,22 @@ Navigation läuft über den `Router` mit Enums aus `BQCore`.
 - Das Ergebnis wird **einmalig auf dem Ort** gespeichert; Check-ins erben
   Stadt und Land vom Ort. Historisch stabil, keine Neuberechnung.
 
-### Ort-Anlage & Dedupe
-1. Vorschläge aus zwei klar getrennten Quellen: bestehende Beer-Quest-Orte im
-   Umkreis von 1 km, darunter Apple-POI-Vorschläge als Eingabehilfe.
+### Ort-Anlage & Dedupe **[v0.3]**
+1. Vorschläge kommen **ausschließlich aus unseren eigenen** bereits erfassten
+   Orten im Umkreis von 1 km.
 2. Bestehender Ort → dessen ID wird verwendet.
-3. Sonst legt `find_or_create_venue` eine **eigene** Entität an. Dedupe über
+3. Sonst tippt der Nutzer den Namen; die Koordinate kommt aus **CoreLocation**
+   (eigene Gerätedaten). `find_or_create_venue` legt die Entität an, Dedupe über
    Geohash-7-Zelle + Namensähnlichkeit (`pg_trgm` ≥ 0.6) im Umkreis von 150 m.
-4. Keine Apple-Identifier, keine Adressdaten, keine Importe — nur der vom
-   Nutzer bestätigte Name plus Koordinate und Kategorie. Siehe `10-risks.md` R2.
+4. **Keine Apple-POI-Daten, in keiner Form.** Die Apple Maps Terms of Use
+   §1.3 (vi) verbieten die *creation of any databases based upon data or
+   content provided through the Service* — unsere `venues`-Tabelle wäre genau
+   das. Die Anzeige der Apple-Karte bleibt selbstverständlich zulässig.
+   Herleitung: `04-cost-analysis.md` §7, Risiko R2.
+
+Praktische Folge: Der **erste** Nutzer an einem Ort tippt zwei Wörter. Ab dem
+zweiten Mal schlägt die App den Ort aus eigenen Daten vor — und genau diese
+Daten gehören uns, ohne Lizenzrisiko.
 
 ### Karte in P0
 Marker für eigene Orte mit MapKit-Clustering; auf Weltebene Länder-Pins mit

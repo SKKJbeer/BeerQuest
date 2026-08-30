@@ -61,8 +61,8 @@ spezifiziert.
 - → S21 / S22.
 
 ### S21 — Where?
-- Statuszeile (📍 Ortung / Ort gefunden / kein Standort), Suchfeld, Abschnitt *Nearby on Beer Quest* (mit Entfernung), Abschnitt *Suggestions* (Kartensuche, klar markiert), Zeile „Add a place".
-- `loading` = Ortung + Suche parallel · `empty` = „No places nearby" + [Add a place] · `failed` = Textsuche bleibt möglich · *Berechtigung verweigert* = Hinweiszeile mit [Enable] und reiner Textsuche.
+- Statuszeile (📍 Ortung / Ort gefunden / kein Standort), Suchfeld, Abschnitt *Nearby on Beer Quest* (eigene Orte, mit Entfernung), Zeile „Add a place". **[v0.3] Kein Abschnitt mit Apple-POI-Vorschlägen** — siehe `10-risks.md` R2.
+- `loading` = Ortung + Suche parallel · `empty` = „No places nearby yet — add it" + [Add a place] (der Normalfall beim ersten Besuch) · `failed` = Textsuche bleibt möglich · *Berechtigung verweigert* = Hinweiszeile mit [Enable] und reiner Textsuche.
 - → S23 / S22.
 
 ### S22 — Neue Entität (Bier **oder** Ort)
