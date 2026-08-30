@@ -32,6 +32,7 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | [`09-implementation-plan.md`](docs/09-implementation-plan.md) | P0.1–P0.11 (36 Tage) und die P1-Reihenfolge danach |
 | [`10-risks.md`](docs/10-risks.md) | 16 technische Risiken mit Gegenmaßnahmen |
 | [`11-release-gates.md`](docs/11-release-gates.md) | **Verbindlich:** was intern reichen darf und was vor jeder externen Verteilung vollständig sein muss |
+| [`12-monetization.md`](docs/12-monetization.md) | Ads in P1, Premium in P2 — und was in P0 bewusst fehlt |
 | [`SETUP.md`](docs/SETUP.md) | Lokales Setup: Xcode, Supabase, GitHub-Secrets |
 
 ## Die Entscheidungen in Kurzform

@@ -67,6 +67,12 @@ public enum XPDefaults {
     /// Taegliches Maximum aus Check-ins und Entdeckungen. Quest- und Sozial-XP
     /// sind ausgenommen. Setzt Product Vision §2 technisch um: Menge zahlt sich
     /// nicht aus.
+    ///
+    /// **Eine Ausnahme:** Der allererste Check-in eines Nutzers ist vom Cap
+    /// ausgenommen und kann bis zu 550 XP geben (Bier + Ort + Stadt + Land).
+    /// Der wichtigste Moment der App soll nicht mit "XP capped today" enden.
+    /// Die Regel wird ausschliesslich serverseitig durchgesetzt
+    /// (`create_check_in`); der Client zeigt nur an, was der Server liefert.
     public static let dailyCap = 500
 
     /// Nur so viele Wiederholungs-Check-ins pro Tag geben ueberhaupt XP.

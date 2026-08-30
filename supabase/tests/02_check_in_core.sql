@@ -21,12 +21,14 @@ begin
         '{"name":"Bar Aurora","category":"bar","lat":43.3070,"lon":10.5170}'::jsonb,
         now(), 'Europe/Rome');
 
-  if (r->>'xp_awarded')::int <> 500 then
-    raise exception 'Erster Check-in muss 50+50+150+300=550 ergeben, gedeckelt auf 500. War: %',
+  -- Der allererste Check-in ist vom Tages-Cap ausgenommen (PM-Entscheidung):
+  -- 50 Bier + 50 Ort + 150 Stadt + 300 Land = 550 XP, ungekuerzt.
+  if (r->>'xp_awarded')::int <> 550 then
+    raise exception 'Erster Check-in muss volle 550 XP geben. War: %',
       r->>'xp_awarded';
   end if;
-  if (r->>'xp_capped')::boolean is not true then
-    raise exception 'Der Tages-Cap haette greifen muessen';
+  if (r->>'xp_capped')::boolean is not false then
+    raise exception 'Der erste Check-in darf nicht als gedeckelt gelten';
   end if;
   if jsonb_array_length(r->'discoveries') <> 4 then
     raise exception 'Erwartet 4 Entdeckungen, war %', jsonb_array_length(r->'discoveries');
@@ -43,7 +45,8 @@ begin
     raise exception 'Stadt/Land wurden nicht automatisch aus dem Ort abgeleitet';
   end if;
 
-  -- === Tages-Cap: ein zweiter Check-in am selben Tag gibt nichts mehr
+  -- === Ab dem zweiten Check-in greift der Cap. Das Tageskonto steht bereits
+  --     bei 550, also gibt es am selben Tag nichts mehr.
   r2 := public.create_check_in(
         gen_random_uuid(),
         '{"name":"Ichnusa"}'::jsonb,
@@ -61,9 +64,9 @@ begin
   end if;
 
   select xp, level into v_xp, v_level from public.profiles where id = u1;
-  if v_xp <> 500 then
-    raise exception 'Profil-XP muss 500 sein (Cap), war %', v_xp;
+  if v_xp <> 550 then
+    raise exception 'Profil-XP muss 550 sein, war %', v_xp;
   end if;
 
-  raise notice 'Core Loop ok: % XP, Level %, Cap greift', v_xp, v_level;
+  raise notice 'Core Loop ok: % XP, Level %, erster Check-in ungekuerzt', v_xp, v_level;
 end $$;

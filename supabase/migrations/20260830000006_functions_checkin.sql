@@ -112,6 +112,8 @@ declare
   v_badges jsonb := '[]'::jsonb;
   v_new_beer boolean := false; v_new_venue boolean := false;
   v_count_today int;
+  v_count_total int;
+  v_is_first boolean;
   q record;
   v_inc int;
   v_total int;
@@ -138,6 +140,12 @@ begin
   if v_count_today >= 30 then
     raise exception 'DAILY_CHECKIN_LIMIT' using errcode = 'check_violation';
   end if;
+
+  -- Ist das der allererste Check-in dieses Nutzers ueberhaupt?
+  -- Wird vor dem Insert ermittelt, sonst waere die Antwort immer nein.
+  select count(*) into v_count_total from public.check_ins where user_id = v_user;
+  v_is_first := (v_count_total = 0)
+                and public.cfg_bool('xp.first_checkin_uncapped', true);
 
   -- --- Bier
   if p_beer ? 'id' then
@@ -228,10 +236,21 @@ begin
   end if;
 
   -- --- Tages-Cap. Setzt Product Vision §2 technisch um: Menge zahlt nicht.
-  v_cap := public.cfg_int('xp.daily_cap', 500);
-  v_today := public.capped_xp_today(v_user, v_local_date);
-  v_xp := greatest(0, least(v_raw_xp, v_cap - v_today));
-  v_capped := v_xp < v_raw_xp;
+  --
+  -- Eine Ausnahme: der allererste Check-in eines Nutzers. Er bekommt seinen
+  -- vollen Discovery-Reward (bis zu 550 XP), damit der wichtigste Moment der
+  -- App nicht mit "XP capped today" endet. Ab dem zweiten Check-in greift
+  -- der Cap unveraendert - auch am selben Tag, denn die 550 zaehlen dann
+  -- bereits auf das Tageskonto.
+  if v_is_first then
+    v_xp := v_raw_xp;
+    v_capped := false;
+  else
+    v_cap := public.cfg_int('xp.daily_cap', 500);
+    v_today := public.capped_xp_today(v_user, v_local_date);
+    v_xp := greatest(0, least(v_raw_xp, v_cap - v_today));
+    v_capped := v_xp < v_raw_xp;
+  end if;
 
   if v_xp > 0 then
     perform public.award_xp(v_user, v_xp, 'check_in', 'check_in',

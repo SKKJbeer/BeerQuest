@@ -60,6 +60,23 @@ spezifiziert.
 - `idle` = Recent + Popular · `loading` = Zeilen-Skeletons ab 2 Zeichen (Debounce 250 ms) · `empty` = nur die Anlage-Zeile · `failed` = „Search unavailable — you can still add it manually".
 - → S21 / S22.
 
+> **Harte Anforderung an die Vorschlagslogik.** Das Bier-Dedupe im Server
+> greift nur bei gleicher normalisierter Identität. Wer „Peroni" tippt,
+> findet „Peroni Nastro Azzurro" **nicht** automatisch — die App muss es
+> vorschlagen, sonst entstehen Dubletten durch Abkürzungen:
+>
+> ```
+> Sucht: Peroni
+> 🍺 Peroni Nastro Azzurro
+> 🍺 Peroni Nastro Azzurro 0.0
+> 🍺 Peroni Gran Riserva
+> ```
+>
+> Umsetzung: Präfix- und Trigram-Treffer aus `search_beers`, sortiert nach
+> Häufigkeit; die Anlage-Zeile steht **unter** den Vorschlägen, nie darüber.
+> Reine Such- und Sortierlogik — **keine KI**, das ist für dieses Problem
+> überdimensioniert.
+
 ### S21 — Where?
 - Statuszeile (📍 Ortung / Ort gefunden / kein Standort), Suchfeld, Abschnitt *Nearby on Beer Quest* (eigene Orte, mit Entfernung), Zeile „Add a place". **[v0.3] Kein Abschnitt mit Apple-POI-Vorschlägen** — siehe `10-risks.md` R2.
 - `loading` = Ortung + Suche parallel · `empty` = „No places nearby yet — add it" + [Add a place] (der Normalfall beim ersten Besuch) · `failed` = Textsuche bleibt möglich · *Berechtigung verweigert* = Hinweiszeile mit [Enable] und reiner Textsuche.
@@ -77,7 +94,7 @@ spezifiziert.
 
 ### S24 — Reward
 - Große XP-Zahl; Discovery-Karten (Bier/Ort/Stadt/Land mit XP); Quest-Fortschritt; Level-Up-Karte; Badge-Karte; Fußzeile **„Next: …"**; [Done]; sekundär [Share] nur bei Level-Up oder Quest-Abschluss.
-- **Kein Ladezustand** — der Screen rendert ausschließlich die Antwort von `create_check_in`. Cap-Fall: Hinweiszeile statt Zahl.
+- **Kein Ladezustand** — der Screen rendert ausschließlich die Antwort von `create_check_in`. Cap-Fall: Hinweiszeile statt Zahl. Der **allererste** Check-in eines Nutzers kann bis zu 550 XP zeigen und erreicht den Cap-Fall nie.
 - [Done] schließt den gesamten Sheet-Stack → S10.
 
 > Dieser Screen ist das Produkt. Wenn er sich wie eine Bestätigungsmeldung

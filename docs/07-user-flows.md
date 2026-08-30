@@ -69,6 +69,7 @@ App-Start ohne Token
    ⤷ Badge     → zusätzliche Karte
    ⤷ Quest fertig → Quest-Complete-Karte mit XP
    ⤷ Tages-Cap → Hinweiszeile statt XP-Zahl
+      (beim allerersten Check-in nie — der ist vom Cap befreit)
    Fußzeile: „Next: 🌍 5 Countries · 3/5"
  → [Done] → Home, Zähler und Fortschritt aktualisiert
 ```

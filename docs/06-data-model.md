@@ -425,6 +425,13 @@ Alle XP-Werte, Caps und Faktoren liegen hier. Balancing ohne App-Update.
 **Tages-Cap: 500 XP/Tag aus Check-ins und Entdeckungen.** Quest- und
 Sozial-XP sind ausgenommen.
 
+**Ausnahme: der allererste Check-in eines Nutzers** ist vom Cap befreit und
+erhält seinen vollen Discovery-Reward — bis zu 550 XP (Bier + Ort + Stadt +
+Land). Der erste Check-in ist der wichtigste Moment der App; er darf nicht
+mit „XP capped today" enden. Ab dem zweiten Check-in gilt der Cap
+unverändert — auch am selben Tag, denn die 550 zählen dann bereits auf das
+Tageskonto. Schalter: `app_config['xp.first_checkin_uncapped']`.
+
 Der Cap ist die technische Umsetzung von Vision §2: Wer an einem Abend zehn
 Biere einträgt, kommt nicht weiter als jemand, der drei neue Orte besucht.
 Bei Erreichen zeigt die App

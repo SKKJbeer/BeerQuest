@@ -262,7 +262,8 @@ denselben Pfad — deshalb wird der Router bereits jetzt so gebaut.
 | Clan Wars | Clan-XP ebenfalls im Ledger | 1 Spalte |
 | City Quests, Hidden Quests | `quests.city_id`, `goal jsonb` | 0 |
 | Premium | `profiles.tier` (Default `free`) | 1 Spalte |
-| B2B-Orte | `venues.owner_id` (nullable) | 1 Spalte |
+| B2B-Orte, gesponserte Quests | `venues.owner_id` (nullable) | 1 Spalte |
+| Werbung (P1) | Home, Quests und Passport sind Listen aus Karten — eine gekennzeichnete Ad-Karte lässt sich einschieben, ohne etwas umzubauen. Kein Ad-SDK, kein Tracking, keine Werbe-ID. Siehe `12-monetization.md`. | 0 |
 | Universal Links | Invite-Code-Logik serverseitig, Router client-seitig | 0 |
 
 Alles andere aus P2 wird **nicht** vorbereitet.

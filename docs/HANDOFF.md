@@ -5,6 +5,133 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-30 (6) — Erst-Check-in vom Cap befreit, Monetarisierung als P1 festgelegt
+
+**Auftrag:** Vor P0.3 zwei Dinge: (1) der allererste Check-in eines Nutzers
+soll seinen vollen Discovery-Reward bekommen statt auf 500 XP gedeckelt zu
+werden, (2) die Monetarisierungsstrategie festhalten — Ads in P1, Premium
+in P2, nichts davon in P0. Dazu das Bier-Dedupe als P0.4-UI-Anforderung
+schärfen.
+
+**Ergebnis:** Beides umgesetzt. Die Cap-Änderung ist **serverseitig
+implementiert und getestet** — alle sechs SQL-Regeltests laufen grün,
+inklusive eines neuen Tests, der beide Hälften der Regel prüft. Die
+Monetarisierungsentscheidung liegt als eigenes Dokument vor und ist in
+`CLAUDE.md` als Leitplanke verankert, damit sie niemand versehentlich nach
+P0 zieht.
+
+### Entscheidungen
+
+| # | Entscheidung | Begründung | Umkehrbar? |
+|---|---|---|---|
+| 1 | **Erster Check-in ist vom Tages-Cap befreit**, Schalter `app_config['xp.first_checkin_uncapped']` | Wie vom PM entschieden. Über `app_config` steuerbar statt hartcodiert — die Ausnahme lässt sich ohne App-Update oder Migration abschalten, falls sie sich im Test als falsch erweist. | Ja, ein Konfigurationswert |
+| 2 | **Ab dem zweiten Check-in gilt der Cap unverändert — auch am selben Tag** | Die 550 XP des ersten Check-ins zählen auf das Tageskonto. Ein zweiter Check-in am selben Tag gibt daher 0 XP. Das ist die konsequente Lesart von „danach gilt weiterhin 500". | Ja |
+| 3 | **Swift-Logik unverändert**, nur Dokumentation und ein Test ergänzt | Der Client rechnet nie XP, er zeigt an, was der Server liefert. Eine Spiegelung der Ausnahme wäre eine zweite Wahrheitsquelle ohne Nutzen. Ergänzt: ein Test, der festhält, dass der volle Erst-Reward (550) über dem Cap (500) liegt — damit fällt auf, wenn jemand die Werte später auseinanderlaufen lässt. | — |
+| 4 | **`cfg_bool` in Migration 0003 statt 0009** | Sonst hinge Migration 0006 (`create_check_in`) von einer späteren Migration ab. Migrationen dürfen nur rückwärts referenzieren. | — |
+| 5 | **Monetarisierung als eigenes Dokument `docs/12-monetization.md`** statt als Absatz in der Vision | Dieselbe Überlegung wie bei den Release-Gates: eine Regel im Fließtext wird übersehen. Enthält P0/P1/P2, die ausdrücklichen Verbote und die technischen Vorgaben mit Status. | — |
+| 6 | **Kopplungsregel für Rewarded Ads als harte Grenze formuliert** und in `CLAUDE.md` aufgenommen | Rewarded Ads an Check-ins zu koppeln würde über die Hintertür genau das System erzeugen, das Product Vision §2 verbietet: mehr trinken ⇒ mehr Ad-Gelegenheiten ⇒ mehr XP. Nur Quest- und Achievement-Aktivität ist zulässig. | Nein — bewusst bindend |
+
+### Geänderte Dateien
+
+| Datei | Was |
+|---|---|
+| `supabase/migrations/…0009_first_checkin_uncapped.sql` | **neu** — Konfigurationsschalter |
+| `…0003_functions_core.sql` | `cfg_bool` ergänzt |
+| `…0006_functions_checkin.sql` | Cap-Ausnahme für den ersten Check-in |
+| `supabase/tests/06_first_checkin_cap.sql` | **neu** — prüft beide Hälften der Regel |
+| `supabase/tests/02_check_in_core.sql` | erwartet jetzt 550 statt 500 |
+| `docs/12-monetization.md` | **neu** — die vollständige Entscheidung |
+| `docs/03-feature-matrix.md` | Abschnitt Monetarisierung mit P0/P1/P2 und drei „nie"-Zeilen |
+| `docs/05-architecture.md` | Ad-Platzierbarkeit in der Vorbereitungstabelle |
+| `docs/08-screens.md` | Bier-Vorschlagslogik als harte P0.4-Anforderung, mit dem Peroni-Beispiel |
+| `docs/09-implementation-plan.md` | Abnahmekriterium für P0.4 ergänzt |
+| `docs/06-data-model.md`, `07-user-flows.md` | Cap-Ausnahme dokumentiert |
+| `CLAUDE.md` | Monetarisierung als dritte Leitplanke |
+| `BeerQuestKit/…/Progression.swift`, `ProgressionTests.swift` | Dokumentation und ein Test |
+
+### Was tatsächlich getestet ist
+
+| Regel | Nachweis |
+|---|---|
+| Erster Check-in gibt volle 550 XP, nicht als gedeckelt markiert | ✅ Test 02, Test 06 |
+| Der volle Erst-Reward übersteigt den Cap tatsächlich | ✅ Test 06 prüft das explizit gegen `app_config` |
+| Zweiter Check-in am selben Tag: 0 XP | ✅ Test 02 |
+| Tag 2, zwei Check-ins à 250 XP: exakt 500, beide ungedeckelt | ✅ Test 06 |
+| Tag 2, dritter Check-in: 0 XP, als gedeckelt markiert, Entdeckungen zählen weiter | ✅ Test 06 |
+| Quest-XP bleibt vom Cap ausgenommen | ✅ Test 04 |
+| Alle bisherigen Regeln unverändert grün | ✅ Tests 01–05 |
+
+Beim Schreiben von Test 06 ist mir ein eigener Fehler unterlaufen: Ich hatte
+für den zweiten Tag München gewählt, das aber an Tag 1 bereits entdeckt war —
+der Test erwartete 250 XP und bekam 100. Die Logik war korrekt, der Test
+falsch. Korrigiert auf Hamburg.
+
+**Weiterhin ungetestet:** der gesamte Swift-Code — diese Umgebung hat kein Xcode.
+
+### Offene Punkte für den PM
+
+1. **`xcodegen generate` und Build** — weiterhin offen, blockiert P0.3 aber
+   nicht mehr lange: P0.3 ist überwiegend Swift. **Spätestens vor P0.3.**
+2. **Supabase-Projekt anlegen** und `supabase db push` — jetzt liegen neun
+   Migrationen bereit. Danach die GitHub-Secrets.
+3. **Alles liegt auf `claude/beer-quest-mvp-spec-dpjh2i`, nicht auf `main`.**
+   Auf `main` steht nur die alte README. Wer das Repo ohne Branch-Angabe
+   öffnet, sieht praktisch nichts. Vorschlag unten.
+4. Wortfilter-Blocklist (~200 Begriffe) vor P0.3 — Redaktionsarbeit.
+
+### Bewusst NICHT gemacht
+
+- **Kein Ad-SDK, kein Monetarisierungscode.** Nur Dokumentation.
+- **Keine Änderung an der Swift-XP-Logik** — siehe Entscheidung 3.
+- **P0.3 noch nicht begonnen.** Ich wollte die Cap-Änderung abgeschlossen und
+  getestet haben, bevor eine neue Phase beginnt.
+- **`profiles.tier` weiterhin nirgends abgefragt** — die Spalte existiert,
+  legt aber nichts fest.
+
+### Nächster Schritt
+
+P0.3 — Sign in with Apple, Onboarding S01–S06, `complete_onboarding` mit
+serverseitiger Altersprüfung, Ziel 60 Sekunden.
+
+### Vorschläge und Themen von mir
+
+1. **Ich würde P0.3 zweiteilen und mit dem Server anfangen.** Der SQL-Teil
+   (`complete_onboarding`, `check_username`, Wortfilter-Blocklist) ist hier
+   vollständig testbar; der Swift-Teil ist es nicht. Wenn ich beides in einem
+   Zug schreibe, stapeln sich zwei ungetestete Swift-Phasen (P0.1 und P0.3)
+   übereinander, und ein Fehler in P0.1 fällt erst auf, wenn schon viel
+   darauf aufbaut. **Konkret: gib mir einmal die Rückmeldung, ob
+   `xcodegen generate` und der Build durchlaufen** — fünf Minuten für dich,
+   und ich kann den Swift-Teil auf gesichertem Grund bauen.
+2. **`main` und der Arbeitsbranch laufen auseinander.** Sechs Commits liegen
+   nur auf dem Branch. Bei einem Solo-Nebenprojekt ohne Review-Prozess spricht
+   wenig dagegen, auf `main` zu mergen — dann sieht der PM ohne Branch-Angabe
+   alles. **Vorschlag: nach der Build-Bestätigung mergen.** Sag Bescheid, ich
+   mache es oder öffne einen PR, wenn du es dokumentiert haben willst.
+3. **Zur Cap-Ausnahme, eine Beobachtung:** Sie wirkt nur beim allerersten
+   Check-in **überhaupt**, nicht beim ersten Check-in eines Tages. Ein Nutzer,
+   der an einem Reisetag drei neue Länder besucht (900 XP), sieht weiterhin
+   den Cap. Das ist meines Erachtens richtig so — die Ausnahme soll den
+   Einstiegsmoment schützen, nicht den Cap aushöhlen. Falls du auch den
+   Reisefall entschärfen willst, wäre ein Wochen-Cap statt eines Tages-Caps
+   die elegantere Lösung. Aber das ist eine echte Produktänderung, keine
+   Feinjustierung — deshalb nur als Beobachtung.
+4. **Zur Monetarisierung, ein Hinweis für P1:** Werbenetzwerke haben
+   Richtlinien zu Alkoholinhalten, und die Kombination „Alkohol-App + Rewarded
+   Ads + 17+/18+" kann die Zahl der verfügbaren Netzwerke einschränken oder
+   die eCPM drücken. Das ist kein Grund, den Plan zu ändern — aber es lohnt
+   sich, das **vor** der SDK-Integration zu prüfen, nicht danach. Als Punkt
+   in `12-monetization.md` vermerkt.
+5. **Ein Gedanke zum Rewarded-Ad-Beispiel:** „+50 Bonus XP" nach einer Quest
+   ist sauber an Achievement-Aktivität gekoppelt. Noch besser fände ich
+   Belohnungen, die **gar keine XP** sind — etwa ein kosmetisches Element,
+   eine zusätzliche Quest-Slot für einen Tag oder ein Badge-Fortschritt.
+   Damit bleibt die XP-Ökonomie vollständig unberührt von Werbung, und das
+   Versprechen aus Vision §2 ist auch dann noch wahr, wenn jemand die
+   Kopplungsregel später aufweichen wollte. Nur ein Vorschlag für P1.
+
+---
+
 ## Session 2026-08-30 (5) — P0.2 Datenbank-Fundament abgeschlossen
 
 **Auftrag:** Mit P0.1 beginnen, 0-€-Anforderung und Vertical Slice einhalten,

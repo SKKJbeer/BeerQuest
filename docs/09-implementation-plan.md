@@ -103,7 +103,10 @@ laufen sauber.
 - `app_events`-Logging ab hier mitlaufend.
 
 **Fertig, wenn:** Ein Bier ist in unter 15 Sekunden eingetragen; ein Check-in
-im Flugmodus geht nicht verloren; dieselbe Entdeckung gibt nie zweimal XP.
+im Flugmodus geht nicht verloren; dieselbe Entdeckung gibt nie zweimal XP —
+**und** die Suche nach „Peroni" schlägt „Peroni Nastro Azzurro" vor, bevor
+sie die Neuanlage anbietet (Dubletten durch Abkürzungen sind das
+Hauptrisiko dieser Phase, siehe `08-screens.md` S20).
 
 > **Hier steht der erste ehrliche Test an: Macht der Loop Spaß?**
 > Wenn nicht, ist jetzt der richtige Zeitpunkt umzusteuern — nicht nach P0.11.

@@ -14,6 +14,12 @@ returns numeric language sql stable as $$
                    where key = p_key), p_default)
 $$;
 
+create or replace function public.cfg_bool(p_key text, p_default boolean)
+returns boolean language sql stable as $$
+  select coalesce((select (value #>> '{}')::boolean from public.app_config
+                   where key = p_key), p_default)
+$$;
+
 -- Normalisierung fuer Dedupe von Bier- und Ortsnamen.
 -- Bewusst ohne unaccent: die Erweiterung ist nicht ueberall verfuegbar und
 -- pg_trgm faengt Umlaut-Varianten in der Praxis gut genug ab.

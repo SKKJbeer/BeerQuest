@@ -146,6 +146,22 @@ Die verbindliche Liste steht in `11-release-gates.md`.
 | Country- / Global-Leaderboard | | | ✅ |
 | Seasonal Leaderboards | | | ✅ |
 
+## Monetarisierung
+
+Vollständige Entscheidung und Begründung: `12-monetization.md`.
+
+| Feature | P0 | P1 | P2 |
+|---|:--:|:--:|:--:|
+| **Keine Werbung, keine Paywall** | ✅ | | |
+| Dezente Native Ads | | ✅ | |
+| Rewarded Ads (freiwillig, an Quests/Badges gekoppelt) | | ✅ | |
+| Ad-SDK inkl. Kostenprüfung, Privacy Manifest, ATT | | ✅ | |
+| Beer Quest PRO (Abo) | | | ✅ |
+| Gesponserte Quests, Bar-/Brauerei-Partnerschaften | | | ✅ |
+| Werbung beim App-Start / nach jedem Check-in / im Check-in-Flow | | | ❌ nie |
+| Paywall für Freunde, Clan, Quests, Passport | | | ❌ nie |
+| Rewarded Ads gekoppelt an Check-ins oder Trinkmenge | | | ❌ nie |
+
 ## Plattform & Betrieb
 
 | Feature | P0 | P1 | P2 |

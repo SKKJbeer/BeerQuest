@@ -14,7 +14,12 @@ Stand: Planung. Spezifikation in `docs/`, Einstieg über `README.md`.
 2. **P0 ist ein Vertical Slice**, keine Feature-Sammlung. Was nicht zum
    Core Loop gehört, ist P1 oder P2 — siehe `docs/03-feature-matrix.md`.
    Features aus P1/P2 werden nie ungefragt nach P0 gezogen.
-3. **Release-Gates** nach `docs/11-release-gates.md`. Interner TestFlight
+3. **Monetarisierung ist P1/P2**, nie P0 — `docs/12-monetization.md`.
+   Ads kommen vor Premium. Rewarded Ads dürfen **niemals** an Check-ins
+   oder Trinkmenge gekoppelt werden, nur an Quest- und Achievement-
+   Aktivität; sonst entsteht über die Hintertür das System, das
+   Product Vision §2 verbietet.
+4. **Release-Gates** nach `docs/11-release-gates.md`. Interner TestFlight
    darf reduziert sein; vor jeder externen Verteilung müssen Privacy Policy,
    Account-Löschung, Moderation und die Apple-Anforderungen vollständig
    umgesetzt und geprüft sein. Diese Liste wird abgehakt, nicht erinnert.

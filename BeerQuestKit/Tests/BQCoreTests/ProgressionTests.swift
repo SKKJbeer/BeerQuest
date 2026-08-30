@@ -75,6 +75,17 @@ final class ProgressionTests: XCTestCase {
         XCTAssertEqual(XPDefaults.dailyCap, 500)
     }
 
+    /// Der volle Erst-Check-in-Reward (Bier + Ort + Stadt + Land) liegt
+    /// oberhalb des Tages-Caps. Genau deshalb ist der erste Check-in
+    /// serverseitig davon ausgenommen - sonst waere der wichtigste Moment
+    /// der App sofort gedeckelt.
+    func testFullFirstDiscoveryExceedsDailyCap() {
+        let full = XPDefaults.newBeer + XPDefaults.newVenue
+                 + XPDefaults.newCity + XPDefaults.newCountry
+        XCTAssertEqual(full, 550)
+        XCTAssertGreaterThan(full, XPDefaults.dailyCap)
+    }
+
     func testDiscoveryXPValues() {
         XCTAssertEqual(DiscoveryKind.beer.xpValue, 50)
         XCTAssertEqual(DiscoveryKind.venue.xpValue, 50)
