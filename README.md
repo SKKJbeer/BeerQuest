@@ -1,7 +1,7 @@
 # 🍺 Beer Quest
 
-Gamifizierte iOS-Social-App für Bierliebhaber. Stand: **Planung freigegeben,
-Phase P0.1 (Projekt-Setup) abgeschlossen.**
+Gamifizierte iOS-Social-App für Bierliebhaber. Stand: **P0.1 und P0.2
+abgeschlossen** — Datenbank und Spiel-Logik stehen und sind getestet.
 
 Zwei harte Rahmenbedingungen binden jede Entscheidung:
 **0 € laufende Infrastrukturkosten** und **P0 als Vertical Slice**.
@@ -54,9 +54,10 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | Kosten-Gate (Free-Tier live verifiziert) | ✅ 2026-08-30, Quellen in `04-cost-analysis.md` §8 |
 | Architektur-Gate (Supabase bestätigt) | ✅ vom PM freigegeben |
 | **P0.1** Projekt-Setup | ✅ Gerüst, CI, Keep-alive, erste Migration |
-| P0.2 Datenbank-Fundament | ⏭️ als Nächstes |
+| **P0.2** Datenbank-Fundament | ✅ Schema, Spiel-Logik, RLS, Seeds — 5 Regeltests grün |
+| P0.3 Auth & Onboarding | ⏭️ als Nächstes |
 
 ## Nächster Schritt
 
-Phase **P0.2** — Schema, Seeds und die spielentscheidenden SQL-Funktionen.
+Phase **P0.3** — Sign in with Apple und Onboarding (Meilenstein M1).
 Offene Punkte für den Projektmanager stehen in [`docs/HANDOFF.md`](docs/HANDOFF.md).

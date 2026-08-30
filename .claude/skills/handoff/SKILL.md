@@ -43,6 +43,12 @@ beantwortet sein muss.>
 
 ### Nächster Schritt
 <Genau ein Satz.>
+
+### Vorschläge und Themen von mir
+<Alles, was ich dem Auftraggeber im Chat vorschlagen oder zu bedenken geben
+würde, gehört auch hierher — Ideen, Bedenken, Beobachtungen, mögliche
+nächste Schritte, Dinge die mir aufgefallen sind. Der PM soll genau das
+sehen, was der Auftraggeber sieht. Nichts nur im Chat lassen.>
 ```
 
 ## Qualitätsregeln
@@ -57,3 +63,6 @@ beantwortet sein muss.>
 - **Selbsterklärend.** Keine Verweise auf „wie besprochen" oder auf
   Chat-Kontext. Dateipfade statt „das Dokument von vorhin".
 - **Kurz.** Ziel: unter einer Bildschirmseite pro Session, plus Tabellen.
+- **Keine Asymmetrie zwischen Chat und Repo.** Was im Chat als Vorschlag,
+  Bedenken oder Beobachtung steht, steht auch im Handoff. Der PM liest nur
+  das Repo — er darf nie weniger wissen als der Auftraggeber.

@@ -5,6 +5,146 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-30 (5) — P0.2 Datenbank-Fundament abgeschlossen
+
+**Auftrag:** Mit P0.1 beginnen, 0-€-Anforderung und Vertical Slice einhalten,
+nach jeder Phase den Handoff aktualisieren.
+
+**Ergebnis:** P0.1 war bereits fertig (Sessions 3 und 4), deshalb ist
+**P0.2 umgesetzt**: Schema, Spiel-Logik, RLS und Seeds. Das ist der Teil, an
+dem das Produkt hängt — und er ist **gegen eine echte Postgres-Instanz
+getestet**, nicht nur geschrieben. `./supabase/ci/run_local.sh` läuft von Null
+durch: Bootstrap → 8 Migrationen → Idempotenzprüfung → 3 Seeds → 5 Regeltests,
+alle grün.
+
+Der Core Loop funktioniert nachweislich: Ein Check-in in Cecina mit einem
+Peroni ergibt 4 Entdeckungen, 550 rohe XP, gedeckelt auf 500, Level 2 — und
+Stadt und Land wurden automatisch aus dem Ort abgeleitet, ohne dass sie
+abgefragt wurden.
+
+### Entscheidungen
+
+| # | Entscheidung | Begründung | Umkehrbar? |
+|---|---|---|---|
+| 1 | **Ort-Dedupe erweitert** um `word_similarity ≥ 0.9` (beidseitig, Mindestlänge 5) zusätzlich zu `similarity ≥ 0.6` | Beim Testen fiel auf: „Cafe Belge" vs. „Cafe Belge Brussels" erreicht nur 0,58 und wäre als zweiter Ort angelegt worden — genau das Szenario aus Risiko R7. Die Mindestlänge verhindert, dass ein Ort namens „Bar" mit jedem „Bar Irgendwas" verschmilzt. | Ja, ein Schwellwert |
+| 2 | **Quest-Vorlage `beer_and_place` durch `three_beers` ersetzt** | Die freigegebene Goal-DSL kennt keine zusammengesetzten Ziele („1 Bier **und** 1 Ort"). Sie dafür zu erweitern wäre eine Scope-Ausweitung gewesen — laut deiner Vorgabe erst dokumentieren, nicht eigenmächtig ausweiten. Deshalb die konservative Variante innerhalb der DSL. Die alte Vorlage wird deaktiviert statt gelöscht, damit laufende Quests ihren Fremdschlüssel behalten. | Ja — wenn du das zusammengesetzte Ziel willst, sag Bescheid, dann bauen wir den DSL-Typ |
+| 3 | **`norm_name` ohne `unaccent`** | Die Erweiterung ist nicht in jeder Umgebung verfügbar; `pg_trgm` fängt Umlaut-Varianten in der Praxis ab. Eine Abhängigkeit weniger. | Ja |
+| 4 | **Landfallback ohne Stadt:** nächstgelegenes Länderzentrum | Grob, aber besser als ein Check-in ohne Land. Betrifft nur Orte weiter als 60 km von jeder bekannten Stadt. | Ja |
+| 5 | **Funktionsrechte: erst allen entziehen, dann gezielt freigeben** | Postgres vergibt `EXECUTE` standardmäßig an `PUBLIC`, und `authenticated` erbt davon. Ein `revoke from authenticated` allein wirkt **nicht** — `award_xp` wäre für jeden Client aufrufbar gewesen, also freie XP-Vergabe. Der Test 05 hat genau das aufgedeckt. Client darf jetzt exakt vier Funktionen aufrufen. | Nein |
+| 6 | **Reward-Paket wird bei Wiederholung rekonstruiert**, nicht gespeichert | Vermeidet eine zusätzliche Spalte im freigegebenen Datenmodell. Entdeckungen hängen über `first_check_in` am Check-in, XP über `ref_id` — das genügt. | Ja |
+| 7 | **Städte-Vollimport per Skript, nicht im Repo** | ~15 MB gehören nicht in die Versionsverwaltung. `supabase/seed/import_geonames.sh` lädt Länder und ~29.000 Städte; die Flaggen-Emoji werden aus dem ISO-Code berechnet statt gepflegt. | — |
+
+### Geänderte Dateien
+
+| Datei | Was |
+|---|---|
+| `supabase/migrations/…0002_schema.sql` | 20 Tabellen, 9 Enum-Typen, alle Indizes. Nur P0 — keine P1-Tabellen |
+| `…0003_functions_core.sql` | `cfg_int`, `norm_name`, Level-Kurve, `geohash7`, `resolve_city` |
+| `…0004_functions_xp.sql` | `award_xp` (idempotent), Ledger-Trigger, `capped_xp_today` |
+| `…0005_functions_catalog.sql` | `find_or_create_beer`, `find_or_create_venue` mit Dedupe |
+| `…0006_functions_checkin.sql` | **`create_check_in`** — der zentrale Call, plus `user_metric`, `check_badges`, `next_goal`, `checkin_reward` |
+| `…0007_seed_static.sql` | 5 Quest-Vorlagen, 4 Badges, `daily_quest_code` ohne Scheduler |
+| `…0008_rls.sql` | RLS auf 19 Tabellen, Lese-Policies, Funktionsrechte |
+| `supabase/seed/01–03` | 12 Länder, 27 Städte, 65 Biere |
+| `supabase/seed/import_geonames.sh` | Vollimport für Produktion |
+| `supabase/ci/bootstrap.sql`, `run_local.sh` | Rollen- und `auth`-Nachbildung, kompletter Testlauf |
+| `supabase/tests/02–05` | Core Loop, Idempotenz und Dedupe, Quests und Clan-XP, RLS |
+| `.github/workflows/sql-tests.yml` | Nutzt jetzt Bootstrap und Seeds |
+| `docs/06-data-model.md` | Umsetzungsstand mit den 5 Abweichungen im Kopf |
+| `docs/09-implementation-plan.md`, `README.md`, `SETUP.md` | Status P0.2 erledigt, Testanleitung |
+| `.claude/skills/handoff/SKILL.md`, `CLAUDE.md` | Neu: Vorschläge und Bedenken gehören immer auch in den Handoff |
+
+### Was tatsächlich getestet ist
+
+| Regel | Nachweis |
+|---|---|
+| Core Loop: 4 Entdeckungen, Stadt/Land automatisch, Level-Up | ✅ Test 02 |
+| Tages-Cap greift, Check-in zählt trotzdem für den Passport | ✅ Test 02 |
+| Idempotenz: gleicher `client_uuid` verdoppelt nie XP | ✅ Test 03 |
+| Ort-Dedupe: 150 m ja, 2 km nein | ✅ Test 03 |
+| Bier-Dedupe über normalisierte Identität | ✅ Test 03 |
+| Quest-Fortschritt, Abschluss, Belohnung | ✅ Test 04 |
+| Clan-XP = 60 % der persönlichen XP, Caches stimmen mit dem Ledger überein | ✅ Test 04 |
+| Quest-XP wird **nicht** gedeckelt | ✅ Test 04 |
+| Keine Schreibrechte für `authenticated`, `award_xp` gesperrt | ✅ Test 05 |
+| Idempotenz der Migrationen | ✅ jeder Lauf wendet sie zweimal an |
+
+**Einschränkung:** Getestet auf Postgres 16 (lokal verfügbar), CI und Supabase
+laufen auf 15. Alle verwendeten Erweiterungen sind identisch; die CI wird das
+auf 15 bestätigen, sobald du das Repo pusht.
+
+**Weiterhin ungetestet:** der gesamte Swift-Code aus P0.1 — diese Umgebung hat
+kein Xcode.
+
+### Offene Punkte für den PM
+
+1. **Zustimmung zu Entscheidung 2** (Quest-Vorlage). Wenn du das
+   zusammengesetzte Ziel „1 Bier **und** 1 Ort" willst, ist das ein neuer
+   DSL-Typ — kleine Erweiterung, aber ich wollte sie nicht ohne dich machen.
+2. **Supabase-Projekt anlegen** — jetzt wird es konkret gebraucht, um die
+   Migrationen in die Cloud zu bringen (`supabase db push`). Danach die
+   GitHub-Secrets für den Keep-alive.
+3. **Bier-Seed geprüft?** Ich habe 65 Biere für DE/AT/CH/IT/CZ/BE/NL/GB/IE/ES/FR/US
+   gesetzt. Wenn dir etwas Offensichtliches fehlt, ist das eine Zeile.
+4. **`xcodegen generate` und Build** aus P0.1 — weiterhin offen.
+5. Wortfilter-Blocklist (~200 Begriffe) vor P0.3.
+
+### Bewusst NICHT gemacht
+
+- **Keine RPCs für Quests, Freunde, Clan, Passport, Leaderboard.** Die stehen
+  in P0.5 bis P0.10. `create_check_in` wertet Quests bereits aus, aber
+  `accept_quest` gibt es noch nicht — im Test werden die Zeilen direkt gesetzt.
+- **Keine P1-Tabellen** (`blocks`, `reports`, `user_city_stats`,
+  `user_country_stats`) — bewusst nicht angelegt.
+- **Kein Städte-Vollimport ausgeführt** — nur das Skript geschrieben. 15 MB
+  Download gehören nicht in eine Testumgebung.
+- **Keine Ausweitung der Goal-DSL** — siehe Entscheidung 2.
+
+### Nächster Schritt
+
+P0.3 — Sign in with Apple, Onboarding-Screens S01–S06, `complete_onboarding`
+mit serverseitiger Altersprüfung. Meilenstein M1: ein neuer Nutzer legt in
+unter 60 Sekunden ein Profil an.
+
+### Vorschläge und Themen von mir
+
+1. **Die Reihenfolge P0.3 → P0.4 lässt sich tauschen.** `create_check_in`
+   ist fertig und testbar; man könnte den Check-in-Flow vor dem Onboarding
+   bauen und mit einem festen Testnutzer arbeiten. Vorteil: der Core Loop
+   wäre eine Woche früher auf dem Gerät erlebbar — und genau daran hängt die
+   Frage, ob das Produkt trägt. Nachteil: das Onboarding kommt später und
+   fühlt sich beim ersten echten Test roher an. **Meine Empfehlung: bei der
+   geplanten Reihenfolge bleiben**, aber es ist eine echte Option, falls du
+   früher etwas zeigen willst.
+2. **Der Tages-Cap ist mit 500 XP scharf.** Im Test war der allererste
+   Check-in bereits gedeckelt (550 roh). Das ist inhaltlich richtig — Menge
+   soll sich nicht auszahlen — aber der erste Reward-Screen eines neuen
+   Nutzers zeigt dann sofort „XP maxed for today". Das ist ein schlechter
+   erster Eindruck. **Vorschlag:** entweder Cap auf 600 anheben oder den
+   allerersten Check-in eines Nutzers vom Cap ausnehmen. Beides ist eine
+   Zeile in `app_config` bzw. eine Bedingung. Ich habe bewusst nichts
+   geändert, weil der Wert freigegeben ist.
+3. **`level_for_xp` ist doppelt implementiert** — einmal in SQL, einmal in
+   Swift. Beide sind getestet und stimmen überein, aber sie können
+   auseinanderlaufen. Alternative wäre, den Client die Werte nur vom Server
+   anzeigen zu lassen. Für den Fortschrittsbalken zwischen zwei Serverantworten
+   braucht der Client die Formel aber lokal. **Ich halte die Doppelung für
+   vertretbar**, wollte sie aber benannt haben.
+4. **Beobachtung zum Bier-Dedupe:** Ein Nutzer, der „Peroni" tippt, bekommt
+   das bestehende „Peroni Nastro Azzurro" **nicht** automatisch — die
+   normalisierten Namen unterscheiden sich. Das ist korrekt (es sind
+   verschiedene Biere), aber die Suchoberfläche in P0.4 muss gute Vorschläge
+   liefern, sonst entstehen Dubletten durch Abkürzungen. Das ist ein
+   UI-Problem, kein Datenproblem — vermerkt für P0.4.
+5. **Was mir für später auffällt:** Es gibt aktuell keinen Weg, einen falsch
+   angelegten Ort oder ein falsch geschriebenes Bier zu korrigieren. Die
+   `merged_into`-Spalten sind da, aber es gibt keine Funktion, die sie nutzt.
+   Bei 10 Testern reicht ein manueller SQL-Befehl. Ab dem externen Test
+   brauchen wir ein kleines Werkzeug. **Vorschlag: als P1-Punkt aufnehmen**,
+   nicht jetzt bauen.
+
+---
+
 ## Session 2026-08-30 (4) — Gates nachkontrolliert, Release-Gate-Regel verankert
 
 **Auftrag:** Die beiden offenen Gates aus dem v0.2-Handoff schließen

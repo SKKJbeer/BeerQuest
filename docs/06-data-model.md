@@ -1,5 +1,35 @@
 # Datenmodell, Spielökonomie und API (v0.2 — P0-Schnitt)
 
+> ## Umsetzungsstand P0.2 (2026-08-30)
+>
+> Das Schema, die Spiel-Logik und die RLS-Policies sind **implementiert und
+> gegen eine echte Postgres-Instanz getestet** (`supabase/ci/run_local.sh`).
+> Fünf Abweichungen von diesem Dokument, alle bewusst und ohne
+> Scope-Ausweitung:
+>
+> 1. **Ort-Dedupe erweitert.** Die Spezifikation nannte nur
+>    `similarity ≥ 0.6`. Damit wäre „Augustiner Keller" vs.
+>    „Augustiner Keller München" **nicht** zusammengelegt worden (gemessen:
+>    0,68 knapp darüber, aber „Cafe Belge" vs. „Cafe Belge Brussels" nur
+>    0,58). Ergänzt um `word_similarity ≥ 0.9` in beide Richtungen, mit
+>    Mindestlänge 5 — sonst würde ein Ort namens „Bar" mit jedem
+>    „Bar Irgendwas" verschmelzen.
+> 2. **`norm_name` ohne `unaccent`.** Die Erweiterung ist nicht überall
+>    verfügbar; `pg_trgm` fängt Umlaut-Varianten in der Praxis ab.
+> 3. **Landfallback ohne Stadt:** nächstgelegenes Länderzentrum statt
+>    Bounding-Box. Grob, aber besser als ein Check-in ohne Land.
+> 4. **Quest-Vorlage `beer_and_place` ersetzt** durch `three_beers` —
+>    Begründung bei §3.5.
+> 5. **Hilfsfunktionen** über die Spezifikation hinaus: `cfg_int`, `cfg_num`,
+>    `norm_name`, `geohash7`, `level_for_xp`, `total_xp_to_reach`,
+>    `user_metric`, `check_badges`, `next_goal`, `checkin_reward`,
+>    `is_friend`, `daily_quest_code`. Alles Implementierung, keine neuen
+>    Features.
+>
+> Nicht implementiert (spätere Phasen): `accept_quest`, `get_home`,
+> `get_quests`, alle Freundes-, Invite- und Clan-RPCs, `delete_check_in`,
+> Passport- und Leaderboard-Abfragen.
+
 PostgreSQL 15 (Supabase Free). Alle Schreibpfade laufen über
 `SECURITY DEFINER`-Funktionen; RLS verweigert direkte Writes.
 
@@ -434,7 +464,13 @@ P0-Katalog.
 | `two_beers` | 2 neue Biere | 200 | 72 h | ✅ |
 | `two_venues` | 2 neue Orte | 200 | 72 h | ✅ |
 | `three_checkins` | 3 Check-ins | 150 | 72 h | ✅ |
-| `beer_and_place` | 1 neues Bier + 1 neuer Ort | 250 | 72 h | ✅ |
+| `three_beers` | 3 neue Biere | 300 | 72 h | ✅ |
+
+> **Korrektur in P0.2:** Ursprünglich stand hier `beer_and_place`
+> („1 neues Bier **und** 1 neuer Ort"). Die Goal-DSL kennt keine
+> zusammengesetzten Ziele, und sie dafür zu erweitern wäre eine
+> Scope-Ausweitung gewesen. Die Vorlage wurde deshalb durch `three_beers`
+> ersetzt, das innerhalb der DSL liegt.
 
 Regeln: max. **3 aktive Quests**; `first_beer` wird im Onboarding automatisch
 angenommen; Ablauf wird beim Lesen ausgewertet (kein Scheduler); die Tagesquest

@@ -24,10 +24,15 @@ Stand: Planung. Spezifikation in `docs/`, Einstieg über `README.md`.
 Ein zweiter Assistent (ChatGPT) arbeitet als Projektmanager. Er liest das
 Repository, aber **nicht diesen Chat**.
 
-Am Ende jeder Session mit inhaltlichen Änderungen:
-`docs/HANDOFF.md` oben um einen Eintrag ergänzen, denselben Text im Chat
-ausgeben, beides im selben Commit. Format und Qualitätsregeln:
-`.claude/skills/handoff/SKILL.md`.
+Am Ende jeder Session mit inhaltlichen Änderungen **und nach jeder
+abgeschlossenen P0-Phase**: `docs/HANDOFF.md` oben um einen Eintrag ergänzen,
+denselben Text im Chat ausgeben, beides im selben Commit. Format und
+Qualitätsregeln: `.claude/skills/handoff/SKILL.md`.
+
+**Alles, was im Chat vorgeschlagen oder zu bedenken gegeben wird, gehört
+ebenfalls in den Handoff** — Ideen, Bedenken, Beobachtungen, nächste
+Schritte. Der Projektmanager liest nur das Repository und darf nie weniger
+wissen als der Auftraggeber.
 
 Das gilt auch ohne explizite Aufforderung.
 

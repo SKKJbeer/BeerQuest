@@ -25,8 +25,8 @@ Nebenprojekt mit ~10 h/Woche ⇒ grob Faktor 4 in Kalenderzeit.
 
 | # | Phase | Tage | Meilenstein |
 |---|---|---|---|
-| P0.1 | Projekt-Setup + Kostencheck | 2,0 | Build läuft |
-| P0.2 | Datenbank-Fundament | 4,0 | Schema, Seeds, XP-Ledger |
+| P0.1 | Projekt-Setup + Kostencheck | 2,0 | ✅ **erledigt** |
+| P0.2 | Datenbank-Fundament | 4,0 | ✅ **erledigt** — Schema, Seeds, XP-Ledger |
 | P0.3 | Auth & Onboarding | 3,5 | **M1** — Account anlegbar |
 | P0.4 | Check-in-Kern | 5,5 | **M2** — Core Loop spielbar |
 | P0.5 | Home, Profile, Passport | 3,5 | Fortschritt sichtbar |
@@ -74,6 +74,11 @@ reproduzierbar, der Keep-alive-Workflow ist grün.
 
 **Fertig, wenn:** `create_check_in` per `curl` gegen die lokale Datenbank einen
 korrekten Reward-Payload liefert — ohne App.
+
+> ✅ **Erledigt am 2026-08-30.** 8 Migrationen, 3 Seed-Dateien, 5 Regeltests.
+> `./supabase/ci/run_local.sh` läuft von Null durch: Bootstrap → Migrationen →
+> Idempotenzprüfung → Seeds → Tests, alle grün. Abweichungen von der
+> Spezifikation sind im Kopf von `06-data-model.md` dokumentiert.
 
 ## P0.3 — Auth & Onboarding (3,5) → **M1**
 

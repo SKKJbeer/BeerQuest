@@ -71,11 +71,20 @@ Danach einmal *Actions → Supabase keep-alive → Run workflow* auslösen und a
 # Swift (lokal, nicht in der CI - siehe unten)
 xcodebuild test -scheme BeerQuest -destination 'platform=iOS Simulator,name=iPhone 15'
 
-# SQL gegen eine lokale Datenbank
-supabase start
-for f in supabase/migrations/*.sql; do psql "$(supabase status -o env | grep DB_URL | cut -d= -f2-)" -v ON_ERROR_STOP=1 -f "$f"; done
-for f in supabase/tests/*.sql;      do psql "$(supabase status -o env | grep DB_URL | cut -d= -f2-)" -v ON_ERROR_STOP=1 -f "$f"; done
+# SQL: vollständiger Durchlauf gegen eine frische Datenbank.
+# Bootstrap -> Migrationen -> Idempotenzprüfung -> Seeds -> Regeltests.
+# Genau das, was auch die CI ausführt.
+./supabase/ci/run_local.sh bq_test
 ```
+
+Der Städte-Vollimport (~29.000 Orte) läuft separat und nur einmal je Umgebung:
+
+```bash
+./supabase/seed/import_geonames.sh "postgresql://..."
+```
+
+Ohne ihn kennt die Datenbank die 27 Städte aus `supabase/seed/02_cities.sql` —
+für Tests ausreichend, für echte Nutzer nicht.
 
 ### Warum kein Swift-Build in der CI?
 
@@ -110,11 +119,10 @@ project.yml             XcodeGen-Spezifikation
 und `BQSession` — niemals einander. Cross-Feature-Navigation läuft über die
 Routen-Enums in `BQCore`.
 
-## 7. Offene Punkte für P0.2
+## 7. Erledigt in P0.2
 
-- Die CI braucht ein minimales `auth`-Schema (`auth.users`, `auth.uid()`),
-  bevor das echte Schema angewendet werden kann — in nacktem Postgres gibt es
-  das nicht. Vermerkt in `supabase/tests/README.md`.
-- Der Städte-Seed (GeoNames `cities15000`, ~15 MB) wird nicht ins Repo
-  eingecheckt, sondern über ein Import-Skript geladen. Attribution nach
-  CC BY 4.0 gehört in Settings → About.
+- ✅ `supabase/ci/bootstrap.sql` bildet Rollen und `auth`-Schema für CI und
+  lokale Tests nach.
+- ✅ Der Städte-Vollimport läuft über `supabase/seed/import_geonames.sh` und
+  liegt nicht im Repo. Die Attribution (GeoNames, CC BY 4.0) gehört in
+  Settings → About — offen bis P0.11.
