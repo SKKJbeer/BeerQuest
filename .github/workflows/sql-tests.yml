@@ -36,33 +36,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Supabase-Rollen und auth-Schema nachbilden
-        run: psql -v ON_ERROR_STOP=1 -f supabase/ci/bootstrap.sql
-
-      - name: Migrationen anwenden
-        run: |
-          for f in supabase/migrations/*.sql; do
-            echo "== $f"
-            psql -v ON_ERROR_STOP=1 -f "$f"
-          done
-
-      - name: Migrationen erneut anwenden (Idempotenz)
-        run: |
-          for f in supabase/migrations/*.sql; do
-            psql -v ON_ERROR_STOP=1 -f "$f" > /dev/null
-          done
-
-      - name: Seeds
-        run: |
-          for f in supabase/seed/*.sql; do
-            echo "== $f"
-            psql -v ON_ERROR_STOP=1 -f "$f"
-          done
-
-      - name: Regeltests
-        run: |
-          shopt -s nullglob
-          for f in supabase/tests/*.sql; do
-            echo "== $f"
-            psql -v ON_ERROR_STOP=1 -f "$f"
-          done
+      - name: Migrationen, Seeds und Regeltests
+        # Dasselbe Skript wie lokal. Es legt die Datenbank selbst an, macht
+        # den Bootstrap, wendet die Migrationen zweimal an (Idempotenz),
+        # spielt die Seeds ein und faehrt die Regeltests.
+        run: ./supabase/ci/run_local.sh bq_ci

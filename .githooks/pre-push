@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Die schnellen Pruefungen vor jedem Push. Was in Sekunden bricht, soll nicht
+# erst in der CI brechen.  Einmalig aktivieren: git config core.hooksPath .githooks
+# Einmalig ueberspringen: git push --no-verify
+exec "$(dirname "$0")/../scripts/verify.sh" schnell

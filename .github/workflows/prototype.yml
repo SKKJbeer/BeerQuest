@@ -28,6 +28,8 @@ on:
 permissions:
   contents: write
 
+# Billiger Auftrag: darf abgebrochen werden, er laeuft gleich wieder.
+# Der teure iOS-Auftrag steht dagegen auf cancel-in-progress: false.
 concurrency:
   group: prototype-${{ github.ref }}
   cancel-in-progress: true
@@ -46,6 +48,9 @@ jobs:
         run: |
           npm i --no-save playwright
           npx playwright install --with-deps chromium
+
+      - name: Tokens gegen die App halten
+        run: python3 scripts/check-tokens.py
 
       - name: Prototyp prüfen
         run: node scripts/check-prototype.mjs

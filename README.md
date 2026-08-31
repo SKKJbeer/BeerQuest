@@ -10,7 +10,8 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 
 | Wenn du wissen willst … | lies |
 |---|---|
-| was zuletzt passiert ist und was offen ist | [`docs/HANDOFF.md`](docs/HANDOFF.md) |
+| wo die Arbeit **jetzt** steht | [`docs/HANDOFF.md`](docs/HANDOFF.md) |
+| was sich wann geändert hat und warum | [`CHANGELOG.md`](CHANGELOG.md) |
 | was in den ersten Test kommt und was nicht | [`docs/03-feature-matrix.md`](docs/03-feature-matrix.md) |
 | warum das nichts kostet | [`docs/04-cost-analysis.md`](docs/04-cost-analysis.md) |
 | wann was gebaut wird | [`docs/09-implementation-plan.md`](docs/09-implementation-plan.md) |
@@ -39,6 +40,7 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | [`15-design-system.md`](docs/15-design-system.md) | Tokens, Komponenten, Prüfregeln |
 | [`16-engineering-standard.md`](docs/16-engineering-standard.md) | Versionierung, Testpyramide, CI/CD, macOS-Runner-Kosten, Definition of Done |
 | [`17-preview-workflow.md`](docs/17-preview-workflow.md) | Klickbare Prototypen: wann, wie, und was REAL/PROTOTYPE/PLACEHOLDER heißt |
+| [`18-lessons-adopted.md`](docs/18-lessons-adopted.md) | Was aus Zählora übernommen, angepasst und bewusst nicht übernommen wurde |
 | [`SETUP.md`](docs/SETUP.md) | Lokales Setup: Xcode, Supabase, GitHub-Secrets |
 
 ## Die Entscheidungen in Kurzform

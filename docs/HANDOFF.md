@@ -5,6 +5,133 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-31 (11) — Erfahrungen aus Zählora übernommen
+
+**Auftrag:** `docs/06-uebergabe.md`, `CLAUDE.md` und
+`.claude/skills/projekt-baukasten/SKILL.md` aus `SKKJbeer/PulseMeter` lesen und
+die Lehren übernehmen.
+
+```
+BUILD:   NICHT AUSGEFÜHRT — kein Swift geändert
+TESTS:   PASS — 30/30 Prototyp, 14/14 Token-Abgleich, 7/7 SQL
+PREVIEW: unverändert, siehe Session 10
+```
+
+**Ergebnis:** Alle drei Dokumente gelesen (1.818 Zeilen). **Wir haben drei
+Fehler gemacht, die dort schon bezahlt sind** — alle korrigiert. Dazu vier
+Übernahmen, eine begründete Abweichung von einer deiner Vorgaben, und eine
+Liste dessen, was wir bewusst **nicht** übernehmen.
+
+Vollständig in **`docs/18-lessons-adopted.md`**.
+
+### Die drei Fehler, die wir gerade wiederholt haben
+
+| Fehler | Dort gekostet | Bei uns korrigiert |
+|---|---|---|
+| **`cancel-in-progress: true` beim teuren macOS-Auftrag** | Drei Läufe an einem Tag, jeder abgebrochen kurz vor dem App-Build — nach der teuersten Minute, ohne Ergebnis | Steht jetzt auf `false` und reiht sich an. Der billige Prototyp-Auftrag bleibt abbrechbar |
+| **Jeder CI-Ablauf formulierte seine Schritte selbst** | „Zwei Abläufe laufen auseinander, und dann prüft der eine etwas anderes als der andere" | Alle drei rufen dieselben Skripte wie der Entwickler |
+| **Tokens standen an zwei Orten, ungeprüft** | Ein Preis stand im Code und auf zwei Seiten. Er sank, eine Seite zog nicht mit — **zwei Wochen lang bot sie ein 0,99-€-Feature öffentlich als kostenlos an** | `scripts/check-tokens.py` hält 14 Farben des Prototyps gegen `Tokens.swift`, läuft in einer Sekunde |
+
+Bemerkenswert an der ersten Zeile ist ihre *zweite* Hälfte: Aus dem Schaden war
+dort die Regel „nie pushen, solange ein Lauf läuft" geworden. Behoben war das
+längst, die Regel blieb stehen und kostete danach nur noch Wartezeit. Deshalb
+steht bei uns die **Ursache** im Kommentar über der Einstellung.
+
+### Übernommen
+
+| Was | Warum es zählt |
+|---|---|
+| **Zweig `pruefungen`** — eine Zeile je lokalem Lauf | Die wertvollste Einzelübernahme. Mac und Cloud sehen einander nicht — **genau daran lagen bei uns drei Sessions ungetesteter Swift-Code übereinander.** Jetzt: `git show origin/pruefungen:README.md \| tail -5` |
+| **`verify.sh` nach Kosten sortiert** | Token-Abgleich und Prototyp in drei Sekunden, Xcode zuletzt. Was in einer Sekunde brechen kann, soll auch in einer Sekunde brechen |
+| **Übersprungenes wird benannt** | „Ein Lauf, der schweigt, sieht aus wie ein Lauf, der geprüft hat." Am Ende steht eine Liste „Nicht geprüft" |
+| **`.githooks/pre-push`** | Sekunden-Prüfungen vor jedem Push |
+| **Skill `release-discipline`** | Version, Changelog und Tests je Änderung — auch bei kleinen |
+| **Acht Fehlerklassen in `CLAUDE.md`** | „Vorhanden ist nicht wirkt", „Zählen ist nicht wissen", „Eine Regel, die niemand zählt, wird nicht befolgt" |
+
+### ⚠️ Eine begründete Abweichung von deiner Vorgabe
+
+Ihre Warnung ist eindeutig:
+
+> Eine Übergabedatei, die wächst, ist nach dem dritten Mal ein Archiv und keine
+> Auskunft mehr.
+
+**Unsere `HANDOFF.md` ist bei elf Sessions.** Genau der beschriebene Zustand:
+Wer wissen will, wo es steht, liest sich durch elf Einträge, von denen zehn
+überholt sind.
+
+Du hattest verlangt: „neueste Session oben, alte bleiben als Verlauf". Beides
+geht — aber nicht in einer Datei:
+
+| Datei | Inhalt | Verhalten |
+|---|---|---|
+| `docs/HANDOFF.md` | der **laufende Zustand** | wird überschrieben |
+| `CHANGELOG.md` | jede Änderung mit Begründung | wächst, neueste oben |
+
+**`CHANGELOG.md` ist angelegt und gefüllt. Die Umstellung von `HANDOFF.md`
+habe ich noch nicht vollzogen** — sie widerspricht deiner Anweisung, und das
+entscheidest du. Bis dahin bleibt die Datei vollständig.
+
+### Bewusst nicht übernommen
+
+- **„Jede Veröffentlichung ein neues Artifact."** Bei ihnen ließ sich ein
+  erneutes Veröffentlichen auf denselben Pfad nicht öffnen — es kam eine
+  Anmeldemaske. Bei uns hat es funktioniert. **Siehst du beim nächsten Mal eine
+  Anmeldemaske, sag Bescheid**, dann übernehmen wir ihr Verfahren sofort.
+- **Vier ihrer Prüfskripte** (`check-strings`, `check-namen`,
+  `check-trefferflaechen`, `check-aktualisierung`) setzen SwiftUI-Views voraus,
+  die wir noch nicht haben. **Vorgemerkt für P0.3.**
+- **`check-versprechen.py`** braucht eine Verkaufsseite. Sobald es eine gibt,
+  ist das die erste Prüfung, die dazukommt: Bei ihnen waren von dreißig Zusagen
+  **drei falsch und vier zu absolut — bei grüner Prüfsuite.**
+- **TestFlight-Automatik und App Store Connect** — wir sind in P0.2/P0.3. Der
+  Baukasten §4 und §5 ist die Anleitung, wenn es so weit ist.
+
+### Geänderte Dateien
+
+`docs/18-lessons-adopted.md` (neu) · `CHANGELOG.md` (neu) ·
+`.claude/skills/release-discipline/SKILL.md` (neu) ·
+`scripts/check-tokens.py` (neu) · `scripts/melden.sh` (neu) ·
+`.githooks/pre-push` (neu) · `scripts/verify.sh` (neu geschrieben) ·
+drei Workflows korrigiert · `CLAUDE.md` (Kaltstart-Verweis, Fehlerklassen) ·
+`README.md`
+
+### Offene Risiken
+
+1. **`melden.sh` ist ungetestet** — es braucht einen Push auf einen neuen
+   Zweig, und meine Sitzungs-Credentials haben bei den Tags mit HTTP 403
+   abgelehnt. Möglich, dass es dir vorbehalten bleibt.
+2. Branch Protection auf `main` fehlt weiterhin.
+3. Tags nur lokal.
+
+### Nächster Schritt
+
+Deine Entscheidung zur `HANDOFF.md`-Aufteilung. Unabhängig davon: Feedback zum
+Prototyp und die Visual Direction — beides blockiert weiterhin P0.3-UI.
+
+### Vorschläge und Themen von mir
+
+1. **Der Zweig `pruefungen` löst unser konkretestes Problem.** Ich frage dich
+   seit drei Sessions „läuft der Build?". Mit einem Lauf `./scripts/verify.sh
+   --melden` auf deinem Mac steht die Antwort im Repo, und ich hole sie mir
+   selbst. Das ist die Übernahme mit dem höchsten Nutzen pro Aufwand.
+2. **Ihr Satz, den ich am wertvollsten finde:** *„Eine Regel, die aus einem
+   Schaden entstand, gilt nicht weiter, weil der Schaden einmal echt war. Sie
+   gilt, solange die Ursache steht."* Ich habe unsere Regeln daraufhin
+   durchgesehen — alle tragen noch. Aber der Mechanismus fehlte, und jetzt
+   steht die Ursache jeweils dabei.
+3. **Einen Befund habe ich mir für später notiert, der uns direkt betrifft:**
+   Ein `schedule`-Ablauf bei GitHub ist keine Zusage — bei ihnen feuerte er an
+   einem Nachmittag einmal statt sechsmal. Das betrifft unseren
+   **Keep-alive**. Falls das Supabase-Projekt trotz Workflow pausiert, ist das
+   die erste Vermutung, nicht die letzte.
+4. **Was mich an ihrem Vorgehen am meisten überzeugt hat**, ist nicht ein
+   einzelnes Skript, sondern dass jede Prüfung ihren Anlass im eigenen Kopf
+   trägt. Man liest nicht „prüft Farben", sondern „prüft Farben, weil dieselbe
+   Sache an zwei Orten zwei Wochen lang eine falsche Preisangabe erzeugt hat".
+   Das habe ich bei `check-tokens.py` und `melden.sh` übernommen.
+
+---
+
 ## Session 2026-08-31 (10) — Klickbarer Prototyp und Preview-Workflow
 
 **Auftrag:** Klickbare Previews als verbindlichen Bestandteil der Entwicklung

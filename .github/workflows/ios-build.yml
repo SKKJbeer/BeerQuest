@@ -19,9 +19,15 @@ on:
     paths: *code
   workflow_dispatch:
 
+# **Der teure Auftrag reiht sich an, er wird nicht abgebrochen.**
+# Uebernommen aus PulseMeter, wo genau die umgekehrte Einstellung an einem
+# einzigen Tag drei Laeufe gekostet hat - jeden abgebrochen kurz vor dem
+# App-Build, also nach der teuersten Minute und ohne je ein Ergebnis.
+# Der billige Prototyp-Auftrag darf dagegen abgebrochen werden; er laeuft
+# gleich wieder.
 concurrency:
   group: ios-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -56,21 +62,8 @@ jobs:
           key: ${{ runner.os }}-spm-${{ hashFiles('BeerQuestKit/Package.swift') }}
           restore-keys: ${{ runner.os }}-spm-
 
-      - name: Simulator waehlen
-        id: sim
-        # Fest verdrahtete Geraetenamen brechen, sobald GitHub das Image
-        # aktualisiert. Deshalb den ersten verfuegbaren iPhone-Simulator nehmen.
-        run: |
-          NAME=$(xcrun simctl list devices available -j \
-            | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; \
-              print(next(x['name'] for v in d.values() for x in v if 'iPhone' in x['name']))")
-          echo "Gewaehlt: $NAME"
-          echo "name=$NAME" >> "$GITHUB_OUTPUT"
-
       - name: Build und Tests
-        run: |
-          xcodebuild test \
-            -project BeerQuest.xcodeproj \
-            -scheme BeerQuest \
-            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.name }}" \
-            CODE_SIGNING_ALLOWED=NO
+        # Dasselbe Skript, das auch lokal laeuft. Zwei Ablaeufe wuerden
+        # auseinanderlaufen, und dann prueft die CI etwas anderes als der
+        # Entwickler.
+        run: ./scripts/verify.sh ios

@@ -1,5 +1,15 @@
 # Beer Quest — Arbeitsanweisungen
 
+> **Sitzung startet kalt? Zuerst `docs/HANDOFF.md`.**
+>
+> Dort steht der **laufende** Zustand: wo die Arbeit steht, was blockiert, was
+> als Nächstes dran ist. Diese Datei hier sagt, *wie* gearbeitet wird; jene
+> sagt, *wo es gerade steht*. Die Historie steht in `CHANGELOG.md`.
+>
+> Der Verweis steht hier, weil ein Dokument, auf das nichts zeigt, nicht
+> gelesen und deshalb auch nicht gepflegt wird — teuer gelernt in Zählora.
+
+
 ## Projektkontext
 
 Gamifizierte iOS-Social-App für Bierliebhaber, Nebenprojekt einer Person.
@@ -64,7 +74,13 @@ Abstände aus `BQDesign/Tokens.swift` — nie hardcodiert im View
   gilt als fertig.
 - Jede kritische Spielregel braucht einen automatisierten Test. Jeder
   behobene Fehler bekommt einen Regressionstest, der dauerhaft bleibt.
-- Vor dem Push `./scripts/verify.sh` ausführen.
+- Vor dem Push `./scripts/verify.sh` ausführen — er ist nach Kosten sortiert
+  und **benennt, was er überspringt**. Die CI ist die Gegenprobe, nicht der
+  erste Durchgang.
+- **Wurde ein Stand schon auf einem Mac geprüft?**
+  `git fetch origin pruefungen && git show origin/pruefungen:README.md | tail -5`
+- Version, Changelog-Eintrag und Tests je Änderung:
+  `.claude/skills/release-discipline/SKILL.md`.
 - **UI-Änderungen brauchen eine klickbare Preview** (`docs/17-preview-workflow.md`).
   Ein Bereich pro Runde — nie zehn Screens auf einer unvalidierten Annahme.
   Im Handoff jeden Bereich als REAL / PROTOTYPE / PLACEHOLDER kennzeichnen
@@ -73,6 +89,27 @@ Abstände aus `BQDesign/Tokens.swift` — nie hardcodiert im View
 - Jeder Handoff nennt `BUILD:` und `TESTS:` mit PASS/FAIL/NICHT AUSGEFÜHRT.
 - macOS-CI kostet das Zehnfache von Linux — Trigger sparsam halten
   (`16-engineering-standard.md` §3).
+
+## Fehlerklassen, die immer wiederkommen
+
+Aus Zählora übernommen, dort jede mehrfach bezahlt
+(`docs/18-lessons-adopted.md`):
+
+1. **„Vorhanden" ist nicht „wirkt", und auch nicht „richtig".** Jedes
+   Nachlesen stellt zwei Fragen: Ist es da, und stimmt es?
+2. **Ein Fehlschlag auf der eigenen Seite ist keine Auskunft über die
+   Gegenseite.** Eine gescheiterte Anfrage darf nie als Aussage über die Welt
+   herauskommen.
+3. **Zählen ist nicht wissen.** Eine Anzahl steht nie für eine Tatsache.
+4. **Wo etwas zweimal steht, steht es früher oder später verschieden.** Ein
+   Ort — oder, wo das nicht geht, eine Prüfung, die die Quelle gegen die Kopie
+   hält.
+5. **Wer nur dort sucht, wo der Fehler auftritt, findet ihn nicht.**
+6. **Eine Prüfung, die anschlägt, hat meistens recht — auch gegen den Auftrag.**
+7. **Eine Regel, die niemand zählt, wird nicht befolgt.** Wenn eine Regel
+   wichtig ist, bekommt sie eine Prüfung.
+8. **Eine Regel gilt, solange ihre Ursache steht** — nicht, weil der Schaden
+   einmal echt war. Wer sie aufschreibt, schreibt die Ursache dazu.
 
 ## Arbeitsweise
 
