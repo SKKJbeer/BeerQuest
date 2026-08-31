@@ -146,6 +146,31 @@ Die verbindliche Liste steht in `11-release-gates.md`.
 | Country- / Global-Leaderboard | | | ✅ |
 | Seasonal Leaderboards | | | ✅ |
 
+## Visuelle Identität & Design
+
+| Feature | P0 | P1 | P2 |
+|---|:--:|:--:|:--:|
+| Zentrales Token-System, keine Hardcodings | ✅ | | |
+| Dark-first | ✅ | | |
+| **Keine Emoji als UI-Elemente** | ✅ | | |
+| Sammelzustände locked/discovered/completed/mastered | ✅ (Typ + Komponente) | ✅ (voll genutzt) | |
+| Eigenes Icon-Set, Badge-Illustrationen | | ✅ | |
+| Clan-Embleme als Kombinationssystem | | | ✅ |
+| Aufgewerteter Kartenstil, Fog of War | | | ✅ |
+
+## Daydrinking (Adventure, nicht Menge)
+
+Regeln und Prüfkriterium: `14-product-dna.md`.
+
+| Feature | P0 | P1 | P2 |
+|---|:--:|:--:|:--:|
+| Zeit-/Wochentagsbedingungen in der Goal-DSL | | ✅ | |
+| Day Drifter, Sunday Session | | ✅ | |
+| First Pour (Reihenfolge am Tag) | | | ✅ |
+| Golden Hour (Sonnenstand), Beach → Beer (Geografie) | | | ✅ |
+| Wetter- und Event-Parameter | | | ✅ |
+| Jede Mechanik, die durch *mehr Trinken* schneller erfüllbar ist | | | ❌ nie |
+
 ## Monetarisierung
 
 Vollständige Entscheidung und Begründung: `12-monetization.md`.

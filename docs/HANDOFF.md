@@ -5,6 +5,149 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-30 (7) — Produkt-DNA, Visual Direction, Design System, P0.3-Server
+
+**Auftrag:** Consolidated Product Direction — XP-Fix, P0.3 starten, Produkt-DNA
+und Daydrinking festhalten, keine Emoji-UI, drei Visual Directions mit
+Empfehlung, Design System vorbereiten.
+
+**Ergebnis:** Punkt 1 und 2 des Auftrags (XP-Erst-Check-in, Handoff) waren
+bereits in Session (6) erledigt — der Auftrag bezog sich auf einen älteren
+Stand. Neu in dieser Session: der **Serverteil von P0.3** (implementiert und
+getestet, 7 Testdateien grün), die **drei Visual Directions mit Empfehlung**,
+das **Design System als Token-Schicht**, die **Produkt-DNA** inklusive
+Daydrinking, und die **Entfernung aller Emoji aus der UI-Schicht**.
+
+### Zur Reihenfolge — eine bewusste Abweichung
+
+Der Auftrag nennt P0.3 (Punkt 3) vor der Design-Richtung (Punkt 4). §19 und
+§20 desselben Auftrags sagen aber: „bevor viele Screens entstehen" und „bevor
+wir große UI-Arbeiten machen". **P0.3 sind sechs Screens.** Sie auf einer
+unbestätigten visuellen Richtung zu bauen hieße, sie zweimal zu bauen.
+
+Deshalb: **P0.3-Server jetzt** (unabhängig von jeder Optik, hier vollständig
+testbar), **P0.3-UI nach der Design-Entscheidung**. Das ist die einzige
+Stelle, an der ich von der vorgegebenen Reihenfolge abweiche.
+
+### Entscheidungen
+
+| # | Entscheidung | Begründung | Umkehrbar? |
+|---|---|---|---|
+| 1 | **Empfehlung: Direction A „Dark Adventure"**, mit drei gezielten Anleihen aus C und typografischer Disziplin aus B | A ist die einzige Richtung, die alle fünf Prüffragen besteht. Entscheidend ist ihre **Metapher** — Karte, Pass, Stempel, Wappen, Medaille. Eine Metapher beantwortet Gestaltungsfragen, die noch niemand gestellt hat: Wenn Seasons kommen, ist klar, wie sie aussehen (eine neue Passseite). B wäre ein sehr schönes Untappd; C hat von allen dreien das höchste Risiko, generisch zu wirken, und kollidiert mit 18+. | **Entscheidung liegt beim PM** |
+| 2 | **Alle Emoji aus der UI entfernt.** `AvatarView` nutzt jetzt Monogramme; Badge-Icons in der Datenbank heißen `badge.first-beer` statt `1F37A`; alle Symbolnamen liegen zentral in `BQIcon` | Ein Tausch des Icon-Sets ist damit eine Datei, kein Streifzug durch alle Views. | — |
+| 3 | **`countries.flag_emoji` bleibt** — bewusste Ausnahme, zur Entscheidung gestellt | Landesflaggen als Unicode sind etabliert, sofort verständlich und plattformseitig gepflegt. Die Alternative wären 249 eigene Assets. Empfehlung: als Daten behalten, UI-Entscheidung später im Passport-Design. | Ja |
+| 4 | **Design System als Token-Schicht** (`BQDesign/Tokens.swift`), alte `Theme.swift` ersetzt | Farben, Typo, Abstände, Radien, Motion und Icons an einer Stelle. Regel in `CLAUDE.md`: kein View definiert eigene Werte. | — |
+| 5 | **`CollectionState` als zentraler Typ** in `BQCore`, Materialstufen statt Neonrahmen | Vier Zustände (locked/discovered/completed/mastered) einmal definiert, überall gleich dargestellt. | — |
+| 6 | **Alterprüfung serverseitig**, aus dem Geburtsjahr | Der Age-Gate-Screen ist Komfort; die Prüfung passiert in `complete_onboarding`. Die Jahresrechnung ist um bis zu ein Jahr konservativ — hier die richtige Richtung. | — |
+| 7 | **Mindestalter global 18** über `app_config['age.min_years']`, keine Länderdifferenzierung | Die USA verlangen 21. Für einen internen TestFlight in Europa ist 18 richtig; die Länderdifferenzierung gehört vor den externen Test und ist in `11-release-gates.md` vermerkt. Ohne Scope-Ausweitung. | Ja, ein Konfigurationswert |
+| 8 | **Wortfilter als Tabelle** `banned_terms`, nicht als Konstante im Code | Die Liste ist Redaktionsarbeit und muss ohne App-Update pflegbar sein. 12 Begriffe als Grundstock; die vollen ~200 bleiben offener Punkt. | — |
+| 9 | **Daydrinking-Prüfregel formuliert:** „Lässt sich die Quest durch *mehr Trinken* schneller erfüllen? Dann ist sie falsch entworfen." | Alle fünf Beispielquests verlangen **eine** Entdeckung unter einer Bedingung, nicht *mehr* Entdeckungen. Die Bedingung ist der Spielinhalt. Damit ist die Vorgabe aus §8 technisch prüfbar statt nur gut gemeint. | — |
+
+### ⚠️ Ein Widerspruch, der eine Entscheidung braucht
+
+§13 fordert einen `locked`-Zustand im Passport. `07-user-flows.md` F4 sagt
+bisher das Gegenteil: keine Locked-Listen, sonst entsteht das Gefühl eines
+unendlichen Katalogs.
+
+**Vorschlag:** `locked` nur auf **endliche, überschaubare Mengen** —
+Badges ✅, Städte innerhalb eines bereits besuchten Landes ✅, Quest-Ketten ✅.
+**Nie** der offene Bierkatalog („12 von 187.000") und nie alle Länder der Welt
+(„12 von 249" sieht nach Scheitern aus).
+
+Faustregel: **`locked` ist eine Einladung, keine Bilanz.** Wenn die Zahl
+rechts vom Bruchstrich entmutigt, ist der Zustand falsch angewendet.
+Bis zur Entscheidung nutzt P0 den Zustand nur für Badges.
+
+### Geänderte Dateien
+
+| Datei | Was |
+|---|---|
+| `docs/13-visual-direction.md` | **neu** — drei Richtungen, Vergleichsmatrix, Empfehlung |
+| `docs/14-product-dna.md` | **neu** — Produktprinzip, Weltkarte, Passport-Zustände, Clans, Daydrinking, keine Emoji, visuelle Identität |
+| `docs/15-design-system.md` | **neu** — Tokens, Komponenten, Prüfregeln |
+| `supabase/migrations/…0010_onboarding.sql` | **neu** — `check_username`, `complete_onboarding`, `banned_terms`, `is_term_allowed` |
+| `supabase/tests/07_onboarding.sql` | **neu** — Alterprüfung, Wortfilter, Erst-Quest, Invite, Kollisionen |
+| `BeerQuestKit/…/Tokens.swift` | **neu**, ersetzt `Theme.swift` |
+| `BeerQuestKit/…/CollectionState.swift` | **neu** |
+| `BeerQuestKit/…/Components.swift` | neu geschrieben: `ScreenBackground`, `NextGoalRow`, `CollectibleTile`, emoji-freier `AvatarView` |
+| `…0007_seed_static.sql` | Badge-Icons semantisch, `tier` als Materialstufe |
+| `App/RootView.swift`, Platzhalter | nutzen `BQIcon` und `ScreenBackground` |
+| `docs/03-feature-matrix.md` | Abschnitte Visuelle Identität und Daydrinking mit P0/P1/P2 |
+| `CLAUDE.md` | Produktprinzip und Emoji-/Token-Regel |
+| `README.md`, `docs/08-screens.md` | Index und Passport-Zustände |
+
+### Was tatsächlich getestet ist
+
+| Regel | Nachweis |
+|---|---|
+| Minderjähriger kann kein Profil anlegen — serverseitig | ✅ Test 07 |
+| Wortfilter greift, auch bei Teiltreffern (`beerquest_team`) | ✅ Test 07 |
+| Username-Format und -Kollision | ✅ Test 07 |
+| Onboarding nur einmal möglich | ✅ Test 07 |
+| Erst-Quest wird angenommen, `next_goal` ist gefüllt | ✅ Test 07 |
+| Invite-Einlösung: Freundschaft, XP auf beiden Seiten, `use_count`, `invited_by`, Badge | ✅ Test 07 |
+| Alle bisherigen Regeln unverändert | ✅ Tests 01–06 |
+
+**Ungetestet:** der gesamte Swift-Code, inklusive der neuen Token-Schicht —
+diese Umgebung hat kein Xcode. Das ist jetzt die dritte ungetestete
+Swift-Änderung in Folge; siehe Vorschlag 1.
+
+### Offene Punkte für den PM
+
+1. **Visual Direction bestätigen oder ablehnen** (`13-visual-direction.md`).
+   Solange sie offen ist, baue ich keine Onboarding-UI. **Das ist der einzige
+   echte Blocker für P0.3.**
+2. **Passport-`locked`-Regel entscheiden** (Widerspruch oben).
+3. **`xcodegen generate` und einmal bauen.** Inzwischen dringlich: drei
+   Swift-Änderungen sind ungetestet gestapelt.
+4. Supabase-Projekt anlegen, `supabase db push`, GitHub-Secrets setzen.
+5. Wortfilter-Blocklist (~200 Begriffe) und Bier-Seed-Review — Redaktionsarbeit.
+6. `countries.flag_emoji` behalten oder ersetzen (Entscheidung 3).
+
+### Bewusst NICHT gemacht
+
+- **Keine Onboarding-UI** — wartet auf die Design-Entscheidung.
+- **Kein Redesign bestehender Screens.** Es gibt nur Platzhalter; die Tokens
+  sind vorbereitet, nicht angewendet.
+- **Keine Daydrinking-Implementierung** — reine Vision, P1/P2.
+- **Keine Länder-Altersgrenzen**, keine Icon-Assets, keine Schriften: das sind
+  Beschaffungs- und Freigabeentscheidungen, keine Bauaufgaben.
+
+### Nächster Schritt
+
+Nach Bestätigung der Visual Direction: **P0.3-UI** (S01–S06) auf der
+Token-Schicht.
+
+### Vorschläge und Themen von mir
+
+1. **Dringend: einmal bauen lassen.** Es liegen jetzt drei ungetestete
+   Swift-Änderungen übereinander (P0.1-Gerüst, Token-Umbau, Komponenten).
+   Wenn im Gerüst ein Fehler steckt, finde ich ihn erst, wenn schon die
+   Onboarding-Screens darauf stehen. Fünf Minuten deiner Zeit sparen mir und
+   dir eine unangenehme Fehlersuche.
+2. **Zur Visual Direction, ehrlich gesagt:** Der Text kann eine Richtung
+   beschreiben, aber nicht zeigen. Wenn dir die Entscheidung auf dieser
+   Grundlage schwerfällt, kann ich zu Direction A **einen einzelnen Screen
+   als visuellen Prototyp** bauen (Home mit XP-Bar, Quest-Karte, Passport-
+   Streifen) — das macht die Richtung in zehn Minuten greifbarer als drei
+   Seiten Prosa. Sag Bescheid, ob du das willst; es ist bewusst kein Redesign.
+3. **Beobachtung zu Direction A:** Ihre Schwäche ist real — sie signalisiert
+   „Spiel" nicht sofort. Das fangen wir über den Reward-Moment und die
+   prominente Progression ab. Wenn du beim ersten Tester merkst, dass die App
+   zu ruhig wirkt, ist die Stellschraube **Motion im Reward-Screen**, nicht
+   die Farbpalette.
+4. **`main` und der Arbeitsbranch laufen weiter auseinander** — inzwischen
+   acht Commits. Vorschlag steht: nach dem Build mergen.
+5. **Ein Gedanke zu Daydrinking:** „First Pour" (unter den Ersten, die einen
+   Ort an einem Tag entdecken) ist die spannendste der fünf Ideen, weil sie
+   **echten sozialen Wettbewerb ohne Konsum** erzeugt — und weil sie mit
+   unseren Daten schon heute berechenbar wäre. Sie ist aber auch die
+   einzige, die einen Anreiz schafft, *früh* zu trinken. Ich würde sie
+   entschärfen zu „einer der Ersten **diese Woche**" — gleicher Reiz, kein
+   Zeitdruck. Nur ein Vorschlag für P1.
+
+---
+
 ## Session 2026-08-30 (6) — Erst-Check-in vom Cap befreit, Monetarisierung als P1 festgelegt
 
 **Auftrag:** Vor P0.3 zwei Dinge: (1) der allererste Check-in eines Nutzers

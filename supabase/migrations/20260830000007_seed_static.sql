@@ -30,18 +30,23 @@ on conflict (code) do update set
 -- behalten. Snapshot-Prinzip - laufende Quests aendern sich nie.
 update public.quest_templates set active = false where code = 'beer_and_place';
 
+-- icon sind **semantische Namen**, keine Emoji-Codepoints.
+-- Der Client bildet sie auf sein Icon-Set ab (BQIcon); solange das eigene
+-- Set fehlt, auf SF Symbols. Emoji sind als UI-Icons ausgeschlossen
+-- (docs/14-product-dna.md).
+-- tier steuert die Materialstufe der Medaille: copper < brass < silver.
 insert into public.badges (code, name, description, tier, icon, criteria) values
-  ('first_beer','First Beer','Log your first check-in.','easy','1F37A',
+  ('first_beer','First Beer','Log your first check-in.','copper','badge.first-beer',
    '{"metric":"check_ins","gte":1}'::jsonb),
-  ('first_country','First Country','Discover your first country.','easy','1F30D',
+  ('first_country','First Country','Discover your first country.','copper','badge.first-country',
    '{"metric":"countries","gte":1}'::jsonb),
-  ('first_friend','First Friend','Add your first friend.','easy','1F465',
+  ('first_friend','First Friend','Add your first friend.','copper','badge.first-friend',
    '{"metric":"friends","gte":1}'::jsonb),
-  ('explorer_5_countries','Globetrotter','Discover 5 countries.','medium','2708',
+  ('explorer_5_countries','Globetrotter','Discover 5 countries.','brass','badge.globetrotter',
    '{"metric":"countries","gte":5}'::jsonb)
 on conflict (code) do update set
   name = excluded.name, description = excluded.description,
-  criteria = excluded.criteria;
+  tier = excluded.tier, icon = excluded.icon, criteria = excluded.criteria;
 
 -- Die Tagesquest ergibt sich deterministisch aus dem Datum - kein Scheduler,
 -- keine Jobs, kein Zustand (docs/06-data-model.md §2.5).

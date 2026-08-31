@@ -33,6 +33,9 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | [`10-risks.md`](docs/10-risks.md) | 16 technische Risiken mit Gegenmaßnahmen |
 | [`11-release-gates.md`](docs/11-release-gates.md) | **Verbindlich:** was intern reichen darf und was vor jeder externen Verteilung vollständig sein muss |
 | [`12-monetization.md`](docs/12-monetization.md) | Ads in P1, Premium in P2 — und was in P0 bewusst fehlt |
+| [`13-visual-direction.md`](docs/13-visual-direction.md) | Drei visuelle Richtungen und die Empfehlung — **Entscheidung offen** |
+| [`14-product-dna.md`](docs/14-product-dna.md) | Adventure statt Tracker, Weltkarte, Passport-Zustände, Daydrinking, keine Emoji |
+| [`15-design-system.md`](docs/15-design-system.md) | Tokens, Komponenten, Prüfregeln |
 | [`SETUP.md`](docs/SETUP.md) | Lokales Setup: Xcode, Supabase, GitHub-Secrets |
 
 ## Die Entscheidungen in Kurzform
@@ -56,7 +59,7 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | Architektur-Gate (Supabase bestätigt) | ✅ vom PM freigegeben |
 | **P0.1** Projekt-Setup | ✅ Gerüst, CI, Keep-alive, erste Migration |
 | **P0.2** Datenbank-Fundament | ✅ Schema, Spiel-Logik, RLS, Seeds — 5 Regeltests grün |
-| P0.3 Auth & Onboarding | ⏭️ als Nächstes |
+| **P0.3** Auth & Onboarding | 🔶 Server fertig und getestet; UI wartet auf die Design-Entscheidung |
 
 ## Nächster Schritt
 

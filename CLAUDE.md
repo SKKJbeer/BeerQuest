@@ -41,6 +41,21 @@ wissen als der Auftraggeber.
 
 Das gilt auch ohne explizite Aufforderung.
 
+## Das Produktprinzip
+
+Jede Entscheidung gegen diese Frage prüfen:
+
+> **Macht sie Beer Quest mehr zu einem Adventure Game — oder mehr zu einem
+> Bier-Tracker?**
+
+Zieht sie Richtung Tracker, kritisch prüfen, ob sie nötig ist. Ziel:
+*Discover the world. One beer at a time.* Details, Weltkarte,
+Sammelzustände, Daydrinking und die Emoji-Regel: `docs/14-product-dna.md`.
+
+**Keine Emoji als UI-Elemente.** Icons kommen aus `BQIcon`, Farben und
+Abstände aus `BQDesign/Tokens.swift` — nie hardcodiert im View
+(`docs/15-design-system.md`).
+
 ## Arbeitsweise
 
 - Planungsdokumente in `docs/` sind die Wahrheit. Weicht der Code ab, wird das

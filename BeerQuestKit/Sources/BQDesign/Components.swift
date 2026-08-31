@@ -1,6 +1,29 @@
 import SwiftUI
 import BQCore
 
+// MARK: - Flaechen
+
+public struct Card<Content: View>: View {
+    private let content: Content
+    public init(@ViewBuilder content: () -> Content) { self.content = content() }
+
+    public var body: some View {
+        content
+            .padding(BQSpacing.m)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(BQColor.surface)
+            .clipShape(RoundedRectangle(cornerRadius: BQRadius.card, style: .continuous))
+    }
+}
+
+/// Hintergrund jeder Vollbildansicht. Nie direkt `Color.black`.
+public struct ScreenBackground: View {
+    public init() {}
+    public var body: some View { BQColor.base.ignoresSafeArea() }
+}
+
+// MARK: - Aktionen
+
 public struct PrimaryButton: View {
     private let title: String
     private let isLoading: Bool
@@ -15,36 +38,23 @@ public struct PrimaryButton: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: BQSpacing.s) {
-                if isLoading { ProgressView().tint(BQColor.background) }
+                if isLoading { ProgressView().tint(BQColor.onAccent) }
                 Text(title).font(BQFont.headline)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, BQSpacing.m)
             .background(BQColor.accent)
-            .foregroundStyle(BQColor.background)
-            .clipShape(RoundedRectangle(cornerRadius: BQSpacing.corner))
+            .foregroundStyle(BQColor.onAccent)
+            .clipShape(RoundedRectangle(cornerRadius: BQRadius.card, style: .continuous))
         }
         .disabled(isLoading)
     }
 }
 
-public struct Card<Content: View>: View {
-    private let content: Content
+// MARK: - Progression
 
-    public init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    public var body: some View {
-        content
-            .padding(BQSpacing.m)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(BQColor.surface)
-            .clipShape(RoundedRectangle(cornerRadius: BQSpacing.corner))
-    }
-}
-
-/// Der Fortschrittsbalken aus Product Vision §11.
+/// Der Fortschrittsbalken. Prominent, nicht in einer Fusszeile -
+/// der Nutzer soll jederzeit sehen, worauf er hinarbeitet.
 public struct XPBar: View {
     private let level: Int
     private let inLevel: Int
@@ -59,8 +69,10 @@ public struct XPBar: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: BQSpacing.xs) {
-            HStack {
-                Text("LEVEL \(level)").font(BQFont.headline)
+            HStack(alignment: .firstTextBaseline) {
+                Text("LEVEL").font(BQFont.label)
+                    .foregroundStyle(BQColor.textTertiary)
+                Text("\(level)").font(BQFont.number)
                 Spacer()
                 Text("\(inLevel.formatted()) / \(needed.formatted()) XP")
                     .font(BQFont.caption)
@@ -68,12 +80,12 @@ public struct XPBar: View {
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(BQColor.surfaceAlt)
+                    Capsule().fill(BQColor.surfaceRaised)
                     Capsule().fill(BQColor.accent)
-                        .frame(width: geo.size.width * fraction)
+                        .frame(width: max(0, geo.size.width * fraction))
                 }
             }
-            .frame(height: 10)
+            .frame(height: 8)
         }
         .foregroundStyle(BQColor.textPrimary)
     }
@@ -83,8 +95,127 @@ public struct XPBar: View {
     }
 }
 
+/// Das sichtbare naechste Ziel. Ohne diese Anzeige arbeitet der Nutzer
+/// auf nichts hin (docs/02-product-gate.md §1 E).
+public struct NextGoalRow: View {
+    private let label: String
+    private let have: Int
+    private let need: Int
+
+    public init(label: String, have: Int, need: Int) {
+        self.label = label
+        self.have = have
+        self.need = need
+    }
+
+    public var body: some View {
+        HStack(spacing: BQSpacing.s) {
+            Image(systemName: BQIcon.badge)
+                .foregroundStyle(BQColor.accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("NEXT").font(BQFont.label)
+                    .foregroundStyle(BQColor.textTertiary)
+                Text(label).font(BQFont.headline)
+                    .foregroundStyle(BQColor.textPrimary)
+            }
+            Spacer()
+            Text("\(have)/\(need)")
+                .font(BQFont.number)
+                .foregroundStyle(BQColor.accent)
+        }
+    }
+}
+
+// MARK: - Sammelobjekte
+
+/// Ein Sammelobjekt im Passport. Die vier Zustaende sind zentral definiert,
+/// damit sie ueberall gleich aussehen und spaeter an einer Stelle
+/// aufgewertet werden koennen.
+public struct CollectibleTile: View {
+    private let icon: String
+    private let title: String
+    private let state: CollectionState
+
+    public init(icon: String, title: String, state: CollectionState) {
+        self.icon = icon
+        self.title = title
+        self.state = state
+    }
+
+    public var body: some View {
+        VStack(spacing: BQSpacing.s) {
+            ZStack {
+                Circle()
+                    .fill(BQColor.surfaceRaised)
+                    .overlay(Circle().strokeBorder(tint.opacity(0.5), lineWidth: 1.5))
+                Image(systemName: state == .locked ? BQIcon.locked : icon)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(tint)
+            }
+            .frame(width: 64, height: 64)
+
+            Text(title)
+                .font(BQFont.caption)
+                .foregroundStyle(state == .locked ? BQColor.textTertiary : BQColor.textPrimary)
+                .lineLimit(1)
+        }
+        .opacity(state == .locked ? 0.55 : 1)
+    }
+
+    private var tint: Color {
+        BQColor.tint(for: CollectionStateToken(rawValue: state.rawValue) ?? .locked)
+    }
+}
+
+// MARK: - Identitaet
+
+/// Avatare kommen aus dem App-Bundle, nicht aus einem Upload - das spart
+/// Storage, Egress und Bildmoderation (docs/04-cost-analysis.md §1).
+///
+/// Bis das Illustrations-Set vorliegt: Monogramm auf gefaerbter Flaeche.
+/// **Bewusst kein Emoji** (docs/14-product-dna.md §Keine Emoji-UI).
+public struct AvatarView: View {
+    private let monogram: String
+    private let color: String
+    private let size: CGFloat
+
+    public init(monogram: String, color: String, size: CGFloat = 44) {
+        self.monogram = monogram
+        self.color = color
+        self.size = size
+    }
+
+    /// Bequemer Aufruf mit einem Profil.
+    public init(username: String, color: String, size: CGFloat = 44) {
+        self.init(monogram: String(username.prefix(1)).uppercased(),
+                  color: color, size: size)
+    }
+
+    public var body: some View {
+        Circle()
+            .fill(Self.palette[color] ?? BQColor.accent)
+            .frame(width: size, height: size)
+            .overlay(
+                Text(monogram)
+                    .font(.system(size: size * 0.42, weight: .bold, design: .rounded))
+                    .foregroundStyle(BQColor.onAccent)
+            )
+    }
+
+    public static let palette: [String: Color] = [
+        "amber":  BQColor.accent,
+        "copper": BQColor.copper,
+        "brass":  BQColor.brass,
+        "forest": Color(red: 0.259, green: 0.494, blue: 0.353),
+        "slate":  Color(red: 0.400, green: 0.447, blue: 0.514),
+        "plum":   Color(red: 0.494, green: 0.318, blue: 0.514),
+    ]
+}
+
+// MARK: - Zustaende
+
 /// Empty States sind bei einer frisch installierten App der eigentliche
-/// Onboarding-Inhalt. Regel: Icon, ein Satz, genau eine Handlungsaufforderung.
+/// Onboarding-Inhalt. Regel: Symbol, ein Satz, genau eine Handlung.
 public struct EmptyState: View {
     private let icon: String
     private let message: String
@@ -101,14 +232,15 @@ public struct EmptyState: View {
 
     public var body: some View {
         VStack(spacing: BQSpacing.m) {
-            Text(icon).font(.system(size: 44))
+            Image(systemName: icon)
+                .font(.system(size: 36, weight: .light))
+                .foregroundStyle(BQColor.textTertiary)
             Text(message)
                 .font(BQFont.body)
                 .foregroundStyle(BQColor.textSecondary)
                 .multilineTextAlignment(.center)
             if let actionTitle, let action {
-                PrimaryButton(actionTitle, action: action)
-                    .frame(maxWidth: 260)
+                PrimaryButton(actionTitle, action: action).frame(maxWidth: 260)
             }
         }
         .padding(BQSpacing.l)
@@ -127,8 +259,7 @@ public struct ErrorCard: View {
     public var body: some View {
         Card {
             VStack(alignment: .leading, spacing: BQSpacing.s) {
-                Text(message)
-                    .font(BQFont.body)
+                Text(message).font(BQFont.body)
                     .foregroundStyle(BQColor.textPrimary)
                 Button("Try again", action: retry)
                     .font(BQFont.caption)
@@ -136,45 +267,4 @@ public struct ErrorCard: View {
             }
         }
     }
-}
-
-/// Avatare kommen aus dem App-Bundle, nicht aus einem Upload.
-/// Das spart Storage, Egress und Bildmoderation - siehe
-/// `docs/04-cost-analysis.md` §1.
-public struct AvatarView: View {
-    private let key: String
-    private let color: String
-    private let size: CGFloat
-
-    public init(key: String, color: String, size: CGFloat = 44) {
-        self.key = key
-        self.color = color
-        self.size = size
-    }
-
-    public var body: some View {
-        Circle()
-            .fill(Self.palette[color] ?? BQColor.accent)
-            .frame(width: size, height: size)
-            .overlay(
-                Text(Self.glyphs[key] ?? "\u{1F37A}")
-                    .font(.system(size: size * 0.5))
-            )
-    }
-
-    // Platzhalter bis zum Illustrations-Set (P0.11). Bewusst Bundle-Assets
-    // statt Uploads - siehe docs/04-cost-analysis.md §1.
-    static let glyphs: [String: String] = [
-        "mug_01": "\u{1F37A}", "mug_02": "\u{1F37B}", "mug_03": "\u{1F942}",
-        "mug_04": "\u{1F30D}", "mug_05": "\u{1F5FA}", "mug_06": "\u{2B50}",
-    ]
-
-    static let palette: [String: Color] = [
-        "amber": BQColor.accent,
-        "copper": BQColor.accentDeep,
-        "forest": Color(red: 0.24, green: 0.50, blue: 0.35),
-        "slate": Color(red: 0.35, green: 0.40, blue: 0.48),
-        "plum": Color(red: 0.49, green: 0.30, blue: 0.50),
-        "clay": Color(red: 0.72, green: 0.42, blue: 0.33),
-    ]
 }

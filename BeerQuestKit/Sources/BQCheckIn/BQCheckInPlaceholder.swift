@@ -13,8 +13,9 @@ public struct BQCheckInPlaceholder: View {
 
     public var body: some View {
         ZStack {
-            BQColor.background.ignoresSafeArea()
-            EmptyState(icon: "\u{1F6A7}", message: "\(title) - coming in a later phase.")
+            ScreenBackground()
+            EmptyState(icon: "hammer.fill",
+                       message: "\(title) - coming in a later phase.")
         }
     }
 }

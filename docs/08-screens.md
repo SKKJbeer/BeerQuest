@@ -104,7 +104,7 @@ spezifiziert.
 
 | # | Screen | Elemente | States |
 |---|---|---|---|
-| S31 | **Passport-Liste** (eine View, vier Konfigurationen: Countries/Cities/Locations/Beers) | Suchleiste, Sortierung (Neueste / A–Z), Zeilen mit Icon, Name, Kontext, Entdeckungsdatum | `empty` = typspezifischer Satz + [+ ADD BEER] · `failed` = Fehlerkarte |
+| S31 | **Passport-Liste** (eine View, vier Konfigurationen: Countries/Cities/Locations/Beers) | Suchleiste, Sortierung (Neueste / A–Z), `CollectibleTile` mit Sammelzustand statt schlichter Zeile. `locked` nur bei endlichen Mengen — nie im Bierkatalog (`14-product-dna.md`) | `empty` = typspezifischer Satz + [+ ADD BEER] · `failed` = Fehlerkarte |
 | S32 | **Ort-Detail** | Name, Kategorie, Stadt, Land, Mini-Karte, „Your visits: 4", dort getrunkene Biere, [Check in here] (springt mit vorbelegtem Ort in S20) | `loading` Skeleton |
 | S33 | **History** | Chronologisch (Bier, Ort, Stadt, Datum, XP), Wisch-Aktion *Delete* nur < 24 h, Bestätigungsdialog mit XP-Hinweis; oben die RetryQueue-Einträge | `empty` = „No check-ins yet" |
 

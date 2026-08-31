@@ -18,23 +18,23 @@ struct RootView: View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedTab) {
                 BQPlayPlaceholder(title: "Home")
-                    .tabItem { Label("Home", systemImage: "house.fill") }
+                    .tabItem { Label("Home", systemImage: BQIcon.home) }
                     .tag(Tab.home)
 
                 BQWorldPlaceholder(title: "Map")
-                    .tabItem { Label("Map", systemImage: "map.fill") }
+                    .tabItem { Label("Map", systemImage: BQIcon.map) }
                     .tag(Tab.map)
 
                 BQPlayPlaceholder(title: "Quests")
-                    .tabItem { Label("Quests", systemImage: "target") }
+                    .tabItem { Label("Quests", systemImage: BQIcon.quests) }
                     .tag(Tab.quests)
 
                 BQPlayPlaceholder(title: "Clan")
-                    .tabItem { Label("Clan", systemImage: "person.3.fill") }
+                    .tabItem { Label("Clan", systemImage: BQIcon.clan) }
                     .tag(Tab.clan)
 
                 BQPlayPlaceholder(title: "Profile")
-                    .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
+                    .tabItem { Label("Profile", systemImage: BQIcon.profile) }
                     .tag(Tab.profile)
             }
 
@@ -50,12 +50,12 @@ struct RootView: View {
         Button {
             isAddingCheckIn = true
         } label: {
-            Label("ADD BEER", systemImage: "plus")
+            Label("ADD BEER", systemImage: BQIcon.addCheckIn)
                 .font(BQFont.headline)
                 .padding(.horizontal, BQSpacing.l)
                 .padding(.vertical, BQSpacing.s + 2)
                 .background(BQColor.accent, in: Capsule())
-                .foregroundStyle(BQColor.background)
+                .foregroundStyle(BQColor.onAccent)
                 .shadow(radius: 8, y: 4)
         }
         .accessibilityLabel("Add a beer check-in")
