@@ -63,7 +63,7 @@ einer harten Produktanforderung, nicht mit einer Vorliebe.
 | **Deep Links** | **Keine in P0.** Invite-**Code** per Share Sheet | entfällt | **0 €** | **0 €** | P1: Universal Links über Cloudflare Pages (Free) auf `*.pages.dev` → weiterhin 0 €. Eigene Domain optional ~12 €/Jahr. |
 | **Hosting (Web)** | **Keines in P0** | — | **0 €** | **0 €** | P1: Cloudflare Pages Free (unbegrenzte Sites, 500 Builds/Monat, HTTPS, eigene Header via `_headers` → korrekter Content-Type für AASA). |
 | **E-Mail** | **Keine** (nur Sign in with Apple) | entfällt | **0 €** | **0 €** | Keines. Kein Passwort-Reset, keine Verifikationsmail, kein Versender nötig. |
-| **CI** | GitHub Actions, **nur Linux-Runner** | ✅ 2.000 Min/Monat + 500 MB Artefakte (privates Repo); öffentliche Repos vollständig kostenlos | **0 €** | **0 €** | ⚠️ **Der einzige Posten, der 0 € kippen kann.** macOS-Runner kosten 0,062 $/min gegen 0,006 $/min Linux (Faktor ~10) ⇒ nur ~200 macOS-Minuten im Freikontingent. **Konsequenz: keine macOS-CI in P0**, der Xcode-Build läuft lokal. |
+| **CI** | GitHub Actions, Linux **und macOS** | ✅ Standard-Runner sind für **öffentliche** Repositories unbegrenzt kostenlos — macOS eingeschlossen | **0 €** | **0 €** | Keines, solange das Repository öffentlich bleibt. Würde es privat, blieben vom Freikontingent nur ~200 macOS-Minuten im Monat (Faktor ~10 gegenüber Linux) — dann müsste die iOS-CI auf Pull Requests beschränkt werden. Siehe `16-engineering-standard.md` §2. |
 | **Externe APIs** | **Keine** | — | **0 €** | **0 €** | Bewusst keine Bierdatenbank-API (Untappd, BreweryDB). |
 | | | **Summe** | **0 €/Monat** | **0 €/Monat** | |
 

@@ -16,7 +16,7 @@ Was heute schon da ist — und was fehlt.
 | **SQL-CI** | `sql-tests.yml`, Linux, Postgres 15, mit Pfadfiltern, prüft auch Migrations-Idempotenz | ✅ läuft |
 | **Lokaler SQL-Durchlauf** | `supabase/ci/run_local.sh` — von Null bis Tests | ✅ |
 | **Swift-Unit-Tests** | 1 Datei, 11 Testfunktionen (nur `Progression`) | 🔶 dünn, aber deckt die einzige Logik ab, die es in Swift gibt |
-| **Swift-Build in CI** | **fehlt vollständig** | 🔴 **die zentrale Lücke** |
+| **Swift-Build in CI** | ✅ scharf seit 2026-08-31 (`ios-build.yml`) | ✅ Lücke geschlossen |
 | **Integrationstests** (App ↔ Backend) | **fehlen** | 🔶 sinnvoll erst mit echtem API-Client (P0.4) |
 | **UI-Tests** | keine | ✅ richtig so — erst für kritische Journeys, nicht jetzt |
 | **Versionierung / Tags** | **0 Tags**, keine Release-Strategie | 🔴 Lücke |
@@ -65,6 +65,22 @@ Ein Xcode-Build mit Tests für dieses Projekt: geschätzt **4–6 Minuten** kalt
 
 Das ist für „jeder Push wird gebaut" nicht ansatzweise genug.
 
+### ✅ Entschieden am 2026-08-31: Das Repository ist öffentlich
+
+Damit ist die Frage beantwortet, bevor sie gestellt werden musste — **das
+Repository ist bereits öffentlich, und beim Parallelprojekt laufen die
+macOS-Runner auf demselben Weg.** Standard-Runner sind für öffentliche
+Repositories unbegrenzt kostenlos, macOS eingeschlossen.
+
+**Konsequenz:** Die iOS-CI ist scharfgeschaltet (`ios-build.yml`), ohne
+Rationierung und ohne laufende Kosten. Die Sparmaßnahmen bleiben trotzdem —
+nicht wegen der Kosten, sondern weil ein Build, der bei jeder
+Dokumentationsänderung anspringt, nur Wartezeit erzeugt.
+
+Ein selbst gehosteter Runner entfällt damit — und das ist gut so: An einem
+öffentlichen Repository wäre er ein Sicherheitsrisiko, weil Fremde über Pull
+Requests Code darauf ausführen könnten.
+
 ### Der Hebel
 
 > **Für öffentliche Repositories sind Standard-Runner kostenlos — macOS
@@ -75,14 +91,12 @@ Damit gibt es genau drei Wege zu iOS-CI bei 0 €:
 
 | Option | Kosten | Aufwand | Bewertung |
 |---|---|---|---|
-| **A — Repository öffentlich machen** | **0 €, unbegrenzt** | 10 Minuten | **Empfehlung.** Löst das Problem vollständig statt es zu rationieren |
+| **A — Repository öffentlich** | **0 €, unbegrenzt** | — | ✅ **gewählt, war bereits der Fall** |
 | **B — Privat bleiben, CI streng rationieren** | 0 €, aber ~4 Builds/Monat | gering | Funktioniert, ist aber ein dauerndes Sparen am falschen Ende |
 | **C — Selbst gehosteter Runner auf dem eigenen Mac** | 0 € | mittel, plus Betrieb | Sinnvoll, wenn der Mac ohnehin läuft. Sicherheitshinweis: selbst gehostete Runner sollten nie an einem **öffentlichen** Repo hängen — Fremde könnten Code darauf ausführen. A und C schließen sich also aus. |
 
-**Zur Rückfrage aus dem Auftrag:** Wenn beim anderen Projekt ein Mac-Runner
-erfolgreich lief, war das entweder ein öffentliches Repository oder ein selbst
-gehosteter Runner. Beides ist hier möglich — **bitte klären, welches von
-beiden es war**, das entscheidet die Empfehlung.
+**Geklärt:** Beim Parallelprojekt lief der Mac-Runner über ein öffentliches
+Repository — derselbe Weg, den wir jetzt nutzen.
 
 ### Was gegen „öffentlich" spricht — und was nicht
 
@@ -126,12 +140,11 @@ Zusätzliche Sparmaßnahmen, alle ohne Nachteil:
 - `timeout-minutes: 20` als Notbremse gegen hängende Jobs.
 - Build **nur für den Simulator**, kein Signing, kein Archiv.
 
-### Was zuerst gebaut wird
+### Stand
 
-Der macOS-Workflow wird **jetzt geschrieben, aber nur manuell auslösbar**
-(`workflow_dispatch`). Er kostet damit nichts, ist aber reviewbar und sofort
-scharfzuschalten, sobald die Entscheidung aus §2 gefallen ist. Das ist die
-Umsetzung von „erst den Plan, dann die Infrastruktur".
+Der macOS-Workflow ist **scharf**. Er baut das Projekt mit XcodeGen, wählt den
+Simulator zur Laufzeit (ein fest verdrahteter Gerätename bricht, sobald GitHub
+das Runner-Image aktualisiert) und führt die Tests ohne Signing aus.
 
 ### Lokales Gate
 
@@ -150,7 +163,7 @@ weil sie sofortiges Feedback gibt und nichts kostet.
 | **Unit** | Reine Logik ohne Netzwerk und UI: XP-/Level-Formeln, RetryQueue, DTO-Mapping, Routen-Parsing | `BeerQuestKit/Tests/` | 🔶 1 Datei, wächst mit den Modulen |
 | **Integration** | App ↔ Backend gegen eine lokale Supabase-Instanz | ab P0.4 | ⏭️ geplant |
 | **UI** | **Nur** kritische Journeys: Onboarding bis Home, Check-in bis Reward | ab P0.5 | ⏭️ geplant, bewusst sparsam |
-| **Build Verification** | Das iOS-Projekt muss reproduzierbar bauen | CI + `verify.sh` | 🔴 die offene Lücke |
+| **Build Verification** | Das iOS-Projekt muss reproduzierbar bauen | CI + `verify.sh` | ✅ CI scharf seit 2026-08-31 |
 
 ### Pflichtabdeckung der Spielregeln
 
