@@ -5,6 +5,123 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-31 (9) — iOS-CI scharf, erster grüner Build
+
+**Auftrag:** Das Repository ist öffentlich, und beim Parallelprojekt laufen
+die macOS-Runner auf demselben Weg. Damit war die offene Entscheidung aus
+Session 8 beantwortet.
+
+```
+BUILD:  PASS  — macos-latest, Xcode 26.6, Lauf #2
+TESTS:  PASS  — 12 Swift-Unit-Tests + 7/7 SQL-Testdateien
+```
+
+**Ergebnis:** Die iOS-CI ist scharfgeschaltet und hat **beim ersten Lauf
+sofort einen echten Fehler gefunden**. Nach dem Fix ist der zweite Lauf grün.
+Damit ist der Swift-Code zum ersten Mal objektiv bestätigt — das größte
+offene Risiko des Projekts ist geschlossen.
+
+### Der Fund
+
+Der erste Build brach ab:
+
+```
+App/RootView.swift:14:37: error: 'Tab' is ambiguous for type lookup
+  SwiftUI.Tab:2:15: note: found this candidate
+  BQCore.Tab:1:13: note: found this candidate
+```
+
+SwiftUI bringt mit der neuen TabView-API selbst einen Typ `Tab` mit. In jeder
+Datei, die SwiftUI **und** BQCore importiert — also praktisch jedem View —
+war die Typsuche mehrdeutig.
+
+**Das ist genau der Fehlertyp, den man ohne Compiler nie findet.** Drei
+Sessions lang lagen 1.005 Zeilen ungetesteter Swift-Code übereinander; der
+Fehler steckte seit P0.1 im Gerüst und hätte jeden weiteren View betroffen.
+
+**Fix:** Umbenennung in `BQTab`. Ein Präfix statt einer Qualifizierung an der
+Aufrufstelle — sonst käme der Konflikt in jedem neuen View zurück.
+
+### Entscheidungen
+
+| # | Entscheidung | Begründung | Umkehrbar? |
+|---|---|---|---|
+| 1 | **iOS-CI scharfgeschaltet** — Push und Pull Request, mit Pfadfiltern | Öffentliches Repository ⇒ Standard-Runner unbegrenzt kostenlos, macOS eingeschlossen. Die 0-€-Anforderung ist erfüllt, ohne Builds zu rationieren. | Ja |
+| 2 | **Pfadfilter bleiben** — trotz kostenloser Runner | Nicht wegen der Kosten, sondern wegen der Wartezeit. Der Doku-Commit dieser Session hat erwartungsgemäß **keinen** Build ausgelöst — der Filter funktioniert nachweislich. | Ja |
+| 3 | **Simulator wird zur Laufzeit gewählt** statt fest verdrahtet | Ein fester Gerätename bricht, sobald GitHub das Runner-Image aktualisiert. Der erste iPhone-Simulator aus `simctl list` ist stabil. | Ja |
+| 4 | **`BQCore.Tab` → `BQTab`** | Siehe oben. Ein Typ namens `Tab` in einer SwiftUI-App ist eine Falle. | Nein, sinnvoll so |
+| 5 | **Kein selbst gehosteter Runner** | An einem öffentlichen Repository wäre er ein Sicherheitsrisiko: Fremde könnten über Pull Requests Code darauf ausführen. Entfällt ersatzlos. | — |
+
+### Geänderte Dateien
+
+| Datei | Was |
+|---|---|
+| `.github/workflows/ios-build.yml` | scharf: Push + Pull Request mit Pfadfiltern, Laufzeit-Simulatorwahl, Caching, `cancel-in-progress`, `timeout-minutes` |
+| `BeerQuestKit/Sources/BQCore/Routes.swift` | `Tab` → `BQTab`, mit Begründung im Code |
+| `App/RootView.swift` | folgt der Umbenennung |
+| `docs/16-engineering-standard.md` | Entscheidung dokumentiert, Lücke „Swift-Build in CI" geschlossen, Tag-Zuordnung |
+| `docs/04-cost-analysis.md` | CI-Zeile: macOS jetzt enthalten und kostenlos |
+| `docs/10-risks.md` | **R16 entschärft** (🟠 → 🟢), mit dem Hinweis, dass es sofort zurückkehrt, falls das Repository privat wird |
+
+### Versionierung
+
+Die Tags `v0.1.0`, `v0.2.0` und `v0.3.0` sind lokal erzeugt, ließen sich aber
+**nicht pushen**: Die Credentials dieser Arbeitssitzung erlauben Pushes auf
+den Arbeitsbranch, nicht das Anlegen von Tags (**HTTP 403**). Die
+Commit-Zuordnung und ein Wiederherstellungsbefehl stehen in
+`16-engineering-standard.md` §5 — vier Zeilen, lokal ausführbar.
+
+### Offene Risiken
+
+1. **Branch Protection fehlt.** Solange die Checks auf `main` nicht als
+   *required* konfiguriert sind, ist „ein PR gilt nicht als fertig, wenn der
+   Build fehlschlägt" eine Absichtserklärung. Braucht Adminrechte im
+   Repository — kann ich nicht setzen.
+2. **Tags nur lokal**, siehe oben.
+3. `main` und Arbeitsbranch driften weiter — inzwischen zwölf Commits.
+4. Die Supabase-Cloud ist weiterhin nicht angelegt.
+
+### Offene Punkte für den PM
+
+1. **Tags pushen** — vier Zeilen aus `16-engineering-standard.md` §5.
+2. **Branch Protection auf `main`** einrichten, `sql` und `build` als
+   erforderlich markieren.
+3. **Visual Direction bestätigen** (`13-visual-direction.md`) — weiterhin der
+   Blocker für P0.3-UI.
+4. **Passport-`locked`-Regel** entscheiden (Widerspruch aus Session 7).
+5. Supabase-Projekt anlegen, `supabase db push`, GitHub-Secrets setzen.
+
+### Bewusst NICHT gemacht
+
+- **Keine Node-20-Warnung behoben.** `actions/checkout@v4` und
+  `actions/cache@v4` laufen bereits auf Node 24, die Warnung ist folgenlos.
+  Eine Versionserhöhung auf gut Glück würde die frisch grüne CI riskieren.
+- **Keine P0.3-UI** — wartet auf die Design-Entscheidung.
+- **Kein Merge nach `main`** — nicht beauftragt.
+
+### Nächster Schritt
+
+Visual Direction bestätigen, dann P0.3-UI (S01–S06) auf der Token-Schicht —
+jetzt mit einem Sicherheitsnetz, das nachweislich funktioniert.
+
+### Vorschläge und Themen von mir
+
+1. **Die CI hat sich in unter zehn Minuten bezahlt gemacht.** Sie fand einen
+   Fehler, der seit P0.1 im Gerüst saß und jeden weiteren View betroffen
+   hätte. Das ist das beste Argument dafür, sie **vor** den sechs
+   Onboarding-Screens scharfzuschalten — genau so ist es jetzt.
+2. **Lehre für die Arbeitsweise:** Drei Sessions ungetesteten Swift-Code zu
+   stapeln war ein Fehler von mir. Ab jetzt gilt: kein Swift-Commit ohne
+   grünen CI-Lauf, und die Handoff-Zeilen `BUILD:`/`TESTS:` werden mit echten
+   Ergebnissen gefüllt, nicht mit „nicht ausgeführt".
+3. **Branch Protection ist der fehlende Baustein.** Ohne sie ist die CI ein
+   Hinweis, keine Regel. Zwei Minuten in den Repository-Einstellungen.
+4. **Zum Merge nach `main`:** Zwölf Commits und drei grüne Phasen sprechen
+   dafür. Ich würde nach der Design-Entscheidung mergen und `main` dann unter
+   Schutz stellen — dann ist der stabile Stand auch formal stabil.
+
+---
+
 ## Session 2026-08-30 (8) — Engineering-Standard: Versionierung, Tests, CI/CD
 
 **Auftrag:** Repository-Stand analysieren, Lücken in Versionierung und

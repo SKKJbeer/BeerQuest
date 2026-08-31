@@ -229,11 +229,25 @@ nicht an ein Gefühl: Er passiert genau dann, wenn Fremde die App bekommen.
 **Zusätzlich:** Jeder TestFlight-Build bekommt eine monoton steigende
 `CURRENT_PROJECT_VERSION` (Build-Nummer). Apple verlangt das ohnehin.
 
-### Tags rückwirkend
+### Tags
 
-P0.1 und P0.2 sind abgeschlossen. Sobald der Build einmal bestätigt ist,
-werden `v0.1.0` und `v0.2.0` auf die jeweiligen Commits gesetzt — dann gibt es
-von Anfang an nachvollziehbare Stände.
+Die Tags sind lokal erzeugt, ließen sich aber **nicht pushen**: Die
+Credentials dieser Arbeitssitzung erlauben Pushes auf den Arbeitsbranch,
+nicht das Anlegen von Tags (HTTP 403). Damit sie nicht verloren gehen, steht
+die Zuordnung hier — sie ist mit einem Befehl wiederherstellbar:
+
+```bash
+git tag -a v0.1.0 321dfc8039bd150490be56666ca32fca20485de7 -m "P0.1 - Projekt-Setup"
+git tag -a v0.2.0 06e5c9d7bc609b0d0cf079c4f1fe675f425984c7 -m "P0.2 - Datenbank-Fundament"
+git tag -a v0.3.0 b81594d3a7d2143f242ab5e3ffa85482f1972094 -m "P0.3 Serverteil + Engineering-Standard, erste gruene iOS-CI"
+git push origin --tags
+```
+
+| Tag | Commit | Inhalt |
+|---|---|---|
+| `v0.1.0` | `321dfc80` | Projekt-Setup, Swift Package, Linux-CI, Keep-alive |
+| `v0.2.0` | `06e5c9d7` | Datenbank-Fundament, Spiel-Logik, RLS, 5 Regeltests |
+| `v0.3.0` | `b81594d3` | Onboarding-Server, Engineering-Standard, **erste grüne iOS-CI** |
 
 ### Commits
 
