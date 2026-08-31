@@ -5,6 +5,133 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-31 (10) — Klickbarer Prototyp und Preview-Workflow
+
+**Auftrag:** Klickbare Previews als verbindlichen Bestandteil der Entwicklung
+verankern, den Zählora-Workflow als Vorbild prüfen, REAL/PROTOTYPE/PLACEHOLDER
+kennzeichnen, `PM REVIEW NEEDED` einführen.
+
+```
+BUILD:   NICHT AUSGEFÜHRT — kein Swift geändert, iOS-CI nicht ausgelöst
+TESTS:   PASS — 30/30 Prototyp-Prüfungen, 7/7 SQL-Testdateien
+PREVIEW: https://claude.ai/code/artifact/4e03d6b2-ac90-4b47-b08f-e34215b27154
+```
+
+**Ergebnis:** Der Core Loop ist zum ersten Mal **anfassbar**. Der Prototyp
+ist mit einem echten Browser geprüft (30 Prüfungen) und über einen Link ohne
+jedes Setup erreichbar.
+
+### PM REVIEW NEEDED
+
+**Preview:** <https://claude.ai/code/artifact/4e03d6b2-ac90-4b47-b08f-e34215b27154>
+
+**Was du ausprobieren solltest — in dieser Reihenfolge:**
+
+1. **Home ansehen.** Du startest als brandneuer Nutzer: Level 1, leerer
+   Passport, Erst-Quest. Frage: Verstehst du in fünf Sekunden, was du tun sollst?
+2. **ADD BEER → „Ichnusa" suchen → Ort wählen → Save.** Frage: Fühlt sich das
+   nach zwei Taps und einem Feld an, oder nach einem Formular?
+3. **Der Reward-Screen.** Das ist der wichtigste Moment der App. Du bekommst
+   **550 XP ungekürzt** — Bier, Ort, Stadt, Land einzeln aufgeschlüsselt, dazu
+   Level-Up und Quest-Fortschritt. Frage: Fühlt sich das nach einem Spiel an
+   oder nach einer Bestätigungsmeldung?
+4. **Zurück auf Home.** Passport-Zähler, XP-Balken und Quest haben sich
+   verändert. Frage: Willst du wissen, was du als Nächstes entdecken kannst?
+5. **Tippe „Peroni" im Suchfeld.** Damit prüfst du die Dubletten-Anforderung
+   aus deinem Auftrag §3 direkt.
+
+**Welche Entscheidungen ich von dir brauche:**
+
+- **Visual Direction A bestätigen oder ablehnen.** Das ist jetzt keine
+  Prosa-Entscheidung mehr — du siehst sie. Sie blockiert weiterhin P0.3-UI.
+- **Reward-Moment:** laut genug? Zu laut? Er ist die einzige Stelle mit
+  echter Animation.
+- **Passport-`locked`-Regel** (offen aus Session 7).
+
+**Bewusst noch Platzhalter:** Map, Quests, Clan und Profile sind ehrliche
+Platzhalterschirme mit Kennzeichnung — nach der Regel „ein Bereich pro Runde".
+
+**Offene Designfragen:** Schriften (noch Systemschrift), eigenes Icon-Set
+(noch SF-Symbols-ähnliche Pfade), Badge-Illustrationen, Clan-Embleme.
+
+### Kennzeichnung
+
+| Bereich | Stufe |
+|---|---|
+| Home, Check-in in drei Schritten, Reward | **PROTOTYPE** — Flow und Zustand echt, Daten simuliert |
+| Map, Quests, Clan, Profile | **PLACEHOLDER** — nur Beschreibung, keine Interaktion |
+| Backend: XP, Level, Dedupe, Quests, Clan-XP, RLS, Onboarding | **REAL** — SQL implementiert und getestet |
+| iOS-App | **PLACEHOLDER** — Gerüst baut, Screens fehlen |
+
+### Entscheidungen
+
+| # | Entscheidung | Begründung | Umkehrbar? |
+|---|---|---|---|
+| 1 | **Zählora-Muster übernommen** — eine in sich geschlossene HTML-Datei, Playwright-Prüfung, Veröffentlichung über einen eigenen Zweig **ohne Geheimnisse** | Ich habe `SKKJbeer/PulseMeter` gelesen; dort trägt genau dieser Ablauf. Der Zweig-Weg ist der Kern: Cloudflare oder GitHub Pages hängt sich an `prototype` — kein Token, nichts in Repository-Einstellungen einzutragen, und die Prüfung behält das letzte Wort. | — |
+| 2 | **Startzustand: brandneuer Nutzer** statt eines bereits gefüllten Kontos | Erst dadurch ist der erste Check-in erlebbar — der Moment, den wir in Session 6 eigens vom Tages-Cap ausgenommen haben. Ein Prototyp, der bei Level 7 startet, kann die wichtigste Produktentscheidung nicht zeigen. Der Test hat mir das aufgedeckt: Meine erste Fassung hatte 50 XP bei einem angeblich schon erfolgten Check-in — inkonsistent. | Ja |
+| 3 | **Drei Preview-Wege statt einem** — Artefakt-Link (sofort), Zweig `prototype` (dauerhaft), TestFlight (echtes iOS) | Wir pressen nicht alles in einen Web-Prototyp. Karte, Standort, Haptik und Systemdialoge brauchen einen echten Build; Reihenfolge, Hierarchie und Rhythmus nicht. Faustregel in `17-preview-workflow.md` §2. | — |
+| 4 | **Emoji-Prüfung im Test** | `14-product-dna.md` verbietet Emoji als UI-Elemente. Eine Regel, die niemand prüft, hält nicht. Der Test zählt Emoji im gerenderten DOM: aktuell 0. | — |
+| 5 | **Web-Prototyp bewusst mit Systemschrift** statt einer Google-Schrift | Der Prototyp soll zeigen, wie die **iOS-App** aussehen wird. Eine Webschrift, die auf dem Gerät nicht zum Einsatz käme, würde die Vorschau schöner machen und die Entscheidung verfälschen. | Ja, sobald die Schrift gewählt ist |
+| 6 | **Prototyp-CI auf Ubuntu**, nicht macOS | Ein Web-Prototyp braucht keinen macOS-Runner. Der iOS-Build bleibt davon unberührt. | — |
+
+### Geänderte Dateien
+
+| Datei | Was |
+|---|---|
+| `docs/prototype/index.html` | **neu** — in sich geschlossener Prototyp, Tokens identisch zu `BQDesign/Tokens.swift` |
+| `scripts/check-prototype.mjs` | **neu** — 30 Playwright-Prüfungen des Core Loops |
+| `scripts/prototype-zweig.sh` | **neu** — legt den geprüften Stand in den Zweig `prototype` |
+| `.github/workflows/prototype.yml` | **neu** — prüfen, dann veröffentlichen; Ubuntu |
+| `docs/17-preview-workflow.md` | **neu** — Vorbild, drei Preview-Wege, Kennzeichnung, DoD für UI, „ein Bereich pro Runde" |
+| `.claude/skills/handoff/SKILL.md` | `PREVIEW:`-Zeile und Abschnitt `PM REVIEW NEEDED` |
+| `CLAUDE.md`, `README.md` | Preview-Regel als Leitplanke, Index |
+| `.gitignore` | `node_modules/` |
+
+### Offene Risiken
+
+1. **Der Prototyp und die iOS-App können auseinanderlaufen.** Die Tokens sind
+   heute identisch, aber nichts erzwingt das. Sobald echte Screens entstehen,
+   ist der Prototyp Vorlage — nicht Zweitimplementierung.
+2. Branch Protection auf `main` fehlt weiterhin.
+3. Tags nur lokal (HTTP 403), Wiederherstellungsbefehl in
+   `16-engineering-standard.md` §5.
+
+### Bewusst NICHT gemacht
+
+- **Keine weiteren Screens.** Map, Quests, Clan, Profile bleiben Platzhalter,
+  bis der Core Loop bestätigt ist — genau die Regel aus deinem Auftrag §9.
+- **Kein Onboarding im Prototyp.** Es kommt in der nächsten Runde, wenn die
+  Richtung steht; der Server dafür ist bereits fertig und getestet.
+- **Kein Pages-Projekt eingerichtet** — braucht dein Konto, Anleitung in
+  `17-preview-workflow.md` §8.
+- **Kein Swift geändert**, deshalb kein iOS-Build ausgelöst.
+
+### Nächster Schritt
+
+Dein Feedback zum Prototyp. Danach entweder Direction A verfeinern oder eine
+Alternative bauen — und erst dann die nächsten Screens.
+
+### Vorschläge und Themen von mir
+
+1. **Der Prototyp ersetzt die Visual-Direction-Entscheidung aus Prosa.** Drei
+   Seiten Beschreibung waren der schlechtere Weg; klick fünf Minuten und du
+   weißt mehr als aus dem Dokument. Falls A nicht trägt, baue ich B oder C
+   als Gegenprobe — ein Prototyp ist ein Tagewerk, sechs falsche Screens sind
+   eine Woche.
+2. **Mir ist beim Bauen etwas aufgefallen:** Der Reward-Screen zeigt vier
+   Entdeckungen untereinander plus Level-Up plus Quest. Das ist viel auf
+   einmal. Ich habe es bewusst so gelassen, damit du siehst, wie voll der
+   Maximalfall ist — der Normalfall sind ein bis zwei Karten. Falls es dir zu
+   überladen wirkt, wäre die Lösung eine gestaffelte Einblendung statt weniger
+   Inhalt.
+3. **Die Platzhalterschirme sind absichtlich karg.** Ich hätte sie hübsch
+   machen können, aber dann hättest du sie bewertet, statt sie zu ignorieren.
+4. **Für die nächste Runde schlage ich das Onboarding vor** (S01–S06). Es ist
+   der einzige Flow, den jeder Nutzer garantiert durchläuft, der Server ist
+   fertig, und er entscheidet über den ersten Eindruck.
+
+---
+
 ## Session 2026-08-31 (9) — iOS-CI scharf, erster grüner Build
 
 **Auftrag:** Das Repository ist öffentlich, und beim Parallelprojekt laufen

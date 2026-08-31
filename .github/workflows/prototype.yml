@@ -1,0 +1,59 @@
+name: Prototyp veröffentlichen
+
+# Nach dem Vorbild aus PulseMeter/Zählora: **erst prüfen, dann veröffentlichen.**
+#
+# Der Prototyp liegt als eine einzige, in sich geschlossene Datei in
+# `docs/prototype/index.html` - kein Bauwerkzeug, keine Abhängigkeiten.
+# `check-prototype.mjs` fährt ihn mit einem echten Browser durch den Core Loop.
+# Nur was dort durchkommt, landet im Zweig `prototype`.
+#
+# **Der Weg ohne ein einziges Geheimnis:** Cloudflare Pages (oder GitHub Pages)
+# hängt sich an diesen Zweig und liest ihn aus. Kein Token, keine Konto-ID,
+# nichts, was am Telefon einzutragen wäre. Und die Prüfung behält das letzte
+# Wort, weil der Zweig nur nach bestandener Prüfung entsteht.
+#
+# Läuft auf Ubuntu - ein Web-Prototyp braucht keinen macOS-Runner.
+on:
+  push:
+    paths:
+      - "docs/prototype/**"
+      - "scripts/check-prototype.mjs"
+      - ".github/workflows/prototype.yml"
+  pull_request:
+    paths:
+      - "docs/prototype/**"
+      - "scripts/check-prototype.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prototype-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruefen-und-veroeffentlichen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Playwright und Chromium
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Prototyp prüfen
+        run: node scripts/check-prototype.mjs
+
+      # Erst hier, und nur im Hauptzweig bzw. auf dem Arbeitszweig:
+      # Ein Pull Request wird geprüft, aber nicht veröffentlicht.
+      - name: In den Zweig prototype legen
+        if: github.event_name != 'pull_request'
+        run: scripts/prototype-zweig.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

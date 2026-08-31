@@ -29,8 +29,9 @@ Am Ende jeder Session mit inhaltlichen Änderungen:
 **Ergebnis:** <2–4 Sätze, was jetzt existiert>
 
 ```
-BUILD:  PASS | FAIL | NICHT AUSGEFÜHRT (mit Grund)
-TESTS:  PASS | FAIL | TEILWEISE (welche)
+BUILD:   PASS | FAIL | NICHT AUSGEFÜHRT (mit Grund)
+TESTS:   PASS | FAIL | TEILWEISE (welche)
+PREVIEW: <Link> | ENTFÄLLT (reine Backend-Arbeit)
 ```
 
 ### Entscheidungen
@@ -48,6 +49,13 @@ beantwortet sein muss.>
 
 ### Nächster Schritt
 <Genau ein Satz.>
+
+### PM REVIEW NEEDED
+<Nur bei UI-/UX-/Game-Flow-Änderungen. Enthält: Link zur Preview · Was soll
+ich ausprobieren? · Welche Screens/Flows sind neu? · Welche Entscheidungen
+brauchst du von mir? · Was ist bewusst noch Platzhalter? · Welche
+Designfragen sind offen? Jeder Bereich mit REAL / PROTOTYPE / PLACEHOLDER
+gekennzeichnet.>
 
 ### Offene Risiken
 <Was könnte später weh tun. Leer lassen ist erlaubt, weglassen nicht.>

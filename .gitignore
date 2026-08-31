@@ -20,3 +20,7 @@ supabase/.temp/
 .env
 .env.local
 Config.xcconfig
+
+# Node (nur Werkzeug fuer die Prototyp-Pruefung, nie eingecheckt)
+node_modules/
+package-lock.json

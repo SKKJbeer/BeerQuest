@@ -65,6 +65,10 @@ Abstände aus `BQDesign/Tokens.swift` — nie hardcodiert im View
 - Jede kritische Spielregel braucht einen automatisierten Test. Jeder
   behobene Fehler bekommt einen Regressionstest, der dauerhaft bleibt.
 - Vor dem Push `./scripts/verify.sh` ausführen.
+- **UI-Änderungen brauchen eine klickbare Preview** (`docs/17-preview-workflow.md`).
+  Ein Bereich pro Runde — nie zehn Screens auf einer unvalidierten Annahme.
+  Im Handoff jeden Bereich als REAL / PROTOTYPE / PLACEHOLDER kennzeichnen
+  und einen Abschnitt `PM REVIEW NEEDED` ergänzen.
 - Commits klein und thematisch, ein Commit pro sinnvollem Schritt.
 - Jeder Handoff nennt `BUILD:` und `TESTS:` mit PASS/FAIL/NICHT AUSGEFÜHRT.
 - macOS-CI kostet das Zehnfache von Linux — Trigger sparsam halten

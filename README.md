@@ -38,6 +38,7 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | [`14-product-dna.md`](docs/14-product-dna.md) | Adventure statt Tracker, Weltkarte, Passport-Zustände, Daydrinking, keine Emoji |
 | [`15-design-system.md`](docs/15-design-system.md) | Tokens, Komponenten, Prüfregeln |
 | [`16-engineering-standard.md`](docs/16-engineering-standard.md) | Versionierung, Testpyramide, CI/CD, macOS-Runner-Kosten, Definition of Done |
+| [`17-preview-workflow.md`](docs/17-preview-workflow.md) | Klickbare Prototypen: wann, wie, und was REAL/PROTOTYPE/PLACEHOLDER heißt |
 | [`SETUP.md`](docs/SETUP.md) | Lokales Setup: Xcode, Supabase, GitHub-Secrets |
 
 ## Die Entscheidungen in Kurzform
