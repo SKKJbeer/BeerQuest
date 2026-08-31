@@ -15,6 +15,7 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | warum das nichts kostet | [`docs/04-cost-analysis.md`](docs/04-cost-analysis.md) |
 | wann was gebaut wird | [`docs/09-implementation-plan.md`](docs/09-implementation-plan.md) |
 | wie du das Projekt zum Laufen bringst | [`docs/SETUP.md`](docs/SETUP.md) |
+| wann etwas als fertig gilt | [`docs/16-engineering-standard.md`](docs/16-engineering-standard.md) |
 
 ## Dokumentation
 
@@ -36,6 +37,7 @@ Zwei harte Rahmenbedingungen binden jede Entscheidung:
 | [`13-visual-direction.md`](docs/13-visual-direction.md) | Drei visuelle Richtungen und die Empfehlung — **Entscheidung offen** |
 | [`14-product-dna.md`](docs/14-product-dna.md) | Adventure statt Tracker, Weltkarte, Passport-Zustände, Daydrinking, keine Emoji |
 | [`15-design-system.md`](docs/15-design-system.md) | Tokens, Komponenten, Prüfregeln |
+| [`16-engineering-standard.md`](docs/16-engineering-standard.md) | Versionierung, Testpyramide, CI/CD, macOS-Runner-Kosten, Definition of Done |
 | [`SETUP.md`](docs/SETUP.md) | Lokales Setup: Xcode, Supabase, GitHub-Secrets |
 
 ## Die Entscheidungen in Kurzform

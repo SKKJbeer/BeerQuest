@@ -56,6 +56,20 @@ Sammelzustände, Daydrinking und die Emoji-Regel: `docs/14-product-dna.md`.
 Abstände aus `BQDesign/Tokens.swift` — nie hardcodiert im View
 (`docs/15-design-system.md`).
 
+## Engineering-Standard
+
+`docs/16-engineering-standard.md`. Kurzfassung:
+
+- **Feature = Implementierung + Tests + erfolgreicher Build.** Nichts anderes
+  gilt als fertig.
+- Jede kritische Spielregel braucht einen automatisierten Test. Jeder
+  behobene Fehler bekommt einen Regressionstest, der dauerhaft bleibt.
+- Vor dem Push `./scripts/verify.sh` ausführen.
+- Commits klein und thematisch, ein Commit pro sinnvollem Schritt.
+- Jeder Handoff nennt `BUILD:` und `TESTS:` mit PASS/FAIL/NICHT AUSGEFÜHRT.
+- macOS-CI kostet das Zehnfache von Linux — Trigger sparsam halten
+  (`16-engineering-standard.md` §3).
+
 ## Arbeitsweise
 
 - Planungsdokumente in `docs/` sind die Wahrheit. Weicht der Code ab, wird das

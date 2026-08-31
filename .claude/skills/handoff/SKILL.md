@@ -28,6 +28,11 @@ Am Ende jeder Session mit inhaltlichen Änderungen:
 
 **Ergebnis:** <2–4 Sätze, was jetzt existiert>
 
+```
+BUILD:  PASS | FAIL | NICHT AUSGEFÜHRT (mit Grund)
+TESTS:  PASS | FAIL | TEILWEISE (welche)
+```
+
 ### Entscheidungen
 | # | Entscheidung | Begründung | Umkehrbar? |
 
@@ -44,6 +49,9 @@ beantwortet sein muss.>
 ### Nächster Schritt
 <Genau ein Satz.>
 
+### Offene Risiken
+<Was könnte später weh tun. Leer lassen ist erlaubt, weglassen nicht.>
+
 ### Vorschläge und Themen von mir
 <Alles, was ich dem Auftraggeber im Chat vorschlagen oder zu bedenken geben
 würde, gehört auch hierher — Ideen, Bedenken, Beobachtungen, mögliche
@@ -59,7 +67,8 @@ sehen, was der Auftraggeber sieht. Nichts nur im Chat lassen.>
   gehört das unter „Offene Punkte", nicht versteckt in den Fließtext.
 - **Keine Erfolgsmeldungen ohne Deckung.** Was nicht getestet ist, wird als
   ungetestet benannt. Was übersprungen wurde, steht unter „Bewusst NICHT
-  gemacht".
+  gemacht". `BUILD:` und `TESTS:` sind Pflicht — „nicht ausgeführt" ist eine
+  zulässige Angabe, eine unbelegte Erfolgsmeldung nicht.
 - **Selbsterklärend.** Keine Verweise auf „wie besprochen" oder auf
   Chat-Kontext. Dateipfade statt „das Dokument von vorhin".
 - **Kurz.** Ziel: unter einer Bildschirmseite pro Session, plus Tabellen.

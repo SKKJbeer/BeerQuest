@@ -10,9 +10,14 @@ on:
     paths: ["supabase/**"]
   workflow_dispatch:
 
+concurrency:
+  group: sql-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   sql:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     services:
       postgres:
         # Version wie im Supabase-Projekt (siehe supabase/config.toml).

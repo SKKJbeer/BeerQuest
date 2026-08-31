@@ -1,0 +1,72 @@
+name: iOS build & tests
+
+# ACHTUNG - KOSTEN. macOS-Runner kosten 0,062 $/min gegen 0,006 $/min Linux
+# (Faktor ~10). Das Freikontingent eines privaten Repositories von 2.000
+# Minuten entspricht damit nur ~200 macOS-Minuten im Monat, also etwa vier
+# bis sechs Builds.
+#
+# Dieser Workflow ist deshalb vorerst NUR MANUELL ausloesbar und verbraucht
+# nichts, bis er bewusst scharfgeschaltet wird.
+#
+# Zum Scharfschalten die auskommentierten Trigger aktivieren - sinnvoll,
+# sobald eine der Optionen aus docs/16-engineering-standard.md §2 entschieden
+# ist (Repository oeffentlich = unbegrenzt kostenlos, oder eigener Runner).
+on:
+  workflow_dispatch:
+  # pull_request:
+  #   paths: ["BeerQuestKit/**", "App/**", "project.yml", "Config.xcconfig.example",
+  #           ".github/workflows/ios-build.yml"]
+  # push:
+  #   branches: [main]
+  #   paths: ["BeerQuestKit/**", "App/**", "project.yml"]
+  # push:
+  #   tags: ["v*"]
+
+# Ein neuer Push bricht den laufenden Build derselben Referenz ab.
+# Spart bei schneller Commit-Folge am meisten Minuten.
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # macos-latest = Apple Silicon, 3 Kerne, 7 GB. Fuer ein Projekt dieser
+    # Groesse voellig ausreichend; Larger Runners waeren teurer und unnoetig.
+    runs-on: macos-latest
+    timeout-minutes: 20    # Notbremse gegen haengende Jobs
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode-Version anzeigen
+        run: xcodebuild -version
+
+      - name: XcodeGen
+        run: brew install xcodegen
+
+      - name: Konfiguration bereitstellen
+        # Der Build braucht die Datei, aber keine echten Werte:
+        # gebaut und getestet wird ohne Serverkontakt.
+        run: cp Config.xcconfig.example Config.xcconfig
+
+      - name: Projekt erzeugen
+        run: xcodegen generate
+
+      - name: Abhaengigkeiten zwischenspeichern
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('BeerQuestKit/Package.swift') }}
+          restore-keys: ${{ runner.os }}-spm-
+
+      - name: Build und Tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project BeerQuest.xcodeproj \
+            -scheme BeerQuest \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty && exit ${PIPESTATUS[0]}

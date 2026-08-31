@@ -5,6 +5,140 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-30 (8) — Engineering-Standard: Versionierung, Tests, CI/CD
+
+**Auftrag:** Repository-Stand analysieren, Lücken in Versionierung und
+Testinfrastruktur identifizieren, macOS-Runner-Kosten offiziell prüfen,
+CI/CD-Strategie vorschlagen, Teststrategie ergänzen. **Ausdrücklich noch
+keine große CI-Infrastruktur bauen — erst den Plan.**
+
+```
+BUILD:  NICHT AUSGEFÜHRT — in dieser Umgebung gibt es weder Swift noch Xcode
+TESTS:  PASS — 7/7 SQL-Testdateien grün (./scripts/verify.sh sql)
+```
+
+**Ergebnis:** Der Plan liegt vor. Gebaut wurden nur die drei Dinge, die
+nichts kosten und sofort nützen: ein lokales Prüfskript, ein macOS-Workflow
+im Ruhezustand, und Sparmaßnahmen an der bestehenden Linux-CI.
+
+### Die zentrale Erkenntnis
+
+**Verifiziert bei GitHub:** macOS-Runner kosten $0,062/min gegen $0,006/min
+für Linux — Faktor ~10. Das Freikontingent von 2.000 Minuten entspricht damit
+**~200 macOS-Minuten im Monat, also etwa vier bis sechs iOS-Builds.** Für
+„jeder Push wird gebaut" reicht das nicht ansatzweise.
+
+**Aber:** GitHub formuliert in der Runner-Dokumentation ausdrücklich
+*„Free for Public, Paid for Private"*. **Ein öffentliches Repository bekommt
+macOS-Runner unbegrenzt kostenlos.** Das ist der einzige Weg, der das Ziel
+vollständig löst, statt es zu rationieren.
+
+### Entscheidungen
+
+| # | Entscheidung | Begründung | Umkehrbar? |
+|---|---|---|---|
+| 1 | **macOS-Workflow geschrieben, aber nur `workflow_dispatch`** | Er kostet nichts, ist aber reviewbar und mit drei entkommentierten Zeilen scharf. Genau das meint „erst der Plan, dann die Infrastruktur". | Ja |
+| 2 | **`macos-latest` (Apple Silicon, 3 Kerne, 7 GB)** als Runner-Größe | Für ~1.000 Zeilen SwiftUI plus ein lokales Package völlig ausreichend. Larger Runners sind teurer, für Team-/Enterprise-Pläne und hier unnötig. | Ja |
+| 3 | **Trigger-Matrix: Linux für alles Mögliche, macOS nur im Pull Request** | Dokumentationsänderungen lösen keinen iOS-Build aus. Dazu `concurrency: cancel-in-progress`, Caching und `timeout-minutes`. | Ja |
+| 4 | **`scripts/verify.sh` als lokales Gate** | Bei einem Solo-Projekt die wirksamste Absicherung überhaupt: sofortiges Feedback, keine Kosten, keine Wartezeit. Gibt am Ende exakt die zwei Zeilen aus, die in den Handoff gehören. | — |
+| 5 | **SemVer `0.MINOR.PATCH`, MINOR = eine abgeschlossene P0-Phase** | `v0.1.0` = P0.1, `v0.2.0` = P0.2. **`v1.0.0` genau dann, wenn Fremde die App bekommen** — also wenn alle 17 Punkte aus `11-release-gates.md` Stufe 2 erfüllt sind. Damit hängt der Sprung an einem inhaltlichen Kriterium, nicht an einem Gefühl. | — |
+| 6 | **Regression-Regel dokumentiert** und mit den zwei realen Fällen belegt (Orts-Dedupe, `award_xp`-Rechte) | Eine Regel mit Beispielen wird befolgt, eine ohne bleibt Prosa. | — |
+| 7 | **Handoff nennt ab sofort `BUILD:` und `TESTS:`** — im Skill und in `CLAUDE.md` verankert | „Nicht ausgeführt" ist zulässig, eine unbelegte Erfolgsmeldung nicht. | — |
+
+### Bestandsaufnahme — was fehlte
+
+| Bereich | Stand |
+|---|---|
+| SQL-Tests und -CI | ✅ 7 Dateien, Linux-CI mit Pfadfiltern, prüft auch Migrations-Idempotenz |
+| Swift-Unit-Tests | 🔶 1 Datei, 11 Funktionen — deckt die einzige Swift-Logik ab, die existiert |
+| **Swift-Build in CI** | 🔴 **fehlte vollständig — die zentrale Lücke** |
+| **Versionierung / Tags** | 🔴 **0 Tags, keine Strategie** |
+| Integrations- und UI-Tests | ⏭️ bewusst später (P0.4 bzw. P0.5) |
+
+Die ehrliche Kernaussage: Die Backend-Logik ist gut abgesichert, weil sie hier
+ausführbar ist. **Der Swift-Code ist es nicht — 1.005 Zeilen in drei
+gestapelten Änderungen sind bis heute nie kompiliert worden.**
+
+### Geänderte Dateien
+
+| Datei | Was |
+|---|---|
+| `docs/16-engineering-standard.md` | **neu** — Bestandsaufnahme, macOS-Kostenanalyse mit Quellen, CI-Strategie, Testpyramide mit Pflichtabdeckung, SemVer, Definition of Done |
+| `scripts/verify.sh` | **neu** — lokales Gate, `sql` / `ios` / alles |
+| `.github/workflows/ios-build.yml` | **neu**, ruhend — XcodeGen, Caching, Simulator-Tests, kein Signing |
+| `.github/workflows/sql-tests.yml` | `concurrency` und `timeout-minutes` ergänzt |
+| `.claude/skills/handoff/SKILL.md` | `BUILD:`/`TESTS:`-Pflicht, Abschnitt „Offene Risiken" |
+| `CLAUDE.md`, `README.md` | Engineering-Standard als Leitplanke, Index |
+
+### Offene Risiken
+
+1. **Drei ungetestete Swift-Änderungen liegen übereinander.** Je länger das so
+   bleibt, desto teurer die Fehlersuche. Das ist das größte offene Risiko im
+   Projekt — größer als jede Produktfrage.
+2. **`main` und der Arbeitsbranch driften** — inzwischen neun Commits.
+3. Bisherige Commits waren zu groß (siehe Selbstkritik in §5 des Dokuments).
+   Ab sofort kleiner geschnitten.
+4. Die Supabase-Cloud ist noch nicht angelegt; alle Migrationen sind nur lokal
+   erprobt.
+
+### Offene Punkte für den PM
+
+1. **Frage zum Mac-Runner im anderen Projekt:** War das ein **öffentliches
+   Repository** oder ein **selbst gehosteter Runner**? Davon hängt die
+   Empfehlung ab — beides führt zu 0 €, aber sie schließen sich gegenseitig
+   aus (ein selbst gehosteter Runner sollte nie an einem öffentlichen Repo
+   hängen, sonst könnten Fremde Code darauf ausführen).
+2. **Repository öffentlich machen?** Im Repo liegen keine Geheimnisse —
+   `Config.xcconfig` ist gitignoriert, der Anon-Key ist ohnehin öffentlich,
+   GitHub-Secrets bleiben geheim. Öffentlich wären allerdings Produktstrategie,
+   Kostenanalyse und Monetarisierungspläne lesbar. Das ist eine
+   Geschäftsentscheidung, keine technische.
+3. **Visual Direction** (aus Session 7) — weiterhin der Blocker für P0.3-UI.
+4. **Einmal bauen lassen** — inzwischen dringend, siehe Risiko 1.
+
+### Bewusst NICHT gemacht
+
+- **Keine scharfe macOS-CI.** Der Workflow ist bewusst ruhend, bis Punkt 1
+  und 2 entschieden sind.
+- **Keine Tags gesetzt.** `v0.1.0` und `v0.2.0` kommen rückwirkend, sobald
+  ein Build bestätigt ist — ein Tag auf ungeprüftem Code wäre wertlos.
+- **Keine Integrations- oder UI-Tests.** Erst ab P0.4 bzw. P0.5 sinnvoll.
+- **Kein Coverage-Gate, keine Test-Matrix, kein TestFlight-Upload, kein
+  Dependabot** — alles sinnvoll für ein Produkt mit Nutzern; wir haben keine.
+
+### Nächster Schritt
+
+Entscheidung zu Punkt 1 und 2, dann macOS-CI scharfschalten und die Tags
+rückwirkend setzen. Parallel: Visual Direction bestätigen, dann P0.3-UI.
+
+### Vorschläge und Themen von mir
+
+1. **Ich würde das Repository öffentlich machen.** Es löst das CI-Problem
+   vollständig und dauerhaft, statt bei vier Builds im Monat zu haushalten.
+   Der Preis ist, dass die Planungsdokumente lesbar sind — bei einem
+   Nebenprojekt ohne Wettbewerber halte ich das für einen guten Tausch. Wenn
+   dir das zu weit geht, ist der selbst gehostete Runner auf deinem Mac die
+   zweitbeste Lösung, kostet aber Betrieb.
+2. **Der eigentliche Gewinn ist nicht die CI, sondern `verify.sh`.** Bei einem
+   Solo-Projekt ist ein Skript, das in zwei Minuten lokal Bescheid gibt, mehr
+   wert als eine Pipeline, die zehn Minuten später ein rotes Kreuz zeigt. Die
+   CI ist das Sicherheitsnetz, nicht das Hauptwerkzeug.
+3. **Zur Reihenfolge:** Ich würde CI *vor* der P0.3-UI scharfschalten. Sechs
+   neue Screens sind der erste Moment, in dem ein Build wirklich brechen kann
+   — und der beste Zeitpunkt für ein Sicherheitsnetz ist davor.
+4. **Ein Punkt, den der Auftrag nicht nennt, der aber dazugehört:** Ein
+   Pull Request kann nur dann „nicht als fertig gelten", wenn die Checks als
+   **required** konfiguriert sind. Das ist eine Einstellung im Repository
+   (Branch Protection auf `main`), die ich nicht setzen kann — sie braucht
+   Adminrechte. Sobald die CI läuft: `main` schützen und `sql` sowie `build`
+   als erforderlich markieren. Sonst ist die Regel Absichtserklärung.
+5. **Beobachtung zur Testabdeckung:** Zwei Pflichtregeln aus deiner Liste sind
+   noch offen — **Leaderboards** (kommt mit P0.10) und **Offline/Retry**
+   (kommt mit P0.4 als Unit-Test der RetryQueue). Beide sind in der
+   Abdeckungstabelle als offen markiert, damit sie nicht durchrutschen.
+
+---
+
 ## Session 2026-08-30 (7) — Produkt-DNA, Visual Direction, Design System, P0.3-Server
 
 **Auftrag:** Consolidated Product Direction — XP-Fix, P0.3 starten, Produkt-DNA
