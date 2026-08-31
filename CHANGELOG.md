@@ -9,6 +9,15 @@ Versionsschema: `docs/16-engineering-standard.md` §5.
 
 ## Unveröffentlicht
 
+### Preview
+- **Der Artefakt-Link ließ sich nicht öffnen** — derselbe Befund wie in
+  Zählora, bei uns schon beim ersten Veröffentlichen. Vermutlich ist ein aus
+  einer Remote-Sitzung veröffentlichtes Artefakt an das Konto gebunden.
+  Konsequenz: Der Prototyp wird ab sofort **immer als Datei mitgeschickt**,
+  und der dauerhafte Weg ist GitHub Pages auf dem Zweig `prototype` — das
+  Repository ist öffentlich, diese Adresse braucht keinen Login.
+- Zweig `prototype` erstmals gepusht.
+
 ### Aus Zählora/PulseMeter übernommen
 - **`cancel-in-progress` beim teuren iOS-Auftrag auf `false` korrigiert.** Dort
   hat die umgekehrte Einstellung an einem Tag drei Läufe gekostet — jeden

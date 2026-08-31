@@ -190,7 +190,7 @@ streichen.* Gilt unverändert, unabhängig von der Sprache — aufgenommen in
 
 | Was | Warum nicht |
 |---|---|
-| **Jede Veröffentlichung ein neues Artifact** | Bei ihnen ließ sich ein erneutes Veröffentlichen auf denselben Pfad nicht öffnen. Bei uns hat es funktioniert. **Wenn du beim nächsten Mal eine Anmeldemaske siehst, sag Bescheid** — dann übernehmen wir ihr Verfahren sofort. |
+| ~~**Jede Veröffentlichung ein neues Artifact**~~ | **Am 31.08. übernommen** — der Fall ist bei uns eingetreten, und zwar schon beim ersten Veröffentlichen. Ihr Verfahren gilt jetzt: neuer Dateiname je Veröffentlichung, zurückgegebene URL prüfen. Zusätzlich, und wichtiger als ihr Verfahren: Die Datei wird **immer mitgeschickt**, und der dauerhafte Weg ist GitHub Pages auf dem Zweig `prototype` — das Repository ist öffentlich, diese Adresse braucht nie einen Login. Siehe `17-preview-workflow.md` §2. |
 | **GitHub Pages scheidet aus (privates Repo)** | Ihr Repo ist privat, unseres öffentlich. Für uns ist Pages eine gültige Option. |
 | Der Zweig `screenshots` | Wir haben noch keine Screenshots — es gibt keine Screens. Kommt mit P0.3-UI. |
 | `check-strings.py`, `check-namen.py`, `check-trefferflaechen.py`, `check-aktualisierung.py` | Setzen SwiftUI-Views bzw. Python-Skripte voraus, die wir noch nicht haben. **Vorgemerkt für P0.3** — dann sind sie sofort wertvoll. |

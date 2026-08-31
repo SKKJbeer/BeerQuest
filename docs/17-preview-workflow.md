@@ -31,7 +31,7 @@ trotzdem das letzte Wort, weil der Zweig nur nach bestandener Prüfung entsteht.
 
 | Weg | Wofür | Aufwand für den PM |
 |---|---|---|
-| **Artefakt-Link** | Sofortiges Feedback innerhalb einer Session. Ein Klick, kein Setup. | keiner |
+| **Artefakt-Link** | Sofortiges Feedback innerhalb einer Session | ⚠️ **hat am 31.08. nicht funktioniert** — siehe unten |
 | **Zweig `prototype`** | Der dauerhafte Stand unter eigener Adresse, wie bei Zählora | einmalig ein Pages-Projekt anlegen |
 | **TestFlight** | Alles, was **echtes iOS-Verhalten** braucht: Standort, Karte, Sign in with Apple, Haptik, Kamera | App-Store-Connect-Einrichtung |
 
@@ -47,6 +47,35 @@ kommt — dafür braucht es einen echten Build.
 | Reihenfolge, Hierarchie, Wortwahl, „verstehe ich, was ich tun soll?" | Web-Prototyp genügt |
 | Reward-Moment, Timing, Rhythmus des Flows | Web-Prototyp genügt |
 | Karte, Standort, Kamera, Haptik, Systemdialoge, Performance | TestFlight nötig |
+
+### ⚠️ Befund vom 2026-08-31: Der Artefakt-Link ließ sich nicht öffnen
+
+Genau das Problem, das Zählora dokumentiert hatte („es kam eine
+Anmeldemaske") — bei uns jetzt bestätigt, und zwar schon beim **ersten**
+Veröffentlichen, nicht erst beim Aktualisieren.
+
+**Vermutung, nicht bewiesen:** Ein aus einer Remote-Sitzung veröffentlichtes
+Artefakt ist privat und an das Konto gebunden. Wer es in einem Browser öffnet,
+in dem er nicht bei claude.ai angemeldet ist, bekommt die Anmeldemaske. Der
+Hinweis „Artifacts are private unless shared from the page's share menu"
+stützt das.
+
+**Was stattdessen zuverlässig funktioniert, in dieser Reihenfolge:**
+
+1. **Die Datei direkt** (`SendUserFile`). Der Prototyp ist in sich
+   geschlossen und läuft **ohne Login und ohne Netz** — Datei speichern, im
+   Browser öffnen, fertig. Das ist der Weg, der nie scheitern kann.
+2. **GitHub Pages auf dem Zweig `prototype`.** Das Repository ist öffentlich,
+   also braucht diese Adresse keinen Login — von niemandem, nie. Einmalig
+   einzurichten (§8), danach dauerhaft.
+3. **Ein zweites Artefakt unter anderem Dateinamen.** Zähloras Verfahren:
+   nie auf einen benutzten Pfad erneut veröffentlichen, jedes Mal ein neuer
+   Name, und **die zurückgegebene URL prüfen** — kommt dieselbe zurück, war es
+   eine Aktualisierung und keine Neuanlage.
+
+**Regel ab sofort:** Bei jeder Produktänderung wird der Prototyp **zusätzlich
+als Datei mitgeschickt**, nicht nur verlinkt. Ein Link, den der Empfänger nicht
+öffnen kann, ist keine Preview.
 
 ---
 
@@ -137,10 +166,13 @@ Für die dauerhafte Adresse — eine der beiden Varianten genügt:
 2. An das Repository hängen, **Produktionszweig `prototype`**
 3. Fertig — jeder geprüfte Stand geht von selbst online
 
-**GitHub Pages**
+**GitHub Pages** — für uns der bessere Weg, weil das Repository öffentlich ist
 1. Settings → Pages → Source: „Deploy from a branch"
-2. Branch `prototype`, Ordner `/`
-3. Adresse: `https://skkjbeer.github.io/BeerQuest/`
+2. Branch **`prototype`**, Ordner `/ (root)` → Save
+3. Nach ein bis zwei Minuten: **`https://skkjbeer.github.io/BeerQuest/`**
+
+Der Zweig `prototype` **existiert bereits** und wird bei jeder geprüften
+Änderung überschrieben. Es fehlt nur der eine Schalter.
 
 Beides kostenlos. Solange keines von beiden eingerichtet ist, liefert der
 Artefakt-Link die Preview.
