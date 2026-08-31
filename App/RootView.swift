@@ -11,7 +11,7 @@ import BQPlay
 /// er hat keinen Zustand, den man verlassen moechte.
 struct RootView: View {
     @Environment(SessionStore.self) private var session
-    @State private var selectedTab: Tab = .home
+    @State private var selectedTab: BQTab = .home
     @State private var isAddingCheckIn = false
 
     var body: some View {
@@ -19,23 +19,23 @@ struct RootView: View {
             TabView(selection: $selectedTab) {
                 BQPlayPlaceholder(title: "Home")
                     .tabItem { Label("Home", systemImage: BQIcon.home) }
-                    .tag(Tab.home)
+                    .tag(BQTab.home)
 
                 BQWorldPlaceholder(title: "Map")
                     .tabItem { Label("Map", systemImage: BQIcon.map) }
-                    .tag(Tab.map)
+                    .tag(BQTab.map)
 
                 BQPlayPlaceholder(title: "Quests")
                     .tabItem { Label("Quests", systemImage: BQIcon.quests) }
-                    .tag(Tab.quests)
+                    .tag(BQTab.quests)
 
                 BQPlayPlaceholder(title: "Clan")
                     .tabItem { Label("Clan", systemImage: BQIcon.clan) }
-                    .tag(Tab.clan)
+                    .tag(BQTab.clan)
 
                 BQPlayPlaceholder(title: "Profile")
                     .tabItem { Label("Profile", systemImage: BQIcon.profile) }
-                    .tag(Tab.profile)
+                    .tag(BQTab.profile)
             }
 
             addButton

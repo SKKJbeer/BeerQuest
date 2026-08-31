@@ -3,7 +3,11 @@ import Foundation
 /// Die fuenf Tabs aus `docs/05-architecture.md` §9.
 /// Der Add-Button ist bewusst kein Tab: Er hat keinen Zustand, den man
 /// verlassen moechte, und oeffnet deshalb ein Sheet.
-public enum Tab: String, Hashable, CaseIterable, Sendable {
+///
+/// Praefix `BQ`, weil SwiftUI seit der neuen TabView-API selbst einen Typ
+/// `Tab` mitbringt. Ohne Praefix ist die Typsuche in jeder Datei mehrdeutig,
+/// die sowohl SwiftUI als auch BQCore importiert - also in praktisch jedem View.
+public enum BQTab: String, Hashable, CaseIterable, Sendable {
     case home, map, quests, clan, profile
 }
 
