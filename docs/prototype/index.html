@@ -4,564 +4,1103 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Beer Quest Core Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75..125,400..800;1,75..125,400&display=swap">
 <style>
-/* ------------------------------------------------------------------
-   Tokens - identisch zu BeerQuestKit/Sources/BQDesign/Tokens.swift.
+/* ==================================================================
+   BEER QUEST — Prototyp V2
    Visuelle Richtung A "Dark Adventure" (docs/13-visual-direction.md).
-   Wenn hier etwas geaendert wird, muss Tokens.swift mitgeaendert werden.
-   ------------------------------------------------------------------ */
+
+   Farben identisch zu BeerQuestKit/Sources/BQDesign/Tokens.swift.
+   check-tokens.py haelt beide gegeneinander - wo etwas zweimal steht,
+   steht es frueher oder spaeter verschieden.
+
+   Neu in V2: eine typografische Stimme. Archivo, mit der Breitenachse
+   als Gestaltungsmittel: Ueberschriften und Zahlen expanded, Fliesstext
+   normal. Systemschrift konnte die Frage "wirkt das hochwertig?" nicht
+   beantworten.
+   ================================================================== */
 :root{
   --base:#111216; --surface:#1b1d22; --raised:#26292f; --separator:#34373e;
   --accent:#efa53c; --accent-deep:#c97627; --on-accent:#111216;
   --ink-1:#f4f3ef; --ink-2:#a5a5a3; --ink-3:#6f7176;
   --copper:#b8734d; --brass:#d4af5a; --silver:#bdc4cb; --success:#67bd7a;
-  --r-card:18px; --r-sheet:28px; --r-small:8px;
-  --s-xs:4px; --s-s:8px; --s-m:16px; --s-l:24px; --s-xl:32px;
+
+  --font:"Archivo","Helvetica Neue",-apple-system,BlinkMacSystemFont,sans-serif;
+  --r-card:18px; --r-sheet:28px; --r-small:10px; --r-pill:999px;
+  --s-xs:4px; --s-s:8px; --s-m:16px; --s-l:24px; --s-xl:32px; --s-xxl:44px;
+  /* Tiefe ueber Flaechenhelligkeit, nicht ueber Schatten. Der eine
+     Schatten hier traegt den schwebenden Hauptknopf. */
+  --lift:0 10px 30px rgba(0,0,0,.55);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
 body{
-  background:#08090b; color:var(--ink-1);
-  font:400 16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
-  display:flex; align-items:center; justify-content:center; padding:16px;
+  background:#08090b;color:var(--ink-1);font-family:var(--font);
+  font-size:16px;line-height:1.45;font-weight:400;
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  -webkit-font-smoothing:antialiased;
 }
-/* Geraeterahmen - nur Buehne, nicht Teil des Designs */
-#phone{
-  width:100%; max-width:400px; height:min(844px,calc(100vh - 32px));
-  background:var(--base); border-radius:38px; overflow:hidden; position:relative;
-  box-shadow:0 24px 70px rgba(0,0,0,.7), 0 0 0 1px #26282e;
-  display:flex; flex-direction:column;
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
-.scroll{flex:1; overflow-y:auto; overscroll-behavior:contain; padding:0 var(--s-m) 108px}
-.screen{display:none; height:100%; flex-direction:column}
-.screen.on{display:flex}
 
-/* Typo */
-h1,h2,h3{margin:0}
-.label{font:600 11px/1 -apple-system,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
-.num{font:800 28px/1 -apple-system,sans-serif;font-variant-numeric:tabular-nums}
-.num-xl{font:800 46px/1 -apple-system,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.title{font:600 21px/1.2 -apple-system,sans-serif}
-.headline{font:600 17px/1.3 -apple-system,sans-serif}
-.cap{font:500 13px/1.35 -apple-system,sans-serif;color:var(--ink-2)}
+/* Geraeterahmen - Buehne, nicht Teil des Designs */
+#phone{
+  width:100%;max-width:400px;height:min(860px,calc(100vh - 32px));
+  background:var(--base);border-radius:40px;overflow:hidden;position:relative;
+  box-shadow:0 30px 80px rgba(0,0,0,.75),0 0 0 1px #24262c;
+  display:flex;flex-direction:column;
+}
+
+/* ------------------------------------------------------- Typografie */
+.display{font-size:30px;line-height:1.05;font-weight:800;
+  font-stretch:118%;letter-spacing:-.015em}
+.title{font-size:21px;line-height:1.15;font-weight:700;font-stretch:110%}
+.headline{font-size:16px;line-height:1.25;font-weight:600}
+.body{font-size:15px;line-height:1.45;color:var(--ink-2)}
+.cap{font-size:13px;line-height:1.35;color:var(--ink-2)}
+.label{font-size:10.5px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);font-stretch:105%}
+.num{font-size:26px;font-weight:800;font-stretch:118%;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.num-xl{font-size:62px;font-weight:800;font-stretch:125%;
+  font-variant-numeric:tabular-nums;letter-spacing:-.035em;line-height:.95}
 .dim{color:var(--ink-2)} .dimmer{color:var(--ink-3)}
 
-/* Bausteine */
-.card{background:var(--surface);border-radius:var(--r-card);padding:var(--s-m);margin-bottom:var(--s-m)}
-.card.tap{cursor:pointer;transition:transform .12s ease,background .12s ease}
-.card.tap:active{transform:scale(.985);background:var(--raised)}
+/* ------------------------------------------------------- Bausteine */
+.scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;
+  padding:0 var(--s-m) 120px}
+.screen{display:none;height:100%;flex-direction:column}
+.screen.on{display:flex}
+.card{background:var(--surface);border-radius:var(--r-card);padding:var(--s-m)}
+.tap{cursor:pointer;transition:transform .14s cubic-bezier(.2,.8,.2,1),background .14s}
+.tap:active{transform:scale(.98);background:var(--raised)}
 .row{display:flex;align-items:center;gap:var(--s-s)}
 .between{display:flex;align-items:center;justify-content:space-between;gap:var(--s-s)}
-.btn{
-  width:100%;border:0;border-radius:var(--r-card);padding:15px;
-  background:var(--accent);color:var(--on-accent);
-  font:600 17px/1 -apple-system,sans-serif;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:transform .12s ease,filter .12s ease;
-}
-.btn:active{transform:scale(.985);filter:brightness(.94)}
-.btn.ghost{background:transparent;color:var(--ink-2);border:1px solid var(--separator)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.bar{height:8px;background:var(--raised);border-radius:99px;overflow:hidden}
-.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .7s cubic-bezier(.2,.8,.2,1)}
-.icon{width:20px;height:20px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.icon.sm{width:16px;height:16px}
-.icon.lg{width:26px;height:26px}
-.sep{height:1px;background:var(--separator);margin:var(--s-m) 0}
+.stack{display:flex;flex-direction:column}
+.gap-s{gap:var(--s-s)} .gap-m{gap:var(--s-m)} .gap-l{gap:var(--s-l)}
+.icon{width:20px;height:20px;flex:0 0 auto;stroke:currentColor;fill:none;
+  stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon.sm{width:15px;height:15px} .icon.lg{width:25px;height:25px}
+.icon.xl{width:34px;height:34px;stroke-width:1.4}
 
-/* Kopf */
-header{padding:calc(env(safe-area-inset-top) + 18px) var(--s-m) var(--s-m)}
-.avatar{width:44px;height:44px;border-radius:50%;background:var(--copper);
-  display:flex;align-items:center;justify-content:center;
-  font:700 18px/1 -apple-system,sans-serif;color:var(--on-accent);flex:0 0 auto}
-
-/* Passport-Streifen */
-.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s-s)}
-.stat{background:var(--surface);border-radius:var(--r-card);padding:12px 6px;text-align:center}
-.stat .icon{margin:0 auto 6px;display:block;color:var(--ink-3)}
-.stat b{display:block;font:700 19px/1 -apple-system,sans-serif;font-variant-numeric:tabular-nums}
-.stat span{display:block;font:500 10px/1.2 -apple-system,sans-serif;color:var(--ink-3);margin-top:3px;
-  letter-spacing:.04em;text-transform:uppercase}
-
-/* Quest */
-.dots{display:flex;gap:6px}
-.dots i{width:9px;height:9px;border-radius:50%;background:var(--raised);display:block}
+/* Fortschrittsbalken */
+.bar{height:6px;background:var(--raised);border-radius:var(--r-pill);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:var(--r-pill);
+  transition:width .9s cubic-bezier(.2,.8,.2,1)}
+/* Punkte statt Balken bei kleinen Zielen - abzaehlbar statt geschaetzt */
+.dots{display:flex;gap:5px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--raised);display:block;
+  transition:background .3s}
 .dots i.done{background:var(--accent)}
-.pill{font:600 11px/1 -apple-system,sans-serif;letter-spacing:.07em;text-transform:uppercase;
-  padding:5px 9px;border-radius:99px;background:var(--raised);color:var(--ink-2)}
-.pill.accent{background:rgba(239,165,60,.15);color:var(--accent)}
 
-/* Tab-Leiste */
-nav{
-  position:absolute;left:0;right:0;bottom:0;height:84px;
-  background:rgba(17,18,22,.92);backdrop-filter:blur(18px);
-  border-top:1px solid var(--separator);
-  display:grid;grid-template-columns:repeat(5,1fr);align-items:start;padding-top:9px;
-}
-nav button{background:0;border:0;color:var(--ink-3);cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px 0;
-  font:500 10px/1 -apple-system,sans-serif}
-nav button.on{color:var(--accent)}
-#add{
-  position:absolute;left:50%;transform:translateX(-50%);bottom:96px;
-  background:var(--accent);color:var(--on-accent);border:0;border-radius:99px;
-  padding:13px 24px;font:700 14px/1 -apple-system,sans-serif;letter-spacing:.05em;
-  display:flex;align-items:center;gap:7px;cursor:pointer;
-  box-shadow:0 8px 24px rgba(0,0,0,.5);transition:transform .12s ease}
-#add:active{transform:translateX(-50%) scale(.96)}
+.pill{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 10px;border-radius:var(--r-pill);background:var(--raised);
+  color:var(--ink-2);white-space:nowrap}
+.pill.accent{background:rgba(239,165,60,.16);color:var(--accent)}
+.pill.ghost{background:transparent;border:1px solid var(--separator);color:var(--ink-3)}
 
-/* Sheet */
-#sheet{position:absolute;inset:0;background:rgba(8,9,11,.6);display:none;z-index:20}
-#sheet.on{display:block}
-.sheet-body{position:absolute;left:0;right:0;bottom:0;top:56px;background:var(--base);
-  border-radius:var(--r-sheet) var(--r-sheet) 0 0;display:flex;flex-direction:column;
-  animation:up .3s cubic-bezier(.2,.8,.2,1)}
-@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
-.sheet-head{padding:18px var(--s-m) 10px;display:flex;align-items:center;justify-content:space-between}
-.sheet-scroll{flex:1;overflow-y:auto;padding:0 var(--s-m) var(--s-m)}
-.step{display:none} .step.on{display:block}
-.field{width:100%;background:var(--surface);border:1px solid var(--separator);
-  border-radius:var(--r-card);padding:14px var(--s-m);color:var(--ink-1);
-  font:400 16px/1 -apple-system,sans-serif;margin-bottom:var(--s-m)}
-.field::placeholder{color:var(--ink-3)}
-.opt{display:flex;align-items:center;gap:12px;padding:13px var(--s-m);background:var(--surface);
-  border-radius:var(--r-card);margin-bottom:8px;cursor:pointer;border:1px solid transparent;
-  transition:border-color .12s ease,background .12s ease}
-.opt:active,.opt.sel{border-color:var(--accent);background:var(--raised)}
-.opt .icon{color:var(--ink-3)}
-.opt b{font:500 16px/1.2 -apple-system,sans-serif;display:block}
-.opt small{color:var(--ink-3);font:400 13px/1.3 -apple-system,sans-serif}
-.new-row{border:1px dashed var(--separator);background:transparent}
+/* Knoepfe. Mindestens 48 px hoch - eine Hand, schlechtes Licht, laute Bar. */
+.btn{width:100%;min-height:52px;border:0;border-radius:var(--r-card);
+  background:var(--accent);color:var(--on-accent);
+  font-size:16px;font-weight:700;font-stretch:110%;letter-spacing:.02em;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .14s cubic-bezier(.2,.8,.2,1),filter .14s}
+.btn:active{transform:scale(.985);filter:brightness(.93)}
+.btn.ghost{background:transparent;color:var(--ink-2);border:1px solid var(--separator)}
+.btn.sm{min-height:44px;font-size:14px;border-radius:var(--r-small)}
 
-/* Reward */
-#reward{position:absolute;inset:0;background:var(--base);display:none;z-index:30;
-  flex-direction:column;padding:var(--s-l) var(--s-m) var(--s-m);overflow-y:auto}
-#reward.on{display:flex}
-.pop{animation:pop .5s cubic-bezier(.2,.9,.3,1.2) both}
-@keyframes pop{from{transform:scale(.82);opacity:0}to{transform:none;opacity:1}}
-.disc{display:flex;align-items:center;gap:12px;background:var(--surface);
-  border-radius:var(--r-card);padding:13px var(--s-m);margin-bottom:8px;
-  animation:slide .45s cubic-bezier(.2,.8,.2,1) both}
-@keyframes slide{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
-.disc b{font:500 15px/1.2 -apple-system,sans-serif;flex:1}
-.disc .xp{font:700 15px/1 -apple-system,sans-serif;color:var(--accent);font-variant-numeric:tabular-nums}
-.medal{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:var(--raised);border:1.5px solid var(--copper);color:var(--copper);flex:0 0 auto}
+/* Medaille - Materialstufen statt Neonrahmen */
+.medal{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--raised);flex:0 0 auto;
+  border:1.5px solid var(--copper);color:var(--copper)}
 .medal.brass{border-color:var(--brass);color:var(--brass)}
+.medal.silver{border-color:var(--silver);color:var(--silver)}
+.medal.locked{border-color:var(--separator);color:var(--ink-3);border-style:dashed}
+.medal.lg{width:56px;height:56px}
 
-/* Platzhalterschirme - ehrlich gekennzeichnet */
+/* ------------------------------------------------------- Home */
+header{padding:calc(env(safe-area-inset-top) + 22px) var(--s-m) 0}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--copper);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:var(--on-accent);flex:0 0 auto}
+
+/* Hero: die eine Frage "was kann ich jetzt entdecken?". Deutlich groesser
+   als alles andere - Hierarchie entsteht durch Groesse, nicht durch Farbe. */
+.hero{background:linear-gradient(180deg,var(--surface) 0%,#191b20 100%);
+  border-radius:var(--r-sheet);padding:var(--s-l) var(--s-m) var(--s-m);
+  border:1px solid #23262c;margin-bottom:var(--s-m)}
+.hero .display{margin:var(--s-s) 0 var(--s-m)}
+
+/* Der Hauptknopf. Einer je Screen, und er schwebt ueber allem. */
+#primary{position:absolute;left:var(--s-m);right:var(--s-m);bottom:100px;
+  z-index:15;box-shadow:var(--lift)}
+
+/* Beer-World-Vorschau auf Home: ein Ausschnitt, kein zweites Feature */
+.worldcard{position:relative;overflow:hidden;padding:0;
+  background:var(--surface);border-radius:var(--r-card)}
+.worldcard svg{display:block;width:100%;height:132px}
+.worldcard .over{position:absolute;inset:auto 0 0 0;padding:var(--s-m);
+  background:linear-gradient(180deg,rgba(27,29,34,0) 0%,rgba(27,29,34,.94) 62%)}
+
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--separator);border-radius:var(--r-card);overflow:hidden}
+.statrow>div{background:var(--surface);padding:13px 4px;text-align:center}
+.statrow b{display:block;font-size:19px;font-weight:800;font-stretch:115%;
+  font-variant-numeric:tabular-nums}
+.statrow span{display:block;font-size:9.5px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+
+/* ------------------------------------------------------- Beer World */
+#world-stage{flex:1;position:relative;overflow:hidden;background:var(--base)}
+#world-stage svg{position:absolute;inset:0;width:100%;height:100%}
+.crumbs{display:flex;align-items:center;gap:6px;padding:var(--s-s) var(--s-m);
+  flex-wrap:wrap}
+.crumb{font-size:12px;font-weight:600;color:var(--ink-3);background:none;border:0;
+  padding:6px 2px;cursor:pointer;min-height:32px}
+.crumb.now{color:var(--accent)}
+.crumb-sep{color:var(--ink-3);opacity:.5}
+
+/* Knoten der eigenen Welt. Entdecktes leuchtet, Offenes wartet. */
+.node{cursor:pointer}
+.node circle.core{transition:r .3s cubic-bezier(.2,.8,.2,1)}
+.node:active circle.core{r:15}
+.node text{font-family:var(--font);font-size:11px;font-weight:600;
+  fill:var(--ink-2);text-anchor:middle}
+.node.open text{fill:var(--ink-3)}
+.route{stroke:var(--accent);stroke-opacity:.28;stroke-width:1.5;fill:none;
+  stroke-dasharray:3 5}
+.pulse{transform-box:fill-box;transform-origin:center;
+  animation:pulse 2.6s ease-out infinite}
+@keyframes pulse{0%{opacity:.55;r:9}70%{opacity:0;r:26}100%{opacity:0;r:26}}
+
+.worldpanel{position:absolute;left:0;right:0;bottom:0;z-index:5;
+  background:linear-gradient(180deg,rgba(17,18,22,0),rgba(17,18,22,.97) 34%);
+  padding:var(--s-xl) var(--s-m) var(--s-m)}
+
+/* ------------------------------------------------------- Check-in */
+#sheet{position:absolute;inset:0;background:rgba(8,9,11,.72);display:none;z-index:20}
+#sheet.on{display:block}
+.sheet-body{position:absolute;left:0;right:0;bottom:0;top:44px;background:var(--base);
+  border-radius:var(--r-sheet) var(--r-sheet) 0 0;display:flex;flex-direction:column;
+  animation:up .34s cubic-bezier(.2,.85,.25,1)}
+@keyframes up{from{transform:translateY(26px);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:38px;height:4px;background:var(--separator);border-radius:2px;
+  margin:10px auto 0}
+
+/* Die Ortszeile steht NEBEN der Bierauswahl, nicht dahinter. Ort, Stadt und
+   Land kommen vom Geraet - sie sind eine Auskunft, keine Frage. */
+.placeline{display:flex;align-items:center;gap:10px;width:100%;
+  background:var(--surface);border:1px solid var(--separator);
+  border-radius:var(--r-card);padding:12px var(--s-m);min-height:56px;
+  cursor:pointer;text-align:left;color:inherit}
+.placeline .icon{color:var(--accent)}
+
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-s)}
+.tile{background:var(--surface);border:1px solid transparent;
+  border-radius:var(--r-card);padding:14px;text-align:left;cursor:pointer;
+  min-height:78px;display:flex;flex-direction:column;justify-content:space-between;
+  gap:6px;color:inherit;transition:transform .14s,border-color .14s,background .14s}
+.tile:active{transform:scale(.97);border-color:var(--accent);background:var(--raised)}
+.tile b{font-size:14.5px;font-weight:700;line-height:1.2}
+.tile small{font-size:11.5px;color:var(--ink-3)}
+
+.field{width:100%;background:var(--surface);border:1px solid var(--separator);
+  border-radius:var(--r-card);padding:15px var(--s-m);color:var(--ink-1);
+  font-family:var(--font);font-size:16px;min-height:52px}
+.field::placeholder{color:var(--ink-3)}
+.opt{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface);
+  border:1px solid transparent;border-radius:var(--r-card);padding:13px var(--s-m);
+  min-height:60px;cursor:pointer;text-align:left;color:inherit;
+  transition:border-color .14s,background .14s}
+.opt:active{border-color:var(--accent);background:var(--raised)}
+.opt b{display:block;font-size:15px;font-weight:600}
+.opt small{display:block;font-size:12px;color:var(--ink-3)}
+.opt.new{border:1px dashed var(--separator);background:transparent}
+
+/* ------------------------------------------------------- Reward */
+#reward{position:absolute;inset:0;background:var(--base);display:none;z-index:30;
+  flex-direction:column;padding:var(--s-xxl) var(--s-m) var(--s-m);overflow-y:auto}
+#reward.on{display:flex}
+.pop{animation:pop .5s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes pop{from{transform:scale(.86);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .44s cubic-bezier(.2,.85,.25,1) both}
+@keyframes rise{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.disc{display:flex;align-items:center;gap:12px;background:var(--surface);
+  border-radius:var(--r-card);padding:12px var(--s-m);min-height:62px}
+.disc b{flex:1;font-size:15px;font-weight:600}
+.disc .xp{font-size:15px;font-weight:800;color:var(--accent);
+  font-variant-numeric:tabular-nums;font-stretch:110%}
+
+/* ------------------------------------------------------- Navigation */
+nav{position:absolute;left:0;right:0;bottom:0;height:82px;z-index:10;
+  background:rgba(17,18,22,.94);backdrop-filter:blur(20px);
+  border-top:1px solid var(--separator);
+  display:grid;grid-template-columns:repeat(5,1fr);align-items:start;padding-top:10px}
+nav button{background:0;border:0;color:var(--ink-3);cursor:pointer;min-height:48px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:9.5px;font-weight:600;letter-spacing:.03em}
+nav button.on{color:var(--accent)}
+
+/* Platzhalter - ehrlich gekennzeichnet, absichtlich karg */
 .ph{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:14px;text-align:center;padding:var(--s-xl);color:var(--ink-3)}
-.ph .icon{width:34px;height:34px;stroke-width:1.4}
-.tag{font:600 10px/1 -apple-system,sans-serif;letter-spacing:.12em;text-transform:uppercase;
-  padding:5px 9px;border-radius:99px;border:1px solid var(--separator);color:var(--ink-3)}
+.tag{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  padding:5px 10px;border-radius:var(--r-pill);border:1px solid var(--separator);
+  color:var(--ink-3)}
 .banner{position:absolute;top:0;left:0;right:0;z-index:40;background:var(--accent-deep);
-  color:#fff;font:600 11px/1 -apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase;
-  text-align:center;padding:7px}
+  color:#fff;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  text-align:center;padding:6px}
+/* Rueckgaengig-Streifen: der Preis dafuer, dass ein Tap sofort eincheckt */
+#undo{position:absolute;left:var(--s-m);right:var(--s-m);bottom:100px;z-index:35;
+  background:var(--raised);border:1px solid var(--separator);border-radius:var(--r-card);
+  padding:13px var(--s-m);display:none;align-items:center;justify-content:space-between;
+  box-shadow:var(--lift)}
+#undo.on{display:flex}
+#undo button{background:0;border:0;color:var(--accent);font-family:var(--font);
+  font-size:14px;font-weight:700;cursor:pointer;min-height:44px;padding:0 4px}
 </style>
 </head>
 <body>
-
 <div id="phone">
-  <div class="banner">Prototyp &middot; keine echten Daten</div>
+  <div class="banner">Prototyp &middot; Mock-Daten</div>
 
-  <!-- ============================= HOME ============================= -->
+  <!-- ============================== HOME ============================== -->
   <section class="screen on" id="s-home">
     <div class="scroll" style="padding-top:26px">
       <header style="padding:0 0 var(--s-m)">
         <div class="between">
-          <div class="row">
-            <div class="avatar" id="ava">S</div>
-            <div>
-              <div class="headline" id="uname">steffen</div>
-              <div class="cap dimmer">Your Beer World</div>
-            </div>
-          </div>
-          <div class="pill" id="streak-city">Level 1</div>
+          <button class="row tap" id="to-profile" style="background:0;border:0;padding:0;color:inherit"
+                  aria-label="Open your profile">
+            <span class="avatar" id="ava">S</span>
+            <span class="stack" style="align-items:flex-start;gap:1px">
+              <span class="headline" id="uname">steffen</span>
+              <span class="label" id="lvl-line">Level 1</span>
+            </span>
+          </button>
+          <button class="pill tap" id="to-clan"
+                  style="border:0;min-height:36px;padding:9px 13px"
+                  aria-label="Open your clan">Hop Hunters</button>
         </div>
       </header>
 
-      <div class="card">
-        <div class="between" style="align-items:flex-end;margin-bottom:10px">
-          <div class="row" style="gap:10px;align-items:baseline">
+      <!-- HERO: die eine Frage. Alles andere ist kleiner. -->
+      <div class="hero">
+        <div class="between">
+          <span class="label" id="hero-kind">Your first quest</span>
+          <span class="pill accent" id="hero-xp">+100 XP</span>
+        </div>
+        <h1 class="display" id="hero-title" aria-label="Discover your first beer">Discover<br>your first beer</h1>
+        <div class="between">
+          <span class="cap" id="hero-sub">Tap the button below</span>
+          <span class="dots" id="hero-dots" role="img" aria-label="Quest progress"><i></i></span>
+        </div>
+      </div>
+
+      <!-- Fortschritt: kompakt, sekundaer -->
+      <div class="card" style="margin-bottom:var(--s-m)">
+        <div class="between" style="margin-bottom:9px">
+          <span class="row" style="gap:7px">
             <span class="label">Level</span>
-            <span class="num" id="lvl">1</span>
-          </div>
+            <span class="num" id="lvl" style="font-size:19px">1</span>
+          </span>
           <span class="cap" id="xptext">0 / 500 XP</span>
         </div>
         <div class="bar"><i id="xpbar" style="width:0%"></i></div>
-      </div>
-
-      <div class="card tap" id="quest-card">
-        <div class="between" style="margin-bottom:10px">
-          <span class="label" id="quest-kind">Your first quest</span>
-          <span class="pill accent" id="quest-xp">+100 XP</span>
-        </div>
-        <div class="between">
-          <div>
-            <div class="headline" id="quest-title">Discover your first beer</div>
-            <div class="cap dimmer" style="margin-top:3px" id="quest-sub">Tap ADD BEER to start</div>
-          </div>
-          <div class="dots" id="qdots"><i></i></div>
-        </div>
-      </div>
-
-      <div class="card" id="goal-card">
-        <div class="row">
-          <span class="medal brass">
+        <div class="row" style="margin-top:13px;gap:9px" id="goal-row">
+          <span class="medal" style="width:30px;height:30px" id="goal-medal">
             <svg class="icon sm" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M9 13.5 7.5 21l4.5-2.4 4.5 2.4-1.5-7.5"/></svg>
           </span>
-          <div style="flex:1">
-            <div class="label">Next</div>
-            <div class="headline" id="goal-label">First Country</div>
-          </div>
-          <div class="num" style="color:var(--accent)" id="goal-num">0/1</div>
+          <span class="stack" style="flex:1;gap:0">
+            <span class="label">Next</span>
+            <span class="headline" id="goal-label">First Country</span>
+          </span>
+          <span class="num" style="font-size:17px;color:var(--accent)" id="goal-num">0/1</span>
         </div>
       </div>
 
-      <div class="label" style="margin:var(--s-l) 0 10px">Passport</div>
-      <div class="strip">
-        <div class="stat"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg><b id="c-country">0</b><span>Countries</span></div>
-        <div class="stat"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21V8l5-3v16M14 21V4l6 3v14M4 21h16"/><path d="M7 11h0M7 15h0M17 11h0M17 15h0"/></svg><b id="c-city">0</b><span>Cities</span></div>
-        <div class="stat"><svg class="icon" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg><b id="c-venue">0</b><span>Places</span></div>
-        <div class="stat"><svg class="icon" viewBox="0 0 24 24"><path d="M8 3h8l-1 4v12a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V7L8 3Z"/><path d="M15 8h2.5a1.5 1.5 0 0 1 0 6H15"/></svg><b id="c-beer">0</b><span>Beers</span></div>
+      <!-- BEER WORLD: ein Ausschnitt, kein zweites Feature -->
+      <button class="worldcard tap" id="to-world" style="border:0;width:100%;margin-bottom:var(--s-m);display:block"
+              aria-label="Open your Beer World">
+        <svg id="mini-world" viewBox="0 0 340 132" aria-hidden="true"></svg>
+        <span class="over stack" style="gap:2px;text-align:left">
+          <span class="label">Your Beer World</span>
+          <span class="headline" id="world-sub">Nothing discovered yet</span>
+        </span>
+      </button>
+
+      <div class="statrow" id="statrow" style="margin-bottom:var(--s-m)">
+        <div><b id="c-country">0</b><span>Countries</span></div>
+        <div><b id="c-city">0</b><span>Cities</span></div>
+        <div><b id="c-venue">0</b><span>Places</span></div>
+        <div><b id="c-beer">0</b><span>Beers</span></div>
       </div>
 
-      <div class="card tap" style="margin-top:var(--s-m)" id="clan-card">
-        <div class="between">
-          <div class="row">
-            <span class="medal"><svg class="icon sm" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4 3 7.4 7 9 4-1.6 7-5 7-9V6l-7-3Z"/></svg></span>
-            <div>
-              <div class="headline">Join a clan</div>
-              <div class="cap dimmer">Beer Quest is better with a crew</div>
-            </div>
-          </div>
-          <svg class="icon dimmer" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
-        </div>
-      </div>
+      <div id="feed"></div>
+    </div>
+    <button class="btn" id="primary">
+      <svg class="icon" viewBox="0 0 24 24" style="stroke-width:2.4"><path d="M12 5v14M5 12h14"/></svg>
+      DISCOVER A BEER
+    </button>
+  </section>
 
-      <div class="label" style="margin:var(--s-l) 0 10px">Activity</div>
-      <div id="feed-empty" class="card" style="text-align:center;padding:var(--s-l)">
-        <svg class="icon dimmer" viewBox="0 0 24 24" style="width:26px;height:26px;margin-bottom:10px"><circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0M17 11h5M19.5 8.5v5"/></svg>
-        <div class="cap">Noch nichts los. Lade einen Freund ein.</div>
+  <!-- ============================ BEER WORLD ========================== -->
+  <section class="screen" id="s-world">
+    <header style="padding-bottom:var(--s-s)">
+      <div class="between">
+        <h2 class="title" id="world-title">Beer World</h2>
+        <span class="pill" id="world-count">0 countries</span>
       </div>
-      <div id="feed" hidden>
-        <div class="card" style="padding:12px var(--s-m)">
-          <div class="row"><span class="dimmer"><svg class="icon sm" viewBox="0 0 24 24"><path d="M8 3h8l-1 4v12a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V7L8 3Z"/></svg></span>
-          <span class="cap"><b style="color:var(--ink-1);font-weight:600">Lisa</b> discovered Duvel</span></div>
-        </div>
-        <div class="card" style="padding:12px var(--s-m)">
-          <div class="row"><span class="dimmer"><svg class="icon sm" viewBox="0 0 24 24"><path d="M4 21V8l5-3v16M14 21V4l6 3v14"/></svg></span>
-          <span class="cap"><b style="color:var(--ink-1);font-weight:600">Max</b> discovered Prague</span></div>
-        </div>
-        <div class="card" style="padding:12px var(--s-m)">
-          <div class="row"><span class="dimmer"><svg class="icon sm" viewBox="0 0 24 24"><path d="M5 4v16l7-4 7 4V4H5Z"/></svg></span>
-          <span class="cap"><b style="color:var(--ink-1);font-weight:600">Anna</b> completed a quest</span></div>
-        </div>
-      </div>
+    </header>
+    <div class="crumbs" id="crumbs"></div>
+    <div id="world-stage">
+      <svg id="world-svg" viewBox="0 0 340 460" aria-label="Your Beer World"></svg>
+      <div class="worldpanel" id="world-panel"></div>
     </div>
   </section>
 
-  <!-- ===================== Platzhalterschirme ====================== -->
-  <section class="screen" id="s-map"><div class="ph">
-    <svg class="icon" viewBox="0 0 24 24"><path d="m9 4-6 3v13l6-3 6 3 6-3V4l-6 3-6-3Zm0 0v13m6-10v13"/></svg>
-    <div class="title">Map</div>
-    <div class="cap">Deine Weltkarte mit allen entdeckten Orten.</div>
-    <span class="tag">Platzhalter</span></div></section>
-
-  <section class="screen" id="s-quests"><div class="ph">
-    <svg class="icon" viewBox="0 0 24 24"><path d="M5 4v16l7-4 7 4V4H5Z"/></svg>
-    <div class="title">Quests</div>
-    <div class="cap">Tagesquest, aktive und erledigte Quests.</div>
-    <span class="tag">Platzhalter</span></div></section>
-
-  <section class="screen" id="s-clan"><div class="ph">
-    <svg class="icon" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4 3 7.4 7 9 4-1.6 7-5 7-9V6l-7-3Z"/></svg>
-    <div class="title">Clan</div>
-    <div class="cap">Mitglieder, Beitrag, Ranking und Aktivität.</div>
-    <span class="tag">Platzhalter</span></div></section>
-
-  <section class="screen" id="s-profile"><div class="ph">
-    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-    <div class="title">Profile</div>
-    <div class="cap">Passport, Badges, Statistiken, Freunde.</div>
-    <span class="tag">Platzhalter</span></div></section>
-
-  <!-- ============================ Check-in ========================== -->
-  <div id="sheet">
-    <div class="sheet-body">
-      <div class="sheet-head">
-        <button class="btn ghost" style="width:auto;padding:8px 14px;font-size:14px" id="sheet-back">Cancel</button>
-        <span class="label" id="step-label">Which beer?</span>
-        <span style="width:64px"></span>
+  <!-- ============================== QUESTS ============================ -->
+  <section class="screen" id="s-quests">
+    <header><h2 class="title">Quests</h2></header>
+    <div class="scroll" style="padding-top:var(--s-m)">
+      <div class="label" style="margin-bottom:var(--s-s)">Today</div>
+      <div class="card" style="margin-bottom:var(--s-l);border:1px solid #2c2f36">
+        <div class="between" style="margin-bottom:var(--s-s)">
+          <span class="pill accent">Day Drifter</span>
+          <span class="cap dimmer">12:00 – 16:00</span>
+        </div>
+        <div class="headline">Discover a beer this afternoon</div>
+        <div class="cap dimmer" style="margin-top:4px">
+          Timing, not quantity. One discovery in the window.</div>
       </div>
-      <div class="sheet-scroll">
+      <div class="label" style="margin-bottom:var(--s-s)">Active</div>
+      <div id="quest-active"></div>
+      <div class="label" style="margin:var(--s-l) 0 var(--s-s)">Available</div>
+      <div id="quest-available"></div>
+    </div>
+  </section>
 
-        <div class="step on" id="step1">
-          <input class="field" id="beer-q" placeholder="Search a beer…" autocomplete="off">
-          <div class="label" style="margin:var(--s-s) 0">Suggestions</div>
-          <div id="beer-list"></div>
+  <!-- =============================== CLAN ============================= -->
+  <section class="screen" id="s-clan">
+    <div class="scroll" style="padding-top:26px">
+      <div class="card" style="margin-bottom:var(--s-m);
+           background:linear-gradient(180deg,var(--surface),#191b20);border:1px solid #23262c">
+        <div class="row gap-m">
+          <span class="medal brass lg">
+            <svg class="icon lg" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4 3 7.4 7 9 4-1.6 7-5 7-9V6l-7-3Z"/></svg>
+          </span>
+          <span class="stack" style="flex:1;gap:2px">
+            <span class="title">Hop Hunters</span>
+            <span class="cap dimmer">Level 12 &middot; 8 members</span>
+          </span>
+          <span class="stack" style="align-items:flex-end;gap:0">
+            <span class="num" style="font-size:21px">1.284</span>
+            <span class="label">Clan XP</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="label" style="margin-bottom:var(--s-s)">This week</div>
+      <div class="card" style="margin-bottom:var(--s-m);padding:var(--s-s) var(--s-m)">
+        <div id="clan-week"></div>
+      </div>
+
+      <div class="label" style="margin-bottom:var(--s-s)">Clan quest</div>
+      <div class="card" style="margin-bottom:var(--s-m)">
+        <div class="headline" style="margin-bottom:var(--s-s)">
+          Discover 10 new places this week</div>
+        <div class="between" style="margin-bottom:9px">
+          <span class="cap">Progress</span>
+          <span class="cap"><b style="color:var(--ink-1)">7</b> / 10</span>
+        </div>
+        <div class="bar"><i style="width:70%"></i></div>
+        <div class="cap dimmer" style="margin-top:10px">
+          You contributed 2. Three more places and the clan levels up.</div>
+      </div>
+
+      <div class="label" style="margin-bottom:var(--s-s)">Members</div>
+      <div id="clan-members"></div>
+    </div>
+  </section>
+
+  <!-- ============================== PROFILE =========================== -->
+  <section class="screen" id="s-profile">
+    <div class="scroll" style="padding-top:26px">
+      <div class="row gap-m" style="margin-bottom:var(--s-l)">
+        <span class="avatar" style="width:56px;height:56px;font-size:21px">S</span>
+        <span class="stack" style="gap:2px">
+          <span class="title">steffen</span>
+          <span class="cap dimmer" id="prof-line">Level 1 &middot; 0 XP</span>
+        </span>
+      </div>
+      <div class="label" style="margin-bottom:var(--s-s)">Badges</div>
+      <div class="card" style="margin-bottom:var(--s-l)">
+        <div id="badges" style="display:grid;grid-template-columns:repeat(4,1fr);
+             gap:var(--s-m);text-align:center"></div>
+      </div>
+      <div class="label" style="margin-bottom:var(--s-s)">Collection</div>
+      <div id="collection"></div>
+    </div>
+  </section>
+
+  <!-- ============================= CHECK-IN =========================== -->
+  <div id="sheet" role="dialog" aria-modal="true" aria-label="Check in a beer">
+    <div class="sheet-body">
+      <div class="grab"></div>
+      <div class="between" style="padding:var(--s-m) var(--s-m) var(--s-s)">
+        <h2 class="title" id="sheet-title">What are you drinking?</h2>
+        <button class="pill ghost tap" id="sheet-close" style="min-height:36px"
+                aria-label="Close">Close</button>
+      </div>
+
+      <div class="scroll" style="padding-bottom:var(--s-m)">
+        <!-- Die Ortszeile steht OBEN und ist eine Auskunft, keine Frage. -->
+        <button class="placeline tap" id="placeline" style="margin-bottom:var(--s-m)">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <span class="stack" style="flex:1;gap:1px">
+            <span class="label">At</span>
+            <span class="headline" id="place-name">Bar Aurora</span>
+            <span class="cap dimmer" id="place-sub">Cecina, Italy &middot; 120 m</span>
+          </span>
+          <span class="pill ghost">Change</span>
+        </button>
+
+        <div id="step-beer">
+          <div class="label" style="margin-bottom:var(--s-s)" id="tiles-label">Recent</div>
+          <div class="tiles" id="tiles" style="margin-bottom:var(--s-m)"></div>
+          <input class="field" id="beer-q" placeholder="Search another beer…"
+                 autocomplete="off" aria-label="Search a beer">
+          <div id="beer-list" style="margin-top:var(--s-s)"></div>
         </div>
 
-        <div class="step" id="step2">
-          <div class="row cap dimmer" style="margin-bottom:var(--s-m)">
-            <svg class="icon sm" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-            <span>Located &middot; Cecina, Italy</span>
-          </div>
-          <div class="label" style="margin-bottom:var(--s-s)">Nearby on Beer Quest</div>
+        <div id="step-place" hidden>
+          <div class="label" style="margin-bottom:var(--s-s)">Nearby</div>
           <div id="venue-list"></div>
         </div>
-
-        <div class="step" id="step3">
-          <div class="card">
-            <div class="row" style="margin-bottom:12px">
-              <span class="dimmer"><svg class="icon" viewBox="0 0 24 24"><path d="M8 3h8l-1 4v12a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V7L8 3Z"/><path d="M15 8h2.5a1.5 1.5 0 0 1 0 6H15"/></svg></span>
-              <b class="headline" id="sum-beer">—</b>
-            </div>
-            <div class="row" style="margin-bottom:12px">
-              <span class="dimmer"><svg class="icon" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
-              <b class="headline" id="sum-venue">—</b>
-            </div>
-            <div class="sep"></div>
-            <div class="between cap dimmer">
-              <span id="sum-place">Cecina &middot; Italy</span><span>Today</span>
-            </div>
-          </div>
-          <button class="btn" id="save">Save check-in</button>
-          <p class="cap dimmer" style="text-align:center;margin-top:14px">
-            Stadt und Land kommen automatisch vom Ort — du gibst sie nie ein.
-          </p>
-        </div>
-
       </div>
     </div>
   </div>
 
-  <!-- ============================= Reward =========================== -->
-  <div id="reward">
-    <div style="text-align:center;padding:var(--s-l) 0 var(--s-m)" class="pop">
-      <div class="label" style="margin-bottom:8px">You earned</div>
-      <div class="num-xl" style="color:var(--accent)"><span id="r-xp">0</span> XP</div>
+  <!-- ============================== REWARD ============================ -->
+  <div id="reward" role="dialog" aria-modal="true" aria-label="Discovery complete">
+    <div class="stack" style="align-items:center;gap:var(--s-s)" id="r-head">
+      <span class="label" id="r-kicker">Discovery complete</span>
+      <span class="num-xl" style="color:var(--accent)"><span id="r-xp">0</span></span>
+      <span class="label" style="color:var(--ink-2)">XP earned</span>
     </div>
-    <div id="r-list"></div>
-    <div id="r-extra"></div>
-    <div style="flex:1"></div>
-    <button class="btn" id="done">Done</button>
+    <div class="stack gap-s" id="r-list" style="margin-top:var(--s-xl)"></div>
+    <div id="r-extra" class="stack gap-s" style="margin-top:var(--s-s)"></div>
+    <div style="flex:1;min-height:var(--s-l)"></div>
+    <div class="stack gap-s">
+      <button class="btn" id="r-next">See what's next</button>
+      <button class="btn ghost sm" id="r-done">Back to home</button>
+    </div>
   </div>
 
-  <button id="add">
-    <svg class="icon sm" viewBox="0 0 24 24" style="stroke-width:2.6"><path d="M12 5v14M5 12h14"/></svg>
-    ADD BEER
-  </button>
+  <div id="undo">
+    <span class="cap" id="undo-text">Checked in.</span>
+    <button id="undo-btn">Undo</button>
+  </div>
 
-  <nav>
+  <nav aria-label="Main">
     <button class="on" data-t="home"><svg class="icon lg" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z"/></svg>Home</button>
-    <button data-t="map"><svg class="icon lg" viewBox="0 0 24 24"><path d="m9 4-6 3v13l6-3 6 3 6-3V4l-6 3-6-3Zm0 0v13m6-10v13"/></svg>Map</button>
+    <button data-t="world"><svg class="icon lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/></svg>World</button>
     <button data-t="quests"><svg class="icon lg" viewBox="0 0 24 24"><path d="M5 4v16l7-4 7 4V4H5Z"/></svg>Quests</button>
     <button data-t="clan"><svg class="icon lg" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4 3 7.4 7 9 4-1.6 7-5 7-9V6l-7-3Z"/></svg>Clan</button>
     <button data-t="profile"><svg class="icon lg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Profile</button>
   </nav>
 </div>
-
 <script>
-/* ------------------------------------------------------------------
-   Zustand. Bewusst klein: Der Prototyp bildet den Core Loop nach, nicht
-   das Backend. XP-Regeln spiegeln docs/06-data-model.md §3 - inklusive
-   der Ausnahme, dass der ERSTE Check-in nicht gedeckelt wird.
-   ------------------------------------------------------------------ */
+/* ==================================================================
+   Zustand. Der Prototyp bildet den Core Loop nach, nicht das Backend.
+   XP-Regeln spiegeln docs/06-data-model.md §3 - inklusive der Ausnahme,
+   dass der ERSTE Check-in nicht gedeckelt wird.
+   ================================================================== */
 const XP = {beer:50, venue:50, city:150, country:300, cap:500};
-/* Frischer Nutzer. Bewusst so: Der erste Check-in ist der wichtigste
-   Moment der App, und nur hier laesst sich pruefen, ob er sich richtig
-   anfuehlt - inklusive der Regel, dass er nicht gedeckelt wird. */
 const S = {
-  xp:0, checkins:0, quest:0,
-  known:{beer:new Set(), venue:new Set(), city:new Set(), country:new Set()},
-  pick:{beer:null, venue:null}
+  xp:0, checkins:0, quest:0, questGoal:1,
+  /* Map statt Set: Der Schluessel ist kleingeschrieben und dient dem
+     Dedupe, der Wert traegt die Schreibweise fuer die Anzeige. Mit einem
+     Set kam "italy" aus der Sammlung zurueck, und die Weltkarte fand
+     dafuer keine Position. */
+  known:{beer:new Map(), venue:new Map(), city:new Map(), country:new Map()},
+  route:[],            // Staedte in der Reihenfolge der Entdeckung
+  history:[],
+  place:null, lastCheckIn:null
 };
-const $ = s => document.querySelector(s);
+const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
+const el = (t, c, h) => { const e=document.createElement(t);
+  if(c) e.className=c; if(h!=null) e.innerHTML=h; return e; };
 
+const ICON = {
+  beer:'<path d="M8 3h8l-1 4v12a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V7L8 3Z"/><path d="M15 8h2.5a1.5 1.5 0 0 1 0 6H15"/>',
+  venue:'<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>',
+  city:'<path d="M4 21V8l5-3v16M14 21V4l6 3v14M4 21h16"/>',
+  country:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/>',
+  badge:'<circle cx="12" cy="9" r="5"/><path d="M9 13.5 7.5 21l4.5-2.4 4.5 2.4-1.5-7.5"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  flag:'<path d="M5 4v16M5 5h11l-2 3 2 3H5"/>'
+};
+const svgIcon = (k, cls='icon') =>
+  `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
+
+/* ------------------------------------------------------ Mock-Daten */
+const PLACES = [
+  {n:'Bar Aurora',    k:'Bar',        d:120, city:'Cecina', cc:'IT', country:'Italy',   x:170,y:250},
+  {n:'Osteria Marina',k:'Restaurant', d:340, city:'Cecina', cc:'IT', country:'Italy',   x:200,y:280},
+  {n:'Il Molo',       k:'Biergarten', d:610, city:'Cecina', cc:'IT', country:'Italy',   x:140,y:290}
+];
 const BEERS = [
-  {n:'Peroni Nastro Azzurro', b:'Birra Peroni', city:'Cecina', country:'Italy'},
-  {n:'Ichnusa Non Filtrata',  b:'Ichnusa',      city:'Cecina', country:'Italy'},
-  {n:'Moretti',               b:'Birra Moretti',city:'Cecina', country:'Italy'},
-  {n:'Menabrea Bionda',       b:'Menabrea',     city:'Cecina', country:'Italy'}
+  {n:'Peroni Nastro Azzurro', b:'Birra Peroni'},
+  {n:'Ichnusa Non Filtrata',  b:'Ichnusa'},
+  {n:'Moretti',               b:'Birra Moretti'},
+  {n:'Menabrea Bionda',       b:'Menabrea'},
+  {n:'Peroni Gran Riserva',   b:'Birra Peroni'},
+  {n:'Forst Kronen',          b:'Forst'}
 ];
-const VENUES = [
-  {n:'Bar Aurora',    k:'Bar',       d:'120 m'},
-  {n:'Osteria Marina',k:'Restaurant',d:'340 m'},
-  {n:'Il Molo',       k:'Biergarten',d:'610 m'}
+/* Was in einem Land noch wartet. Endliche, ueberschaubare Menge - das ist
+   eine Einladung, keine Bilanz. Nie "12 von 187.000". */
+const WAITING = {Italy:['Florence','Rome','Milan'], Germany:['Munich','Berlin']};
+const CLAN_WEEK = [
+  {who:'Lisa',  what:'discovered', name:'Verona', kind:'city'},
+  {who:'Max',   what:'discovered', name:'Prague', kind:'city'},
+  {who:'Anna',  what:'discovered', name:'Berlin', kind:'city'}
+];
+const CLAN_MEMBERS = [
+  {n:'Lisa', xp:412}, {n:'Max', xp:298}, {n:'Anna', xp:255}, {n:'steffen', xp:0, me:true}
+];
+const BADGES = [
+  {code:'first_beer',    name:'First Beer',   metric:'checkins', need:1, tier:''},
+  {code:'first_country', name:'First Country',metric:'country',  need:1, tier:''},
+  {code:'globetrotter',  name:'Globetrotter', metric:'country',  need:5, tier:'brass'},
+  {code:'collector',     name:'Collector',    metric:'beer',     need:10,tier:'silver'}
 ];
 
-/* Level-Kurve, identisch zu Progression.swift: needed(n) = 500*n */
-const levelFor = xp => {let l=1; while(250*(l+1)*l <= xp) l++; return l;};
+const levelFor = xp => { let l=1; while(250*(l+1)*l <= xp) l++; return l; };
 const totalTo  = l  => 250*l*(l-1);
+const metric = m => m==='checkins' ? S.checkins : S.known[m].size;
 
-function renderHome(){
-  const l = levelFor(S.xp), inL = S.xp - totalTo(l), need = 500*l;
-  $('#lvl').textContent = l;
-  $('#xptext').textContent = inL.toLocaleString('de-DE')+' / '+need.toLocaleString('de-DE')+' XP';
-  $('#xpbar').style.width = Math.min(100, inL/need*100)+'%';
-  $('#c-beer').textContent    = S.known.beer.size;
-  $('#c-venue').textContent   = S.known.venue.size;
-  $('#c-city').textContent    = S.known.city.size;
-  $('#c-country').textContent = S.known.country.size;
-  $('#streak-city').textContent = 'Level '+l;
-  const firstDone = S.checkins > 0;
-  $('#goal-label').textContent = firstDone ? 'Globetrotter' : 'First Country';
-  $('#goal-num').textContent   = firstDone
-      ? S.known.country.size+'/5' : S.known.country.size+'/1';
-  if(firstDone){
-    $('#quest-kind').textContent  = 'Today\u2019s quest';
-    $('#quest-xp').textContent    = '+200 XP';
-    $('#quest-title').textContent = 'Discover 2 new beers';
-    $('#quest-sub').textContent   = '2 days left';
-    if($('#qdots').children.length < 2) $('#qdots').innerHTML = '<i></i><i></i>';
-    $('#feed-empty').hidden = true; $('#feed').hidden = false;
-  }
-  $$('#qdots i').forEach((d,i)=> d.classList.toggle('done', i < S.quest));
-}
-
-/* Navigation */
+/* ------------------------------------------------------ Navigation */
 function show(id){
-  $$('.screen').forEach(s=>s.classList.toggle('on', s.id==='s-'+id));
-  $$('nav button').forEach(b=>b.classList.toggle('on', b.dataset.t===id));
+  $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's'+'-'+id));
+  $$('nav button').forEach(b => {
+    const on = b.dataset.t === id;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-current', on ? 'page' : 'false');
+  });
+  $('#primary').style.display = id === 'home' ? 'flex' : 'none';
+  if(id === 'world') drawWorld();
+  if(id === 'quests') renderQuests();
+  if(id === 'profile') renderProfile();
+  if(id === 'clan') renderClan();
 }
-$$('nav button').forEach(b=> b.onclick = ()=> show(b.dataset.t));
-$('#quest-card').onclick = ()=> show('quests');
-$('#clan-card').onclick  = ()=> show('clan');
+$$('nav button').forEach(b => b.onclick = () => show(b.dataset.t));
+$('#to-world').onclick   = () => show('world');
+$('#to-clan').onclick    = () => show('clan');
+$('#to-profile').onclick = () => show('profile');
 
-/* Check-in */
-function beerRows(q=''){
-  const term = q.trim().toLowerCase();
-  const hits = BEERS.filter(b => !term || b.n.toLowerCase().includes(term));
-  const list = $('#beer-list'); list.innerHTML='';
-  hits.forEach(b=>{
-    const el = document.createElement('div');
-    el.className='opt'; el.dataset.beer=b.n;
-    el.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M8 3h8l-1 4v12a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V7L8 3Z"/><path d="M15 8h2.5a1.5 1.5 0 0 1 0 6H15"/></svg>
-      <div style="flex:1"><b>${b.n}</b><small>${b.b}</small></div>`;
-    el.onclick = ()=>{ S.pick.beer=b; step(2); };
-    list.appendChild(el);
-  });
-  if(term && !hits.some(b=>b.n.toLowerCase()===term)){
-    const el = document.createElement('div');
-    el.className='opt new-row'; el.id='add-beer';
-    el.innerHTML = `<svg class="icon" viewBox="0 0 24 24" style="stroke-width:2.4"><path d="M12 5v14M5 12h14"/></svg>
-      <div style="flex:1"><b>Add &bdquo;${q.trim()}&ldquo;</b><small>Neues Bier für alle anlegen</small></div>`;
-    el.onclick = ()=>{ S.pick.beer={n:q.trim(), b:'', city:'Cecina', country:'Italy'}; step(2); };
-    list.appendChild(el);
+/* ====================================================== BEER WORLD
+   Kein Standard-Kartenbild mit Nadeln. Vier Ebenen, jede mit eigener
+   Darstellung, verbunden durch die Route der eigenen Entdeckungen:
+   World -> Country -> City -> Location
+   Entdecktes leuchtet, Wartendes ist gestrichelt - eine Einladung.
+   ================================================================== */
+let world = {level:'world', country:null, city:null};
+
+const COUNTRY_POS = {Italy:{x:190,y:250}, Germany:{x:150,y:150},
+  Belgium:{x:120,y:120}, Czechia:{x:200,y:140}};
+const CITY_POS = {Cecina:{x:170,y:300}, Florence:{x:210,y:230},
+  Rome:{x:190,y:350}, Milan:{x:130,y:180}, Munich:{x:170,y:250}, Berlin:{x:190,y:150}};
+
+function drawWorld(){
+  const svg = $('#world-svg'), panel = $('#world-panel');
+  svg.innerHTML=''; panel.innerHTML='';
+  const NS='http://www.w3.org/2000/svg';
+  const add = (tag, attrs, txt) => {
+    const e=document.createElementNS(NS,tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    if(txt!=null) e.textContent=txt;
+    svg.appendChild(e); return e;
+  };
+  renderCrumbs();
+
+  if(world.level === 'world'){
+    $('#world-title').textContent = 'Beer World';
+    $('#world-count').textContent = S.known.country.size + ' countries';
+    const found = [...S.known.country.values()];
+    if(!found.length){
+      panel.appendChild(el('div','cap',
+        'Your world is empty. Every beer you discover puts a place on it.'));
+      return;
+    }
+    // Route: die Laender in der Reihenfolge, in der sie entdeckt wurden
+    const pts = found.map(c => COUNTRY_POS[c] || {x:170,y:230});
+    if(pts.length>1){
+      add('path',{class:'route', d:'M'+pts.map(p=>p.x+' '+p.y).join(' L')});
+    }
+    found.forEach((c,i) => {
+      const p = COUNTRY_POS[c] || {x:170,y:230};
+      const g = document.createElementNS(NS,'g');
+      g.setAttribute('class','node'); g.setAttribute('tabindex','0');
+      g.setAttribute('role','button');
+      g.setAttribute('aria-label','Open '+c);
+      g.innerHTML =
+        (i===found.length-1 ? `<circle class="pulse" cx="${p.x}" cy="${p.y}" r="9" fill="none" stroke="var(--accent)" stroke-width="1.5"/>`:'')+
+        `<circle class="core" cx="${p.x}" cy="${p.y}" r="11" fill="var(--accent)" fill-opacity=".18" stroke="var(--accent)" stroke-width="1.6"/>`+
+        `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="var(--accent)"/>`+
+        `<text x="${p.x}" y="${p.y+28}">${c}</text>`;
+      g.onclick = () => { world={level:'country',country:c,city:null}; drawWorld(); };
+      g.onkeydown = e => { if(e.key==='Enter') g.onclick(); };
+      svg.appendChild(g);
+    });
+    panel.appendChild(el('div','cap',
+      found.length===1 ? 'One country on your map. Where next?'
+                       : found.length+' countries connected by your route.'));
+
+  } else if(world.level === 'country'){
+    $('#world-title').textContent = world.country;
+    const mine = S.route.filter(c => c.country === world.country);
+    const open = (WAITING[world.country]||[]).filter(n => !S.known.city.has(n.toLowerCase()));
+    $('#world-count').textContent = mine.length + ' of ' + (mine.length+open.length) + ' cities';
+
+    const pts = mine.map(c => CITY_POS[c.city] || {x:170,y:250});
+    if(pts.length>1) add('path',{class:'route', d:'M'+pts.map(p=>p.x+' '+p.y).join(' L')});
+
+    mine.forEach(c => {
+      const p = CITY_POS[c.city] || {x:170,y:250};
+      const g = document.createElementNS(NS,'g');
+      g.setAttribute('class','node'); g.setAttribute('tabindex','0');
+      g.setAttribute('role','button'); g.setAttribute('aria-label','Open '+c.city);
+      g.innerHTML =
+        `<circle class="core" cx="${p.x}" cy="${p.y}" r="10" fill="var(--accent)" fill-opacity=".18" stroke="var(--accent)" stroke-width="1.6"/>`+
+        `<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--accent)"/>`+
+        `<text x="${p.x}" y="${p.y+26}">${c.city}</text>`;
+      g.onclick = () => { world={level:'city',country:world.country,city:c.city}; drawWorld(); };
+      g.onkeydown = e => { if(e.key==='Enter') g.onclick(); };
+      svg.appendChild(g);
+    });
+    // Wartende Staedte: gestrichelt, ohne Zahl. Eine Einladung.
+    open.forEach((n,i) => {
+      const p = CITY_POS[n] || {x:90+i*80, y:400};
+      const g = document.createElementNS(NS,'g');
+      g.setAttribute('class','node open');
+      g.innerHTML =
+        `<circle cx="${p.x}" cy="${p.y}" r="9" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 4"/>`+
+        `<text x="${p.x}" y="${p.y+25}">${n}</text>`;
+      svg.appendChild(g);
+    });
+    panel.appendChild(el('div','cap', open.length
+      ? open.length+' more '+(open.length===1?'city is':'cities are')+' waiting in '+world.country+'.'
+      : 'You have been everywhere we know in '+world.country+'.'));
+
+  } else {
+    $('#world-title').textContent = world.city;
+    const places = S.history.filter(h => h.city === world.city);
+    const uniq = [...new Map(places.map(p=>[p.venue,p])).values()];
+    $('#world-count').textContent = uniq.length + (uniq.length===1?' place':' places');
+    uniq.forEach((p,i) => {
+      const x = 80 + (i%2)*160, y = 130 + Math.floor(i/2)*110;
+      const g = document.createElementNS(NS,'g');
+      g.setAttribute('class','node');
+      g.innerHTML =
+        `<circle class="core" cx="${x}" cy="${y}" r="13" fill="var(--accent)" fill-opacity=".16" stroke="var(--accent)" stroke-width="1.5"/>`+
+        `<circle cx="${x}" cy="${y}" r="4" fill="var(--accent)"/>`+
+        `<text x="${x}" y="${y+30}">${p.venue}</text>`;
+      svg.appendChild(g);
+    });
+    const list = el('div','stack gap-s');
+    places.forEach(p => list.appendChild(el('div','row',
+      `<span class="dimmer">${svgIcon('beer','icon sm')}</span>
+       <span class="cap" style="color:var(--ink-1)">${p.beer}</span>
+       <span class="cap dimmer" style="margin-left:auto">${p.venue}</span>`)));
+    panel.appendChild(list);
   }
 }
-function venueRows(){
-  const list = $('#venue-list'); list.innerHTML='';
-  VENUES.forEach(v=>{
-    const el = document.createElement('div');
-    el.className='opt'; el.dataset.venue=v.n;
-    el.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-      <div style="flex:1"><b>${v.n}</b><small>${v.k} &middot; ${v.d}</small></div>`;
-    el.onclick = ()=>{ S.pick.venue=v; step(3); };
-    list.appendChild(el);
-  });
-  const el = document.createElement('div');
-  el.className='opt new-row';
-  el.innerHTML = `<svg class="icon" viewBox="0 0 24 24" style="stroke-width:2.4"><path d="M12 5v14M5 12h14"/></svg>
-    <div style="flex:1"><b>Add a place</b><small>Name eingeben, Position kommt vom Gerät</small></div>`;
-  el.onclick = ()=>{ S.pick.venue={n:'Nuovo Posto', k:'Bar', d:'hier'}; step(3); };
-  list.appendChild(el);
-}
-const LABELS = {1:'Which beer?', 2:'Where?', 3:'Confirm'};
-function step(n){
-  $$('.step').forEach((s,i)=> s.classList.toggle('on', i===n-1));
-  $('#step-label').textContent = LABELS[n];
-  $('#sheet-back').textContent = n===1 ? 'Cancel' : 'Back';
-  $('#sheet-back').dataset.step = n;
-  if(n===2) venueRows();
-  if(n===3){
-    $('#sum-beer').textContent  = S.pick.beer.n;
-    $('#sum-venue').textContent = S.pick.venue.n;
+
+function renderCrumbs(){
+  const c = $('#crumbs'); c.innerHTML='';
+  const add = (label, lvl) => {
+    if(c.children.length) c.appendChild(el('span','crumb-sep','/'));
+    const b = el('button','crumb'+(lvl===null?' now':''), label);
+    if(lvl) b.onclick = () => { world = lvl; drawWorld(); };
+    c.appendChild(b);
+  };
+  if(world.level==='world') add('World', null);
+  else {
+    add('World', {level:'world',country:null,city:null});
+    if(world.level==='country') add(world.country, null);
+    else { add(world.country, {level:'country',country:world.country,city:null});
+           add(world.city, null); }
   }
 }
-$('#add').onclick = ()=>{
-  S.pick={beer:null,venue:null};
-  $('#beer-q').value=''; beerRows(); step(1);
+
+/* ====================================================== CHECK-IN
+   Radikal verkuerzt gegenueber V1. Vorher: ADD -> Bier -> Ort ->
+   Bestaetigen -> Speichern, also vier Entscheidungen und ein Schritt,
+   der nichts entscheidet.
+   Jetzt: Der Ort steht als Auskunft OBEN, korrigierbar. Ein Tap auf ein
+   Bier checkt sofort ein. Der Preis dafuer ist ein Rueckgaengig-Streifen -
+   und der ist billiger als ein Bestaetigungsschritt bei jedem Check-in.
+   ================================================================== */
+function openSheet(){
+  S.place = S.place || PLACES[0];
+  $('#place-name').textContent = S.place.n;
+  $('#place-sub').textContent  = S.place.city+', '+S.place.country+' · '+S.place.d+' m';
+  $('#step-beer').hidden = false; $('#step-place').hidden = true;
+  $('#sheet-title').textContent = 'What are you drinking?';
+  $('#beer-q').value=''; renderTiles(); $('#beer-list').innerHTML='';
   $('#sheet').classList.add('on');
+}
+$('#primary').onclick     = openSheet;
+$('#sheet-close').onclick = () => {
+  if(!$('#step-place').hidden){ showBeerStep(); return; }
+  $('#sheet').classList.remove('on');
 };
-$('#sheet-back').onclick = ()=>{
-  const n = +($('#sheet-back').dataset.step||1);
-  if(n===1) $('#sheet').classList.remove('on'); else step(n-1);
-};
-$('#beer-q').oninput = e => beerRows(e.target.value);
 
-/* Speichern - hier faellt die Reward-Berechnung */
-$('#save').onclick = ()=>{
-  const b=S.pick.beer, v=S.pick.venue;
-  const found=[];
-  const add=(kind,key,name,xp)=>{
+function showBeerStep(){
+  $('#step-beer').hidden=false; $('#step-place').hidden=true;
+  $('#sheet-title').textContent='What are you drinking?';
+}
+$('#placeline').onclick = () => {
+  $('#step-beer').hidden=true; $('#step-place').hidden=false;
+  $('#sheet-title').textContent='Where are you?';
+  const list=$('#venue-list'); list.innerHTML='';
+  PLACES.forEach(p => {
+    const b = el('button','opt tap',
+      `${svgIcon('venue')}<span style="flex:1"><b>${p.n}</b><small>${p.k} · ${p.d} m</small></span>`);
+    b.onclick = () => { S.place=p;
+      $('#place-name').textContent=p.n;
+      $('#place-sub').textContent=p.city+', '+p.country+' · '+p.d+' m';
+      showBeerStep(); };
+    list.appendChild(b);
+  });
+  const b = el('button','opt new tap',
+    `<svg class="icon" viewBox="0 0 24 24" style="stroke-width:2.3"><path d="M12 5v14M5 12h14"/></svg>
+     <span style="flex:1"><b>Add a place</b><small>Name only — position comes from your phone</small></span>`);
+  b.onclick = () => { S.place={n:'Nuovo Posto',k:'Bar',d:0,city:S.place.city,
+    cc:S.place.cc,country:S.place.country};
+    $('#place-name').textContent='Nuovo Posto';
+    $('#place-sub').textContent=S.place.city+', '+S.place.country+' · here';
+    showBeerStep(); };
+  list.appendChild(b);
+};
+
+function renderTiles(){
+  const t=$('#tiles'); t.innerHTML='';
+  const recent = S.history.slice(0,2).map(h => ({n:h.beer, b:''}));
+  const src = recent.length ? recent : BEERS.slice(0,4);
+  $('#tiles-label').textContent = recent.length ? 'Again' : 'Popular here';
+  src.forEach(b => {
+    const btn = el('button','tile tap',
+      `<span class="dimmer">${svgIcon('beer','icon')}</span>
+       <span><b>${b.n}</b>${b.b?`<small>${b.b}</small>`:''}</span>`);
+    btn.onclick = () => checkIn(b);
+    t.appendChild(btn);
+  });
+}
+
+$('#beer-q').oninput = e => {
+  const term = e.target.value.trim().toLowerCase();
+  const list = $('#beer-list'); list.innerHTML='';
+  if(term.length < 2) return;
+  // Praefix zuerst, dann enthalten. Wer "Peroni" tippt, sieht die Varianten -
+  // sonst legt er eine Dublette an (docs/10-risks.md R12).
+  const hits = BEERS.filter(b => b.n.toLowerCase().includes(term))
+    .sort((a,x) => a.n.toLowerCase().indexOf(term) - x.n.toLowerCase().indexOf(term));
+  hits.forEach(b => {
+    const btn = el('button','opt tap',
+      `${svgIcon('beer')}<span style="flex:1"><b>${b.n}</b><small>${b.b}</small></span>`);
+    btn.onclick = () => checkIn(b);
+    list.appendChild(btn);
+  });
+  if(!hits.some(b => b.n.toLowerCase() === term)){
+    const btn = el('button','opt new tap',
+      `<svg class="icon" viewBox="0 0 24 24" style="stroke-width:2.3"><path d="M12 5v14M5 12h14"/></svg>
+       <span style="flex:1"><b>Add “${e.target.value.trim()}”</b><small>New beer, for everyone</small></span>`);
+    btn.onclick = () => checkIn({n:e.target.value.trim(), b:''});
+    list.appendChild(btn);
+  }
+};
+
+/* --------------------------------------------------------- Reward */
+function checkIn(beer){
+  const p = S.place;
+  const found = [];
+  const add = (kind, key, name, xp) => {
     if(!S.known[kind].has(key.toLowerCase())){
-      S.known[kind].add(key.toLowerCase());
-      found.push({kind,name,xp});
+      S.known[kind].set(key.toLowerCase(), name);
+      found.push({kind, name, xp});
     }
   };
-  add('beer', b.n, b.n, XP.beer);
-  add('venue', v.n, v.n, XP.venue);
-  add('city', b.city, b.city, XP.city);
-  add('country', b.country, b.country, XP.country);
-
-  let raw = found.reduce((s,d)=>s+d.xp, 0) || 10;
-  const first = S.checkins === 0;              // Ausnahme fuer den ersten Check-in
-  const gained = first ? raw : Math.min(raw, XP.cap);
-  const capped = !first && gained < raw;
-
   const before = levelFor(S.xp);
-  const goal = S.checkins === 0 ? 1 : 2;
+  const isFirst = S.checkins === 0;
+
+  add('beer', beer.n, beer.n, XP.beer);
+  add('venue', p.n, p.n, XP.venue);
+  const newCity = !S.known.city.has(p.city.toLowerCase());
+  add('city', p.city, p.city, XP.city);
+  add('country', p.country, p.country, XP.country);
+  if(newCity) S.route.push({city:p.city, country:p.country});
+
+  const raw = found.reduce((s,d) => s+d.xp, 0) || 10;
+  const gained = isFirst ? raw : Math.min(raw, XP.cap);
+  const capped = !isFirst && gained < raw;
+
   S.xp += gained; S.checkins++;
-  if(found.some(d=>d.kind==='beer')) S.quest = Math.min(goal, S.quest+1);
+  if(found.some(d => d.kind==='beer')) S.quest = Math.min(S.questGoal, S.quest+1);
+  const questDone = S.quest >= S.questGoal;
   const after = levelFor(S.xp);
 
-  /* Reward zeichnen */
-  $('#r-xp').textContent = '+'+gained;
-  const list=$('#r-list'); list.innerHTML='';
-  const ICONS={
-    beer:'<path d="M8 3h8l-1 4v12a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V7L8 3Z"/>',
-    venue:'<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>',
-    city:'<path d="M4 21V8l5-3v16M14 21V4l6 3v14M4 21h16"/>',
-    country:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/>'
-  };
-  const WORD={beer:'New beer',venue:'New place',city:'New city',country:'New country'};
-  found.forEach((d,i)=>{
-    const el=document.createElement('div');
-    el.className='disc'; el.style.animationDelay=(0.12+i*0.09)+'s';
-    el.innerHTML=`<span class="medal"><svg class="icon sm" viewBox="0 0 24 24">${ICONS[d.kind]}</svg></span>
-      <b>${WORD[d.kind]}: ${d.name}</b><span class="xp">+${d.xp}</span>`;
-    list.appendChild(el);
-  });
-  const extra=$('#r-extra'); extra.innerHTML='';
-  if(capped){
-    extra.innerHTML += `<div class="card" style="margin-top:12px"><div class="cap">
-      Nice pace! XP are maxed for today — check-ins still count for your passport.</div></div>`;
-  }
-  if(after>before){
-    extra.innerHTML += `<div class="card" style="margin-top:12px;border:1px solid var(--accent)">
-      <div class="between"><div><div class="label">Level up</div>
-      <div class="headline">Level ${after}</div></div>
-      <div class="num" style="color:var(--accent)">${after}</div></div></div>`;
-  }
-  extra.innerHTML += `<div class="card" style="margin-top:12px"><div class="between">
-    <div><div class="label">${S.quest>=goal?'Quest complete':'Quest'}</div>
-    <div class="headline">${goal===1?'Discover your first beer':'Discover 2 new beers'}</div></div>
-    <div class="dots">${'<i class="done"></i>'.repeat(S.quest)}${'<i></i>'.repeat(Math.max(0,goal-S.quest))}</div>
-    </div></div>`;
-  extra.innerHTML += `<div class="row" style="margin-top:12px;gap:8px;color:var(--ink-3)">
-    <svg class="icon sm" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M9 13.5 7.5 21l4.5-2.4 4.5 2.4-1.5-7.5"/></svg>
-    <span class="cap">Next: Globetrotter &middot; ${S.known.country.size}/5</span></div>`;
+  S.history.unshift({beer:beer.n, venue:p.n, city:p.city, country:p.country});
+  S.lastCheckIn = {gained, found, before, questWas:S.quest-1};
 
   $('#sheet').classList.remove('on');
-  $('#reward').classList.add('on');
-};
-$('#done').onclick = ()=>{ $('#reward').classList.remove('on'); renderHome(); show('home'); };
+  showReward({gained, found, capped, before, after, questDone});
+}
 
-beerRows(); renderHome();
+function showReward(r){
+  const kick = $('#r-kicker');
+  kick.textContent = r.found.length ? 'Discovery complete' : 'Checked in';
+  // XP zaehlt sichtbar hoch - kurz, kein Konfetti.
+  const target = r.gained, dur = 700, t0 = performance.now();
+  const step = now => {
+    const k = Math.min(1, (now-t0)/dur);
+    $('#r-xp').textContent = Math.round(target * (1-Math.pow(1-k,3)));
+    if(k<1) requestAnimationFrame(step);
+  };
+  $('#r-xp').textContent='0'; requestAnimationFrame(step);
+  $('#r-head').classList.remove('pop'); void $('#r-head').offsetWidth;
+  $('#r-head').classList.add('pop');
+
+  const WORD={beer:'New beer',venue:'New place',city:'New city',country:'New country'};
+  const list=$('#r-list'); list.innerHTML='';
+  r.found.forEach((d,i) => {
+    const row = el('div','disc rise',
+      `<span class="medal">${svgIcon(d.kind,'icon sm')}</span>
+       <b>${WORD[d.kind]}: ${d.name}</b><span class="xp">+${d.xp}</span>`);
+    row.style.animationDelay = (0.18 + i*0.1)+'s';
+    list.appendChild(row);
+  });
+
+  const ex=$('#r-extra'); ex.innerHTML='';
+  if(r.capped) ex.appendChild(el('div','card cap',
+    'Nice pace. XP are maxed for today — this still counts for your passport.'));
+  if(r.after > r.before){
+    const c = el('div','card rise',
+      `<div class="between"><span class="stack" style="gap:1px">
+        <span class="label">Level up</span>
+        <span class="title">Level ${r.after}</span></span>
+       <span class="num" style="color:var(--accent)">${r.after}</span></div>`);
+    c.style.animationDelay='.5s'; ex.appendChild(c);
+  }
+  if(r.questDone){
+    const c = el('div','card rise',
+      `<div class="between"><span class="stack" style="gap:1px">
+        <span class="label">Quest complete</span>
+        <span class="headline">${$('#hero-title').textContent.replace(/\s+/g,' ')}</span></span>
+       <span class="pill accent">+100 XP</span></div>`);
+    c.style.animationDelay='.6s'; ex.appendChild(c);
+  }
+  $('#reward').classList.add('on');
+}
+
+/* Nach dem Reward: der naechste Grund weiterzuspielen. Das ist das
+   "After" aus der Game-Psychologie, nicht ein zweiter Home-Screen. */
+$('#r-next').onclick = () => {
+  $('#reward').classList.remove('on');
+  render(); showUndo(); show('world');
+};
+$('#r-done').onclick = () => {
+  $('#reward').classList.remove('on'); render(); showUndo(); show('home');
+};
+
+function showUndo(){
+  const u=$('#undo'); u.classList.add('on');
+  $('#undo-text').textContent = 'Checked in at '+S.place.n+'.';
+  clearTimeout(showUndo.t);
+  showUndo.t = setTimeout(() => u.classList.remove('on'), 6000);
+}
+$('#undo-btn').onclick = () => {
+  const c = S.lastCheckIn; if(!c) return;
+  S.xp -= c.gained; S.checkins--; S.quest = Math.max(0, c.questWas);
+  c.found.forEach(d => S.known[d.kind].delete(d.name.toLowerCase()));
+  const h = S.history.shift();
+  if(h) S.route = S.route.filter(r => S.history.some(x => x.city === r.city));
+  S.lastCheckIn = null;
+  $('#undo').classList.remove('on');
+  render(); show('home');
+};
+
+/* ------------------------------------------------- Home und Listen */
+function render(){
+  const l = levelFor(S.xp), inL = S.xp - totalTo(l), need = 500*l;
+  $('#lvl').textContent = l;
+  $('#lvl-line').textContent = 'Level '+l;
+  $('#xptext').textContent = inL.toLocaleString('de-DE')+' / '+need.toLocaleString('de-DE')+' XP';
+  $('#xpbar').style.width = Math.min(100, inL/need*100)+'%';
+  $('#c-country').textContent = S.known.country.size;
+  $('#c-city').textContent    = S.known.city.size;
+  $('#c-venue').textContent   = S.known.venue.size;
+  $('#c-beer').textContent    = S.known.beer.size;
+  $('#prof-line').textContent = 'Level '+l+' · '+S.xp.toLocaleString('de-DE')+' XP';
+
+  // Hero: vor dem ersten Check-in die Erst-Quest, danach das naechste Ziel
+  // im aktuellen Land. Der Nutzer bekommt immer einen naechsten Grund.
+  if(S.checkins === 0){
+    S.questGoal = 1;
+    $('#hero-kind').textContent  = 'Your first quest';
+    $('#hero-xp').textContent    = '+100 XP';
+    $('#hero-title').innerHTML   = 'Discover<br>your first beer';
+    $('#hero-title').setAttribute('aria-label','Discover your first beer');
+    $('#hero-sub').textContent   = 'Tap the button below';
+  } else {
+    S.questGoal = 2;
+    const city = S.history[0] ? S.history[0].city : '';
+    $('#hero-kind').textContent  = "Today's quest";
+    $('#hero-xp').textContent    = '+200 XP';
+    $('#hero-title').innerHTML   = 'Discover 2 more<br>beers in '+city;
+    $('#hero-title').setAttribute('aria-label','Discover 2 more beers in '+city);
+    $('#hero-sub').textContent   = S.quest+' of 2 done · 2 days left';
+  }
+  const dots = $('#hero-dots'); dots.innerHTML='';
+  for(let i=0;i<S.questGoal;i++) dots.appendChild(el('i', i<S.quest?'done':''));
+
+  // Naechstes Ziel: das naechstliegende offene Badge
+  const open = BADGES.filter(b => metric(b.metric) < b.need)
+    .sort((a,b) => (metric(b.metric)/b.need) - (metric(a.metric)/a.need))[0];
+  if(open){
+    $('#goal-label').textContent = open.name;
+    $('#goal-num').textContent = metric(open.metric)+'/'+open.need;
+    $('#goal-medal').className = 'medal '+(open.tier||'');
+  } else {
+    $('#goal-label').textContent = 'Level '+(l+1);
+    $('#goal-num').textContent = inL+'/'+need;
+  }
+
+  $('#world-sub').textContent = S.known.country.size
+    ? S.known.country.size+' '+(S.known.country.size===1?'country':'countries')+
+      ' · '+S.known.city.size+' '+(S.known.city.size===1?'city':'cities')
+    : 'Nothing discovered yet';
+  drawMiniWorld();
+
+  const feed=$('#feed'); feed.innerHTML='';
+  if(S.checkins === 0){
+    feed.appendChild(el('div','card cap',
+      'Your clan is waiting. Lisa discovered Verona this week.'));
+  }
+}
+
+/* Ausschnitt der eigenen Welt auf Home. Klein, aber dieselbe Sprache
+   wie der grosse Screen - Knoten und Route, keine Nadeln auf einer Karte. */
+function drawMiniWorld(){
+  const svg=$('#mini-world'); svg.innerHTML='';
+  const NS='http://www.w3.org/2000/svg';
+  const found=[...S.known.country.values()];
+  if(!found.length){
+    for(let i=0;i<9;i++){
+      const c=document.createElementNS(NS,'circle');
+      c.setAttribute('cx', 30+((i*37)%300)); c.setAttribute('cy', 34+((i*29)%68));
+      c.setAttribute('r','2.5'); c.setAttribute('fill','var(--ink-3)');
+      c.setAttribute('opacity','.35'); svg.appendChild(c);
+    }
+    return;
+  }
+  const pts = found.map((c,i) => ({x:60+i*90, y:52}));
+  if(pts.length>1){
+    const p=document.createElementNS(NS,'path');
+    p.setAttribute('class','route');
+    p.setAttribute('d','M'+pts.map(q=>q.x+' '+q.y).join(' L'));
+    svg.appendChild(p);
+  }
+  pts.forEach((q,i) => {
+    const g=document.createElementNS(NS,'g');
+    g.innerHTML =
+      `<circle cx="${q.x}" cy="${q.y}" r="13" fill="var(--accent)" fill-opacity=".16" stroke="var(--accent)" stroke-width="1.4"/>`+
+      `<circle cx="${q.x}" cy="${q.y}" r="4" fill="var(--accent)"/>`;
+    svg.appendChild(g);
+  });
+}
+
+function renderQuests(){
+  const a=$('#quest-active'), v=$('#quest-available');
+  a.innerHTML=''; v.innerHTML='';
+  const card = (kind, title, sub, xp, done, goal) => el('div','card',
+    `<div class="between" style="margin-bottom:6px">
+       <span class="label">${kind}</span><span class="pill accent">${xp}</span></div>
+     <div class="headline">${title}</div>
+     <div class="between" style="margin-top:8px">
+       <span class="cap dimmer">${sub}</span>
+       <span class="dots">${'<i class="done"></i>'.repeat(done)}${'<i></i>'.repeat(Math.max(0,goal-done))}</span>
+     </div>`);
+  a.appendChild(card(S.checkins?'Today':'First quest',
+    S.checkins ? 'Discover 2 more beers in '+(S.history[0]?S.history[0].city:'')
+               : 'Discover your first beer',
+    S.checkins ? '2 days left' : 'Tap Discover on Home',
+    S.checkins?'+200 XP':'+100 XP', S.quest, S.questGoal));
+  [['Place Hunter','Discover 2 new places','+200 XP'],
+   ['Golden Hour','Discover a place during golden hour','+250 XP'],
+   ['Keep It Going','Check in 3 times','+150 XP']]
+    .forEach(([t,d,x]) => v.appendChild(card('Available', t, d, x, 0, 2)));
+}
+
+function renderClan(){
+  const w=$('#clan-week'); w.innerHTML='';
+  CLAN_WEEK.forEach((e,i) => {
+    const row = el('div','row',
+      `<span class="dimmer">${svgIcon(e.kind,'icon sm')}</span>
+       <span class="cap" style="color:var(--ink-1)"><b>${e.who}</b> ${e.what} ${e.name}</span>`);
+    row.style.padding='9px 0';
+    if(i) row.style.borderTop='1px solid var(--separator)';
+    w.appendChild(row);
+  });
+  const m=$('#clan-members'); m.innerHTML='';
+  CLAN_MEMBERS.map(x => x.me ? {...x, xp:S.xp} : x)
+    .sort((a,b)=>b.xp-a.xp)
+    .forEach((x,i) => {
+      const row = el('div','card row',
+        `<span class="num" style="font-size:15px;width:22px;color:var(--ink-3)">${i+1}</span>
+         <span class="avatar" style="width:30px;height:30px;font-size:12px;
+           background:${x.me?'var(--accent)':'var(--raised)'};
+           color:${x.me?'var(--on-accent)':'var(--ink-2)'}">${x.n[0].toUpperCase()}</span>
+         <span class="headline" style="flex:1">${x.n}${x.me?' <span class="pill accent" style="margin-left:6px">You</span>':''}</span>
+         <span class="num" style="font-size:15px">${x.xp}</span>`);
+      row.style.marginBottom='8px'; row.style.padding='11px var(--s-m)';
+      m.appendChild(row);
+    });
+}
+
+function renderProfile(){
+  const b=$('#badges'); b.innerHTML='';
+  BADGES.forEach(x => {
+    const have = metric(x.metric), earned = have >= x.need;
+    b.appendChild(el('div','stack',
+      `<span class="medal ${earned?(x.tier||''):'locked'}" style="margin:0 auto">
+         ${svgIcon(earned?'badge':'lock','icon sm')}</span>
+       <span class="cap" style="margin-top:7px;font-size:11px;
+         color:${earned?'var(--ink-1)':'var(--ink-3)'}">${x.name}</span>
+       <span class="label" style="font-size:9px">${earned?'Earned':have+'/'+x.need}</span>`));
+  });
+  const c=$('#collection'); c.innerHTML='';
+  const kinds=[['country','Countries'],['city','Cities'],['venue','Places'],['beer','Beers']];
+  kinds.forEach(([k,label]) => {
+    const n = S.known[k].size;
+    const row = el('div','card between tap',
+      `<span class="row"><span class="dimmer">${svgIcon(k)}</span>
+         <span class="headline">${label}</span></span>
+       <span class="row"><span class="num" style="font-size:17px">${n}</span>
+         <svg class="icon sm dimmer" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>`);
+    row.style.marginBottom='8px';
+    row.onclick = () => show('world');
+    c.appendChild(row);
+  });
+}
+
+render(); show('home');
 </script>
 </body>
 </html>

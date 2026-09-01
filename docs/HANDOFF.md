@@ -5,6 +5,149 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-31 (13) — Prototyp V2, UI/UX-Validierungssprint
+
+**Auftrag:** Keinen Screen-Sprint, sondern einen UX-Sprint. Core Loop radikal
+vereinfachen, eine Hauptaktion je Screen, Beer World als Signature Feature,
+Reward als Spielmoment, Clan-Emotion testen, klickbarer Prototyp V2.
+
+```
+BUILD:   NICHT AUSGEFÜHRT — kein Swift geändert (nur ein Kommentarblock
+         in Tokens.swift), iOS-CI wird davon nicht ausgelöst
+TESTS:   PASS — 39/39 Prototyp, 11/11 SQL, 14/14 Tokens
+PREVIEW: Datei im Chat · Artefakt
+         https://claude.ai/code/artifact/178741b0-7968-457c-81a6-48ad69a0af24
+         · Zweig `prototype` aktualisiert
+```
+
+---
+
+## PM REVIEW NEEDED
+
+### 1. Was wurde verändert?
+
+**Der Check-in ist von vier Schritten auf zwei Taps geschrumpft.** Das ist die
+wichtigste Änderung. Vorher: ADD → Bier → Ort → Bestätigen → Speichern. Der
+Bestätigungsschritt entschied nichts — er zeigte nur, was man gerade gewählt
+hatte. Jetzt steht der Ort als **Auskunft über** der Bierauswahl, korrigierbar
+per Tap, und ein Tap auf ein Bier checkt sofort ein.
+
+Dazu: Home neu hierarchisiert (Hero → eine Hauptaktion → Fortschritt →
+nächstes Ziel → Weltausschnitt → Soziales), Beer World als eigenes Feature,
+Reward als Spielmoment, Clan-Vorschau, eine typografische Stimme.
+
+### 2. Was kannst du anklicken?
+
+Der vollständige Flow, den du verlangt hast:
+
+```
+Home → DISCOVER A BEER → Bier antippen → Reward
+     → „See what's next" → Beer World → Land → Stadt → zurück
+Home → Hop Hunters (oben rechts) → Clan
+```
+
+Dazu alle fünf Tabs, die Ortskorrektur im Sheet, die Suche („Peroni" tippen),
+Rückgängig nach dem Check-in, Badges und Sammlung im Profil.
+
+### 3. Was ist echtes Backend?
+
+| Bereich | Stufe |
+|---|---|
+| XP-Regeln, Level-Kurve, Erst-Check-in ohne Cap, Dedupe, Quests, Clan-XP, RLS, Onboarding, Suche, Passport, Karte, Freunde, Clan, Leaderboard | **REAL** — 35 RPCs, 11 Testdateien grün |
+| Home, Check-in, Reward, Beer World, Clan, Profil **im Prototyp** | **PROTOTYPE** — Flow und Zustand echt, Daten im Browser |
+| iOS-App | **PLACEHOLDER** — Gerüst baut, Screens fehlen |
+
+### 4. Was ist Mock?
+
+Drei Orte in Cecina, sechs Biere, die Clan-Daten (Hop Hunters, Wochenaktivität,
+Clan-Quest 7/10, drei Mitglieder), die wartenden Städte je Land. Der Prototyp
+spricht **nicht** mit Supabase — er rechnet die XP-Regeln in JavaScript nach.
+Weichen beide voneinander ab, ist das ein Fehler, kein Zustand.
+
+### 5. Welche Designentscheidungen sind neu?
+
+| # | Entscheidung | Begründung |
+|---|---|---|
+| 1 | **Ein Tap auf ein Bier checkt sofort ein**, mit Rückgängig-Streifen | Ein Bestätigungsschritt bei *jedem* Check-in kostet mehr als ein Rückgängig bei den seltenen Fehlgriffen |
+| 2 | **Der Ort ist eine Auskunft, keine Frage** | Ort, Stadt und Land kommen vom Gerät. Sie gehören neben die Auswahl, nicht dahinter |
+| 3 | **Beer World: Knoten und Route statt Karte mit Nadeln** | Die Verbindungslinie in der Reihenfolge der Entdeckung macht es zu *deiner Reise*. Eine Standardkarte hätte jede andere App auch |
+| 4 | **Wartende Städte gestrichelt, ohne Zahl** | Genau deine Regel: „Hier wartet noch etwas auf dich", nie „12 von 187.000" |
+| 5 | **Archivo als Schrift**, Breitenachse als Gestaltungsmittel | Systemschrift konnte nicht beantworten, ob es hochwertig wirkt. **Beschaffungsentscheidung offen** — die App nutzt bis P0.11 die Systemschrift, der Prototyp sieht deshalb heute anders aus |
+| 6 | **Der Reward endet mit „See what's next"** | Das „After" der Spielpsychologie. Ein Reward, der nur schließt, entlässt den Nutzer aus dem Spiel |
+| 7 | **Genau eine Akzentfläche je Screen** | Wird im Test gezählt — eine Regel, die niemand zählt, wird nicht befolgt |
+
+### 6. Welche Fragen sollst du beim Testen beantworten?
+
+1. **Verstehst du in einer Sekunde, was du auf Home tun sollst?**
+2. **Fühlen sich zwei Taps richtig an — oder fehlt dir die Bestätigung?** Das
+   ist die riskanteste Entscheidung dieses Sprints.
+3. **Ist der Reward ein Spielmoment oder eine Bestätigungsmeldung?**
+4. **Beer World: fühlt sich das nach *deiner* Welt an?** Und trägt die
+   Sprache aus Knoten und Route, oder fehlt dir eine richtige Karte?
+5. **Clan: willst du beitreten?** Die Frage ist emotional, nicht funktional.
+6. **Sieht das nach einer App aus, die du freiwillig benutzen würdest?**
+
+### 7. Was ist bewusst noch offen?
+
+- **Kein Onboarding im Prototyp.** Der Server dafür ist fertig; die Screens
+  kommen erst nach deinem Urteil über diese Richtung.
+- **Keine echten Illustrationen und kein eigenes Icon-Set** — die Icons sind
+  eigene SVG-Pfade, aber kein gestaltetes Set. Badges sind Medaillenringe,
+  keine Illustrationen.
+- **Die Schrift ist nicht beschafft.** Ohne Netz greift die Ersatzkette, und
+  dann sieht der Prototyp anders aus als beabsichtigt. Der Test benennt das.
+- **Quests-Tab ist dünn** — er zeigt die Struktur, nicht die Tiefe.
+- **Daydrinking nur als eine Karte** („Day Drifter", „Golden Hour") — visuell
+  vorbereitet, nicht implementiert.
+
+---
+
+### Was das Testen aufgedeckt hat
+
+**Die Weltkarte blieb leer.** Die Länder wurden mit kleingeschriebenem
+Schlüssel gespeichert, und die Karte fand für „italy" keine Position. Jetzt
+eine `Map`: Schlüssel normalisiert für das Dedupe, Wert in
+Anzeigeschreibweise. Ohne den Test wäre das Signature Feature im Review
+schlicht leer gewesen.
+
+Dazu ein zu kleines Tap-Ziel (der Clan-Chip, 22 px hoch) — gefunden von der
+neuen Prüfung, nicht vom Auge.
+
+### Offene Risiken
+
+1. Der Prototyp rechnet die XP-Regeln in JavaScript nach. **Weichen sie von
+   den SQL-Regeln ab, ist das ein Fehler, kein Zustand** — heute stimmen sie
+   überein, aber nichts erzwingt das. Eine Prüfung dafür fehlt noch.
+2. Swift weiterhin ungetestet seit der letzten CI-Runde.
+3. Branch Protection auf `main` fehlt.
+
+### Nächster Schritt
+
+**Dein Urteil.** Danach entweder eine weitere UX-Iteration oder P0.3-UI auf
+dieser Richtung.
+
+### Vorschläge und Themen von mir
+
+1. **Die riskanteste Entscheidung ist der sofortige Check-in.** Ich halte sie
+   für richtig — aber wenn du beim Testen zögerst, ist das ein Signal. Die
+   Rückfallebene wäre ein Bestätigungsknopf im Sheet statt eines Taps auf die
+   Kachel; das kostet eine halbe Stunde.
+2. **Mir fehlt eine Prüfung, die die XP-Regeln des Prototyps gegen die des
+   Servers hält.** Dieselbe Fehlerklasse wie bei den Tokens, nur noch teurer:
+   Wenn der Prototyp 550 XP zeigt und der Server 500 gibt, validierst du etwas,
+   das es nicht gibt. Zählora hat für genau diesen Fall
+   `check-versprechen.py`. Ich würde das nachziehen — sag Bescheid.
+3. **Was mir beim Bauen aufgefallen ist:** Der Quests-Tab ist der schwächste
+   Screen. Er zeigt Karten, aber keine Spannung. Wenn Quests der zentrale
+   Mechanismus sein sollen, braucht er eine eigene Runde — nicht jetzt, aber
+   vor P0.7.
+4. **Zur Typografie, ehrlich:** Archivo ist eine gute, charaktervolle Grotesk,
+   aber sie ist meine Wahl, nicht deine. Wenn dir die Richtung stimmt, die
+   Schrift aber nicht, ist das ein Tausch von zehn Minuten. Wichtiger ist die
+   Frage, ob die *Hierarchie* trägt.
+
+---
+
 ## Session 2026-08-31 (12) — P0-Server vollständig
 
 **Auftrag:** „Wie geht es weiter?" — ich habe die unblockierte Arbeit gemacht,

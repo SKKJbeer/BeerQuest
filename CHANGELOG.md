@@ -9,6 +9,34 @@ Versionsschema: `docs/16-engineering-standard.md` §5.
 
 ## Unveröffentlicht
 
+### Prototyp V2 — UI/UX-Validierungssprint
+- **Check-in von vier Schritten auf zwei Taps.** Der Bestätigungsschritt
+  entschied nichts und ist ersatzlos weg; der Ort steht als *Auskunft* über
+  der Bierauswahl statt als eigener Schritt dahinter. Ein Tap auf ein Bier
+  checkt sofort ein — der Preis dafür ist ein Rückgängig-Streifen, und der ist
+  billiger als eine Bestätigung bei jedem einzelnen Check-in.
+- **Eine dominante Hauptaktion je Screen.** Der Test zählt, dass auf Home
+  genau *eine* Fläche in Akzentfarbe liegt.
+- **Beer World** als vier Ebenen mit Brotkrumen: World → Country → City →
+  Location. Keine Standardkarte mit Nadeln, sondern Knoten, die durch die
+  eigene Entdeckungsroute verbunden sind. Wartende Städte stehen gestrichelt
+  daneben — eine Einladung, keine Bilanz.
+- **Reward als Spielmoment**: XP zählen sichtbar hoch, Entdeckungen laufen
+  gestaffelt ein, danach der nächste Grund weiterzuspielen. Kein Konfetti.
+- **Clan-Vorschau** mit Wochenaktivität, Clan-Quest und Rangliste.
+- **Typografische Stimme**: Archivo mit der Breitenachse als Gestaltungsmittel.
+  Systemschrift konnte die Frage „wirkt das hochwertig?" nicht beantworten.
+  Die Schrift ist in `Tokens.swift` als offene Beschaffungsentscheidung
+  vermerkt — die App nutzt bis P0.11 weiter die Systemschrift.
+- **Beim Testen gefunden:** Die Länder wurden kleingeschrieben gespeichert
+  (`Set` mit normalisiertem Schlüssel). Die Weltkarte fand für „italy" keine
+  Position und blieb leer. Jetzt eine `Map`: Schlüssel normalisiert, Wert in
+  Anzeigeschreibweise.
+- **39 Prototyp-Prüfungen**, neu darunter: Tap-Ziele ≥ 32 px, genau eine
+  Akzent-Aktion, Navigation mit Text statt nur Symbolen, Bewegungsreduktion.
+  Fehlgeschlagene Netzanfragen zählen nicht mehr als Programmfehler, werden
+  aber **benannt** — ohne Netz lädt die Schrift nicht.
+
 ### P0-Server vollständig
 - **35 RPCs** freigegeben, damit ist die in `06-data-model.md` §4
   spezifizierte Oberfläche vollständig. Vier neue Testdateien (08–11),

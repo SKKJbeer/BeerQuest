@@ -57,6 +57,21 @@ public enum CollectionStateToken: String, Sendable {
     case locked, discovered, completed, mastered
 }
 
+/// Die Schrift. **Offene Entscheidung** (docs/13-visual-direction.md):
+/// Der Prototyp V2 nutzt **Archivo** — eine Grotesk mit Breitenachse, die
+/// als Gestaltungsmittel dient: Ueberschriften und Zahlen breit, Fliesstext
+/// normal. Archivo steht unter der SIL Open Font License und laesst sich
+/// mitliefern.
+///
+/// Bis die Schrift beschafft und gebuendelt ist (P0.11), verwendet die App
+/// die Systemschrift. Der Prototyp sieht deshalb heute anders aus als die
+/// App — das ist bewusst und im Handoff benannt.
+public enum BQFontFamily {
+    /// Wird gesetzt, sobald die Schrift im Bundle liegt.
+    public static let display: String? = nil
+    public static let body: String? = nil
+}
+
 public enum BQFont {
     /// Grosse Zahlen: XP, Level, Zaehler. Tabular, damit nichts springt.
     public static let numberXL = Font.system(size: 44, weight: .heavy, design: .rounded)
