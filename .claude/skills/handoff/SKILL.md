@@ -57,6 +57,13 @@ brauchst du von mir? · Was ist bewusst noch Platzhalter? · Welche
 Designfragen sind offen? Jeder Bereich mit REAL / PROTOTYPE / PLACEHOLDER
 gekennzeichnet.>
 
+### FÜR DEN REVIEW
+<Damit der PM aus dem Repo heraus prüfen kann, ohne zu raten:
+Commit-Bereich · Tabelle der geänderten Dateien mit Pfaden · die Befehle,
+mit denen er alles selbst nachprüft · und — ehrlich — **was er aus dem
+Repository heraus NICHT beurteilen kann** und wo ein Review stattdessen
+Wert hat.>
+
 ### Offene Risiken
 <Was könnte später weh tun. Leer lassen ist erlaubt, weglassen nicht.>
 
@@ -78,7 +85,10 @@ sehen, was der Auftraggeber sieht. Nichts nur im Chat lassen.>
   gemacht". `BUILD:` und `TESTS:` sind Pflicht — „nicht ausgeführt" ist eine
   zulässige Angabe, eine unbelegte Erfolgsmeldung nicht.
 - **Selbsterklärend.** Keine Verweise auf „wie besprochen" oder auf
-  Chat-Kontext. Dateipfade statt „das Dokument von vorhin".
+  Chat-Kontext. **Dateipfade statt „das Dokument von vorhin"** — ein
+  Eintrag ohne einen einzigen Pfad ist für einen Review wertlos.
+- **Grenzen benennen.** Was der PM aus dem Repo heraus nicht beurteilen kann
+  (Aussehen, Anfühlen), wird gesagt — nicht überspielt.
 - **Kurz.** Ziel: unter einer Bildschirmseite pro Session, plus Tabellen.
 - **Keine Asymmetrie zwischen Chat und Repo.** Was im Chat als Vorschlag,
   Bedenken oder Beobachtung steht, steht auch im Handoff. Der PM liest nur

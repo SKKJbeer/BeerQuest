@@ -1,7 +1,19 @@
 # Handoff-Protokoll
 
-Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
-`.claude/skills/handoff/SKILL.md`.
+Für den Projektmanager (ChatGPT). **Neueste Session steht ganz oben** — sie ist
+die einzige, die den aktuellen Zustand beschreibt. Alles darunter ist Verlauf.
+
+> **Für einen Review genügt der oberste Eintrag.** Er enthält einen Abschnitt
+> `FÜR DEN REVIEW` mit Commit-Bereich, geänderten Dateien und den Befehlen,
+> mit denen sich alles nachprüfen lässt.
+>
+> Diese Datei ist inzwischen 13 Einträge lang. Zählora warnt genau davor: eine
+> Übergabedatei, die wächst, ist nach dem dritten Mal ein Archiv und keine
+> Auskunft mehr. Die Aufteilung in laufenden Zustand (hier) und Historie
+> (`CHANGELOG.md`) ist vorbereitet und wartet auf die Zustimmung des PM —
+> siehe Session (11).
+
+Format und Regeln: `.claude/skills/handoff/SKILL.md`.
 
 ---
 
@@ -101,6 +113,75 @@ Weichen beide voneinander ab, ist das ein Fehler, kein Zustand.
   vorbereitet, nicht implementiert.
 
 ---
+
+## FÜR DEN REVIEW
+
+**Commit:** `9e4ab6b` — der gesamte Sprint liegt in einem Commit auf
+`claude/beer-quest-mvp-spec-dpjh2i`.
+
+```bash
+git log --oneline 771fa0a..9e4ab6b
+git diff 771fa0a..9e4ab6b -- docs/prototype/index.html
+```
+
+**Geänderte Dateien:**
+
+| Datei | Was | Zeilen |
+|---|---|---|
+| `docs/prototype/index.html` | der Prototyp selbst — Tokens, Markup, Logik in einer Datei | +1401 |
+| `scripts/check-prototype.mjs` | 39 Prüfungen mit echtem Browser | +230 |
+| `BeerQuestKit/Sources/BQDesign/Tokens.swift` | Schrift-Entscheidung als Kommentar, **keine Logik geändert** | +15 |
+| `CHANGELOG.md`, `docs/HANDOFF.md` | Dokumentation | — |
+
+**Selbst nachprüfen:**
+
+```bash
+./scripts/verify.sh schnell     # Tokens + Prototyp, ~3 s
+./scripts/verify.sh             # zusätzlich die SQL-Regeln
+node scripts/check-prototype.mjs   # nur der Prototyp, mit Einzelbefunden
+python3 scripts/check-tokens.py    # App-Farben gegen Prototyp-Farben
+```
+
+**Wo im Prototyp was steht** (`docs/prototype/index.html`):
+
+| Zeile | Inhalt |
+|---|---|
+| 12–60 | Design-Tokens, identisch zu `Tokens.swift` |
+| 272 | Markup Home: Hero, Fortschritt, Weltausschnitt |
+| 351 | Markup Beer World |
+| 450 | Markup Check-in-Sheet |
+| 488 | Markup Reward |
+| 607–740 | Logik Beer World: vier Ebenen, Knoten und Route |
+| 742–830 | Logik Check-in: Ortszeile, Kacheln, Suche |
+| 831–938 | `checkIn()` und `showReward()` — hier fallen die XP |
+| 939+ | Home, Quests, Clan, Profil |
+
+*(Zeilennummern nachgemessen, nicht geschätzt — sie gelten für Commit
+`9e4ab6b`.)*
+
+### ⚠️ Was ChatGPT aus dem Repo heraus **nicht** beurteilen kann
+
+Das ist die ehrliche Grenze dieses Reviews:
+
+- **Wie es aussieht.** Der Prototyp ist 52 KB HTML. Man kann ihn lesen, aber
+  nicht sehen. Ob Hierarchie, Typografie und Rhythmus tragen, entscheidet
+  sich am Bildschirm — nicht im Quelltext.
+- **Wie er sich anfühlt.** Zwei Taps statt vier ist eine Behauptung, bis
+  jemand sie ausprobiert. Genau dafür sind die sechs Fragen oben.
+
+**Was ChatGPT dagegen sehr wohl prüfen kann** — und wo ein Review echten Wert
+hat:
+
+1. **Widersprüche zur eigenen Spezifikation.** Stimmt der Prototyp mit
+   `docs/06-data-model.md` §3 überein (XP-Werte, Cap, Erst-Check-in)? Mit
+   `14-product-dna.md` (keine Emoji, `locked` als Einladung)? Mit
+   `13-visual-direction.md` (Direction A)?
+2. **Ob die Prüfungen prüfen, was sie behaupten.** `check-prototype.mjs` ist
+   lesbar — deckt sie die Regeln wirklich ab, oder nur ihre Anwesenheit?
+3. **Ob eine Entscheidung dem Produktprinzip widerspricht.** Besonders der
+   sofortige Check-in: Macht er Beer Quest mehr zum Adventure Game oder mehr
+   zum Tracker?
+4. **Ob etwas fehlt**, das im Auftrag stand. Der Auftrag hatte 20 Punkte.
 
 ### Was das Testen aufgedeckt hat
 
