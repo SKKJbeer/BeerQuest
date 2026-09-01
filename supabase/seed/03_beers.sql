@@ -41,6 +41,8 @@ from (values
   ('Bernard Světlý Ležák','Bernard','CZ'),
   -- Italien
   ('Peroni Nastro Azzurro','Birra Peroni','IT'),
+  ('Peroni Nastro Azzurro 0.0','Birra Peroni','IT'),
+  ('Peroni Gran Riserva','Birra Peroni','IT'),
   ('Moretti','Birra Moretti','IT'),
   ('Ichnusa Non Filtrata','Ichnusa','IT'),
   ('Menabrea Bionda','Menabrea','IT'),
