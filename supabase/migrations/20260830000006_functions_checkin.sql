@@ -189,8 +189,12 @@ begin
 
   -- --- Entdeckungen. Der Primaerschluessel verhindert Doppelvergabe
   --     strukturell, nicht durch Anwendungslogik.
-  insert into public.user_discoveries (user_id, kind, entity_id, first_check_in)
-  values (v_user, 'beer', v_beer::text, v_checkin) on conflict do nothing;
+  -- discovered_at kommt vom Check-in, nicht von now(): Wer einen Besuch von
+  -- vorgestern nachtraegt, hat vorgestern entdeckt. Sonst steht der Passport
+  -- in der falschen Reihenfolge, und zwei in derselben Transaktion
+  -- angelegte Funde haetten denselben Zeitstempel.
+  insert into public.user_discoveries (user_id, kind, entity_id, first_check_in, discovered_at)
+  values (v_user, 'beer', v_beer::text, v_checkin, p_happened_at) on conflict do nothing;
   if found then
     v_new_beer := true;
     v_raw_xp := v_raw_xp + public.cfg_int('xp.new_beer', 50);
@@ -199,8 +203,8 @@ begin
       'xp', public.cfg_int('xp.new_beer', 50));
   end if;
 
-  insert into public.user_discoveries (user_id, kind, entity_id, first_check_in)
-  values (v_user, 'venue', v_venue::text, v_checkin) on conflict do nothing;
+  insert into public.user_discoveries (user_id, kind, entity_id, first_check_in, discovered_at)
+  values (v_user, 'venue', v_venue::text, v_checkin, p_happened_at) on conflict do nothing;
   if found then
     v_new_venue := true;
     v_raw_xp := v_raw_xp + public.cfg_int('xp.new_venue', 50);
@@ -210,8 +214,8 @@ begin
   end if;
 
   if v_city is not null then
-    insert into public.user_discoveries (user_id, kind, entity_id, first_check_in)
-    values (v_user, 'city', v_city::text, v_checkin) on conflict do nothing;
+    insert into public.user_discoveries (user_id, kind, entity_id, first_check_in, discovered_at)
+    values (v_user, 'city', v_city::text, v_checkin, p_happened_at) on conflict do nothing;
     if found then
       v_raw_xp := v_raw_xp + public.cfg_int('xp.new_city', 150);
       v_discoveries := v_discoveries || jsonb_build_object('kind','city',
@@ -220,8 +224,8 @@ begin
     end if;
   end if;
 
-  insert into public.user_discoveries (user_id, kind, entity_id, first_check_in)
-  values (v_user, 'country', v_country, v_checkin) on conflict do nothing;
+  insert into public.user_discoveries (user_id, kind, entity_id, first_check_in, discovered_at)
+  values (v_user, 'country', v_country, v_checkin, p_happened_at) on conflict do nothing;
   if found then
     v_raw_xp := v_raw_xp + public.cfg_int('xp.new_country', 300);
     v_discoveries := v_discoveries || jsonb_build_object('kind','country',

@@ -9,6 +9,37 @@ Versionsschema: `docs/16-engineering-standard.md` §5.
 
 ## Unveröffentlicht
 
+### P0-Server vollständig
+- **35 RPCs** freigegeben, damit ist die in `06-data-model.md` §4
+  spezifizierte Oberfläche vollständig. Vier neue Testdateien (08–11),
+  insgesamt **11 SQL-Testdateien grün**.
+- `search_beers` setzt die Dubletten-Anforderung um: „Peroni" liefert alle
+  drei Varianten, Rangfolge exakt → Präfix → Wort → ähnlich, innerhalb eines
+  Rangs nach Beliebtheit. `similarity` reichte nicht — „Peronni" gegen
+  „Peroni Nastro Azzurro" ergibt 0,26; `word_similarity` ergibt 0,67.
+  Derselbe Fall wie beim Orts-Dedupe.
+- `get_home` liefert Profil, Passport, nächstes Ziel, Quests, Clan und drei
+  Aktivitätszeilen in einem Aufruf. Egress ist das Limit, nicht Rechenzeit.
+- **`get_quests` war als STABLE deklariert** — eine solche Funktion darf nicht
+  schreiben, und der Quest-Ablauf beim Lesen lief still ins Leere. Jetzt
+  VOLATILE, mit der Begründung im Kommentar.
+- **`user_discoveries.discovered_at` stand auf der Transaktionszeit** statt
+  auf dem Zeitpunkt des Check-ins. Wer einen Besuch von vorgestern nachtrug,
+  bekam ihn im Passport an die falsche Stelle. Kommt jetzt aus `happened_at`.
+- `delete_check_in` nimmt XP per **Gegenbuchung** zurück, nicht durch Löschen
+  der ursprünglichen Buchung — der Ledger bleibt vollständig.
+- Sichtbarkeitsregeln geprüft: Ein Fremder sieht Zähler, aber keine
+  Bewegungsspur; den Clan-Beitrittscode und die Mitgliederliste sieht nur,
+  wer Mitglied ist.
+- Invite-Codes ohne I, L, O, U — sie werden diktiert. Ein noch gültiger Code
+  wird wiederverwendet, statt fünf in Umlauf zu bringen.
+
+### Prüfungen
+- **`verify.sh` unterscheidet jetzt drei Fälle**: kein psql, psql ohne
+  Verbindung, und ein echter Fehlschlag. Vorher meldete eine fehlende
+  Datenbankverbindung ROT — ein Fehlschlag auf der eigenen Seite ist aber
+  keine Auskunft über die Regeln, die geprüft werden sollten.
+
 ### Preview
 - **Der Artefakt-Link ließ sich nicht öffnen** — derselbe Befund wie in
   Zählora, bei uns schon beim ersten Veröffentlichen. Vermutlich ist ein aus

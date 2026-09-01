@@ -5,6 +5,103 @@ Für den Projektmanager (ChatGPT). Neueste Session oben. Format und Regeln:
 
 ---
 
+## Session 2026-08-31 (12) — P0-Server vollständig
+
+**Auftrag:** „Wie geht es weiter?" — ich habe die unblockierte Arbeit gemacht,
+statt weiter zu fragen: die 26 fehlenden RPCs.
+
+```
+BUILD:   NICHT AUSGEFÜHRT — kein Swift geändert
+TESTS:   PASS — 11/11 SQL-Testdateien, 30/30 Prototyp, 14/14 Tokens
+PREVIEW: unverändert (Datei im Chat, Zweig `prototype`)
+```
+
+**Ergebnis:** **Die in `06-data-model.md` §4 spezifizierte API-Oberfläche ist
+vollständig.** 35 Funktionen für Clients freigegeben, vier neue Testdateien.
+Damit ist der gesamte P0-Server fertig und geprüft — Onboarding, Check-in,
+Suche, Home, Quests, Passport, Karte, Historie, Freunde, Invites, Clan,
+Leaderboard, Profil.
+
+Sobald die Design-Entscheidung steht, ist die UI reine Oberflächenarbeit auf
+geprüftem Grund.
+
+### Was das Testen aufgedeckt hat
+
+Vier echte Fehler, die ohne Test bis in die App gekommen wären:
+
+| Fehler | Warum er zählt |
+|---|---|
+| **`get_quests` war STABLE deklariert** | Eine STABLE-Funktion darf nicht schreiben. Der Quest-Ablauf beim Lesen lief still ins Leere — abgelaufene Quests wären für immer aktiv geblieben. Das ist der Preis dafür, keinen Scheduler zu betreiben, und er war fast unbezahlt geblieben. |
+| **`discovered_at` stand auf der Transaktionszeit** | Wer einen Besuch von vorgestern nachträgt, bekam ihn im Passport an die falsche Stelle. Kommt jetzt aus `happened_at` — man hat vorgestern entdeckt, nicht heute. |
+| **`similarity` reichte für die Biersuche nicht** | „Peronni" gegen „Peroni Nastro Azzurro" ergibt 0,26 und fällt durch jede sinnvolle Schwelle. `word_similarity` ergibt 0,67. **Exakt derselbe Fall wie beim Orts-Dedupe** — dieselbe Fehlerklasse, zweimal. |
+| **Zwei Fensterfunktionen bzw. Aggregate falsch geschachtelt** | Beides Compile-Fehler, beide sofort aufgefallen. |
+
+Dazu ein Fehler in meinem eigenen Test: Ich hatte einen Clan „Hop Heads"
+angelegt, den Test 04 bereits vergibt. Die Tests laufen nacheinander gegen
+dieselbe Datenbank — ein Name, den ein anderer Test schon hat, sieht aus wie
+ein Fehler in `create_clan` und ist keiner. Vermerkt im Test.
+
+### Und ein Befund am Prüfskript selbst
+
+`./scripts/verify.sh` meldete **ROT**, obwohl alle Tests grün waren: Als
+`root` gibt es keine Postgres-Rolle, die Verbindung scheiterte — und das
+Skript zählte das als Fehlschlag.
+
+**Genau die Fehlerklasse aus Zählora:** Ein Fehlschlag auf der eigenen Seite
+ist keine Auskunft über die Gegenseite. Das Skript unterscheidet jetzt drei
+Fälle: kein psql · psql ohne Verbindung (übersprungen, **mit Grund und
+Hinweis**) · echter Fehlschlag. Dass ich es überhaupt gemerkt habe, liegt am
+vollständigen Lauf — der Einzellauf hatte grün gemeldet.
+
+### Entscheidungen
+
+| # | Entscheidung | Begründung |
+|---|---|---|
+| 1 | **`search_beers` rangiert exakt → Präfix → Wort → ähnlich**, innerhalb eines Rangs nach Beliebtheit | Deine Anforderung §3 wörtlich. Test 08 prüft, dass „Peroni" alle drei Varianten liefert und der Präfix-Treffer oben steht |
+| 2 | **Ein gültiger Invite-Code wird wiederverwendet** statt bei jedem Antippen ein neuer | Sonst hat ein Nutzer fünf Codes im Umlauf und weiß nicht, welcher gilt |
+| 3 | **Invite-Codes ohne I, L, O, U** | Der Code wird diktiert. Diese vier verwechselt man mit 1, 0 und V |
+| 4 | **`delete_check_in` bucht gegen, statt zu löschen** | Der Ledger bleibt vollständig und nachvollziehbar. Test prüft, dass beide Buchungen stehen bleiben |
+| 5 | **Ein Fremder sieht Zähler, aber keine Bewegungsspur** | Zähler tragen das Leaderboard und verraten nicht, wo jemand war. Gilt auch für Clan-Beitrittscode und Mitgliederliste |
+| 6 | **Owner verlässt den Clan → dienstältestes Mitglied erbt**; letztes Mitglied → Clan stillgelegt, XP bleiben beim Clan | Sonst wäre ein Clan mit dem Owner verloren |
+
+### Geänderte Dateien
+
+Fünf neue Migrationen (`…011` bis `…016`), vier neue Testdateien (08–11),
+`verify.sh`, `CHANGELOG.md`, Seed um die Peroni-Varianten ergänzt.
+
+### Offene Risiken
+
+1. Der Swift-Code ist weiterhin ungetestet, seit der letzten CI-Runde ist
+   nichts daran geändert worden.
+2. Branch Protection auf `main` fehlt.
+3. `melden.sh` und der Zweig `pruefungen` sind noch nie von einem Mac aus
+   gelaufen.
+
+### Nächster Schritt
+
+**Die Visual Direction ist jetzt der einzige Blocker, der noch Arbeit
+aufhält.** Server und Prototyp sind fertig; alles Weitere ist UI.
+
+### Vorschläge und Themen von mir
+
+1. **Dieselbe Fehlerklasse ist mir zweimal untergekommen** — `similarity`
+   misst gegen den ganzen Text, `word_similarity` gegen ein Wort darin. Erst
+   beim Orts-Dedupe, jetzt bei der Biersuche. Ich habe die Begründung an
+   beiden Stellen in den Code geschrieben, damit die dritte Stelle nicht
+   auch noch danebengeht.
+2. **Der P0-Server ist fertig — das ist ein guter Moment für `v0.4.0` und für
+   den Merge nach `main`.** Voraussetzung bleibt ein grüner Xcode-Build.
+3. **Was mir beim Bauen aufgefallen ist:** `get_home` liefert inzwischen
+   sieben Blöcke in einem Aufruf. Das ist gewollt (Egress), aber der Payload
+   wächst. Wenn er über ~8 KB geht, würde ich die Aktivität in einen eigenen,
+   selteneren Aufruf ziehen. Aktuell ist er weit darunter.
+4. **Eine Lücke, die mir bewusst ist:** Das Leaderboard hat noch keinen
+   eigenen Test für den Fall „Nutzer ohne Freunde". Er sollte eine Liste mit
+   genau einer Zeile liefern — der eigenen. Trage ich beim nächsten Anfassen
+   nach.
+
+---
+
 ## Session 2026-08-31 (11) — Erfahrungen aus Zählora übernommen
 
 **Auftrag:** `docs/06-uebergabe.md`, `CLAUDE.md` und

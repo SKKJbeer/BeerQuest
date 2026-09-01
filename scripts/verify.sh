@@ -63,10 +63,20 @@ fi
 # ---------------------------------------------- 3. Datenbank (Sekunden)
 if [ "$UMFANG" = "alles" ] || [ "$UMFANG" = "sql" ]; then
   schritt "Datenbank"
-  if command -v psql >/dev/null; then
-    ./supabase/ci/run_local.sh "${BQ_TESTDB:-bq_verify}" || FEHLER=1
-  else
+  # Drei Faelle, und sie duerfen nicht verwechselt werden:
+  #   kein psql          -> uebersprungen
+  #   psql, keine Verbindung -> uebersprungen MIT GRUND, nicht rot.
+  #     Ein Fehlschlag auf der eigenen Seite ist keine Auskunft ueber die
+  #     Regeln, die geprueft werden sollten.
+  #   Verbindung, Test faellt -> rot
+  if ! command -v psql >/dev/null; then
     uebersprungen "SQL-Regeltests (kein psql)"
+  elif ! psql -d postgres -c 'select 1' >/dev/null 2>&1; then
+    uebersprungen "SQL-Regeltests (keine Verbindung zur Datenbank als '$(whoami)')"
+    echo "   Hinweis: In diesem Container laeuft Postgres unter dem Nutzer 'postgres'."
+    echo "   Dann:    su postgres -c './scripts/verify.sh sql'"
+  else
+    ./supabase/ci/run_local.sh "${BQ_TESTDB:-bq_verify}" || FEHLER=1
   fi
 fi
 
