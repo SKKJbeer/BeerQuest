@@ -40,6 +40,72 @@ page.on('console', m => {
 await page.goto(url);
 await page.waitForTimeout(400);
 
+head('Onboarding — drei Schritte bis zur ersten Quest');
+note(await page.locator('#onboard').isVisible(), 'Das Onboarding steht vor der App');
+// Nicht `isVisible()` auf dem Hero fragen: Playwright kennt keine
+// Verdeckung, das Element ist gerendert und gilt als sichtbar. Die Frage,
+// auf die es ankommt, ist eine andere - deckt das Onboarding den Schirm
+// wirklich ab, oder blitzt Home darunter durch?
+{
+  const ob = await page.locator('#onboard').boundingBox();
+  const ph = await page.locator('#phone').boundingBox();
+  note(ob.width >= ph.width - 1 && ob.height >= ph.height - 1,
+       'Es deckt den ganzen Schirm ab - Home blitzt nicht durch');
+  // Erreichbarkeit heisst: Was liegt an dieser Stelle wirklich oben?
+  // Das beantwortet der Browser, nicht eine Rechnung mit Rechtecken.
+  const verdeckt = await page.evaluate(() => {
+    const b = document.querySelector('#primary').getBoundingClientRect();
+    const oben = document.elementFromPoint(b.x + b.width/2, b.y + b.height/2);
+    return !!oben && !!oben.closest('#onboard');
+  });
+  note(verdeckt, 'Die Hauptaktion von Home ist waehrenddessen nicht erreichbar');
+}
+
+// Die vier Versprechen. Sie sind der Grund, warum jemand weitertippt.
+for (const w of ['Discover', 'Collect', 'Progress', 'Compete']) {
+  note(await page.locator(`.promise .headline:text-is("${w}")`).isVisible(),
+       `Versprechen sichtbar: ${w}`);
+}
+note((await page.locator('.ob-step.on .display').textContent()).includes('Discover'),
+     'Der erste Schirm sagt, worum es geht, nicht wer wir sind');
+note(await page.locator('.ob-step.on .btn').count() === 1,
+     'Genau eine Hauptaktion im ersten Schritt');
+
+await page.locator('#ob-go').click();
+await page.waitForTimeout(200);
+note((await page.locator('.ob-step.on .display').textContent()).includes('18'),
+     'Schritt 2 ist die Altersgrenze - der Server verlangt sie');
+
+// Wer "Not yet" tippt, kommt nicht weiter. Sonst waere die Frage Deko.
+await page.locator('#ob-age-no').click();
+await page.waitForTimeout(150);
+note(await page.locator('#ob-age-hint').isVisible(),
+     '"Not yet" bekommt eine Antwort statt eines Durchmarschs');
+note(await page.locator('[data-ob="1"].on').isVisible(),
+     '"Not yet" fuehrt NICHT weiter');
+
+await page.locator('#ob-age-yes').click();
+await page.waitForTimeout(200);
+note(await page.locator('[data-ob="2"].on').isVisible(), 'Schritt 3 ist die Namenswahl');
+note(await page.locator('#ob-done').isDisabled(), 'Ohne Namen geht es nicht weiter');
+
+// Der Wortfilter des Servers, hier vorweggenommen: wer ihn erst nach dem
+// Tippen erfaehrt, tippt zweimal.
+await page.locator('#ob-name').fill('admin');
+await page.waitForTimeout(120);
+note(await page.locator('#ob-done').isDisabled(), 'Ein gesperrter Name blockiert');
+note((await page.locator('#ob-name-hint').textContent()).length > 0,
+     'Und er sagt auch, warum');
+
+await page.locator('#ob-name').fill('steffen');
+await page.waitForTimeout(120);
+note(!await page.locator('#ob-done').isDisabled(), 'Ein gueltiger Name gibt frei');
+await page.locator('#ob-done').click();
+await page.waitForTimeout(300);
+note(!await page.locator('#onboard').isVisible(), 'Nach dem Onboarding ist es weg');
+note((await page.locator('#uname').textContent()).trim() === 'steffen',
+     'Der gewaehlte Name steht auf Home');
+
 head('Home — eine dominante Hauptaktion');
 note(await page.locator('#s-home.on').isVisible(), 'Home ist der Startschirm');
 const primary = page.locator('#primary');
@@ -138,11 +204,89 @@ note(/7/.test(clan) && /10/.test(clan), 'Der Fortschritt der Clan-Quest ist sich
 note(await page.locator('#clan-members .card').count() >= 3, 'Mitglieder mit Rangliste');
 note(/You/.test(clan), 'Die eigene Zeile ist markiert');
 
+// THIS WEEK zeigt Orte mit Zahlen, keine Meldungen. "Verona - 14" ist ein
+// Ort, an dem etwas los ist; "Lisa discovered Verona" ist eine Nachricht.
+{
+  const zeilen = await page.locator('#clan-week .headline').allTextContents();
+  const zahlen = (await page.locator('#clan-week .num').allTextContents())
+                   .map(t => parseInt(t, 10));
+  note(zeilen.length >= 3, `THIS WEEK zeigt mehrere Orte (${zeilen.length})`);
+  note(zeilen[0] === 'Verona' && zahlen[0] === 14,
+       `Der Kopf der Liste ist ein Ort mit Zahl (${zeilen[0]} - ${zahlen[0]})`);
+  note(zahlen.every((n, i) => i === 0 || n <= zahlen[i-1]),
+       'Die Liste ist absteigend sortiert - oben steht, wo am meisten los ist');
+  note(!/discovered/i.test(clan),
+       'Keine Aktivitaetsmeldungen mehr - Orte, keine Nachrichten');
+  note((await page.locator('#clan-week-hint').textContent()).includes('Verona'),
+       'Eine Zeile sagt, was die Zahlen bedeuten');
+}
+
+head('Home → Clan — die Vorschau zeigt dasselbe wie der Clan-Schirm');
+await page.click('nav button[data-t="home"]');
+await page.waitForTimeout(250);
+{
+  const stadt = (await page.locator('#home-clan-city').textContent()).trim();
+  const zahl  = (await page.locator('#home-clan-n').textContent()).trim();
+  note(stadt === 'Verona' && zahl === '14',
+       `Die Vorschau zeigt den Kopf der Clan-Woche (${stadt} - ${zahl})`);
+  note((await page.locator('#home-clan-line').textContent()).length > 10,
+       'Und sagt, was das mit mir zu tun hat');
+  // Die schwebende Hauptaktion liegt UEBER dem Inhalt. Die letzte Karte lag
+  // darunter und war halb verdeckt - im Kopf faellt das nicht auf, im
+  // Screenshot sofort.
+  {
+    // Ganz nach unten scrollen - nur dort stellt sich die Frage ueberhaupt.
+    await page.evaluate(() => {
+      const sc = document.querySelector('#s-home .scroll');
+      sc.scrollTop = sc.scrollHeight;
+    });
+    await page.waitForTimeout(200);
+    const karte = await page.locator('#feed .card').boundingBox();
+    const knopf = await page.locator('#primary').boundingBox();
+    note(karte.y + karte.height <= knopf.y + 1,
+         'Ganz unten gescrollt liegt die letzte Karte ueber der Hauptaktion');
+    await page.evaluate(() => { document.querySelector('#s-home .scroll').scrollTop = 0; });
+    await page.waitForTimeout(150);
+  }
+  await page.locator('#home-clan-city').click();
+  await page.waitForTimeout(250);
+  note(await page.locator('#s-clan.on').isVisible(),
+       'Ein Tap auf die Vorschau fuehrt in den Clan');
+}
+
+head('Passport — Sammelzustaende statt Zaehlerstaende');
+await page.click('nav button[data-t="profile"]');
+await page.waitForTimeout(300);
+{
+  const stamps = page.locator('#passport .stamp');
+  const n = await stamps.count();
+  note(n >= 4, `Das Passport zeigt Felder (${n})`);
+  note(await page.locator('#passport .stamp.discovered, #passport .stamp.completed, #passport .stamp.mastered').count() >= 1,
+       'Was entdeckt wurde, traegt einen Stempel');
+  const gesperrt = page.locator('#passport .stamp.locked');
+  note(await gesperrt.count() >= 1, 'Und es gibt Felder, die noch warten');
+
+  // Der Kern der Produkt-DNA: Ein gesperrtes Feld zeigt, WAS dort wartet -
+  // nie, wie viel fehlt. "Waiting" statt "0 von 187.000".
+  const ersterGesperrt = (await gesperrt.first().textContent()).trim();
+  note(/Waiting/.test(ersterGesperrt), `Gesperrt heisst "Waiting" (${ersterGesperrt.replace(/\s+/g,' ')})`);
+  note(!/\d+\s*(of|\/)\s*\d+/i.test(await page.locator('#passport').textContent()),
+       'Nirgends eine Bilanz der Art "12 von 187.000"');
+  note(/[A-Z][a-z]+/.test(ersterGesperrt.replace('Waiting','')),
+       'Ein gesperrtes Feld nennt den Ort - eine Einladung, kein Platzhalter');
+  note((await page.locator('#passport-hint').textContent()).length > 10,
+       'Eine Zeile sagt, welcher Ort als Naechstes drankaeme');
+}
+
 head('Naechster Grund weiterzuspielen');
 await page.click('nav button[data-t="home"]');
 await page.waitForTimeout(300);
-const hero = await page.locator('#hero-title').textContent();
-note(/Discover 2 more/.test(hero), `Nach dem Check-in steht ein neues Ziel da ("${hero.trim()}")`);
+// aria-label statt textContent: Im Markup steht ein <br>, und textContent
+// klebt die Zeilen zu "morebeers" zusammen. Das las sich in der Ausgabe wie
+// ein Textfehler in der App, war aber einer im Test - die Stelle, an der
+// wirklich der Satz steht, ist das Label fuer Sprachausgabe.
+const hero = await page.locator('#hero-title').getAttribute('aria-label');
+note(/Discover 2 more beers/.test(hero), `Nach dem Check-in steht ein neues Ziel da ("${hero.trim()}")`);
 note(/Cecina/.test(hero), 'Das Ziel knuepft an den Ort an, an dem der Nutzer gerade war');
 note((await page.locator('#c-country').textContent()) === '1', 'Die Zaehler sind gestiegen');
 

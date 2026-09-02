@@ -14,6 +14,55 @@ Versionsschema: `docs/16-engineering-standard.md` §5.
 
 ---
 
+## v0.4.0 — Onboarding, Passport, Clan-Woche (UX-Slice)
+
+Phase 2 des Stabilisierungsauftrags: **ein durchgehender Weg**, nicht zehn
+Screens. Onboarding → Home → Entdecken → Check-in → Reward → Beer World →
+nächste Quest, dazu Home → Clan.
+
+### Neu
+- **Onboarding, drei Schritte.** Es bildet den Server nach, der schon
+  existiert (`supabase/tests/07_onboarding.sql`): Versprechen, Altersgrenze,
+  Namenswahl mit Wortfilter. Was der Server nicht kann, steht dort auch
+  nicht — sonst verspricht der Prototyp etwas, das niemand einlöst.
+  - Die vier Versprechen sind vier Zeilen, kein Fließtext: **Discover,
+    Collect, Progress, Compete**. Wer sie nicht in drei Sekunden liest,
+    liest sie nicht.
+  - „Not yet" auf die Altersfrage führt nicht weiter. Eine Frage, die man
+    beliebig beantworten kann, ist Deko.
+  - Der Wortfilter meldet sich beim Tippen, nicht danach. Wer ihn erst nach
+    „weiter" erfährt, tippt zweimal.
+- **Passport statt Sammlung.** Vier Zustände je Stadt: *locked → discovered
+  → completed → mastered*. Ein gesperrtes Feld zeigt, **was** dort wartet,
+  nie **wie viel** fehlt: „Florence — Waiting", nicht „12 von 187.000". Das
+  ist der Unterschied zwischen einer Einladung und einer Bilanz, und er
+  entscheidet, ob sich das Ding wie ein Adventure Game anfühlt oder wie ein
+  Bier-Tracker (`docs/14-product-dna.md`). Eine Prüfung hält dagegen: kein
+  Muster der Form „n von m" im Passport.
+- **Clan „This week" zeigt Orte, keine Meldungen.** `Verona — 14`,
+  `Berlin — 9`, `Prague — 7`, absteigend, mit Balken. „Lisa discovered
+  Verona" ist eine Nachricht; „Verona — 14" ist ein Ort, an dem gerade etwas
+  los ist — und genau das erzeugt den Sog. Wer selbst dort war, sieht es
+  markiert.
+- **Clan-Vorschau auf Home**, ganz unten: erst die eigene Welt, dann die der
+  anderen. Sie zeigt **dieselbe** oberste Zeile wie der Clan-Schirm, nicht
+  eine zweite Formulierung derselben Sache — die würde früher oder später
+  etwas anderes behaupten.
+
+### Behoben
+- **Die letzte Karte auf Home lag unter der schwebenden Hauptaktion.** Die
+  Scroll-Luft war auf 120 px eingestellt, gebraucht werden 186. Gefunden im
+  Screenshot, nicht im Kopf; eine Prüfung scrollt jetzt ganz nach unten und
+  misst nach.
+
+### Geprüft
+82 Prototyp-Prüfungen (von 47), neu darunter: alle drei Onboarding-Schritte,
+die Sperre bei „Not yet", der Wortfilter in beiden Richtungen, die
+Passport-Zustände, das Verbot der Bilanz-Formulierung, das Clan-Format samt
+Sortierung und die Freiheit der letzten Karte.
+
+---
+
 ## v0.3.1 — Die Prüfungen selbst geprüft
 
 Diese Version enthält **keinen Produktcode**. Sie repariert das Werkzeug,
