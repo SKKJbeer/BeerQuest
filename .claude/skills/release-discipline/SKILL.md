@@ -18,6 +18,22 @@ etwas bricht, ist nicht mehr feststellbar, welche davon es war.
 3. **Tests.** Neue Spielregel ⇒ neuer Test. Behobener Fehler ⇒ Regressionstest,
    der dauerhaft bleibt.
 
+## Wo die Version steht — und wo nicht
+
+Die Version steht an **zwei** Orten, und `verify.sh` hält sie gegeneinander:
+
+- `CHANGELOG.md` — die oberste `## vX.Y.Z`-Überschrift
+- `project.yml` — `MARKETING_VERSION`
+
+**Eine Git-Marke ist nicht der Träger.** Aus der Cloud-Umgebung lässt sich
+kein Tag schieben (`HTTP 403`); die Marken `v0.1.0` bis `v0.3.0` existierten
+drei Sessions lang nur lokal und waren am Repository nie zu sehen, während
+die Übergabe sie als Zustand meldete. Wer eine Marke setzen will, tut das auf
+dem Mac — als Zugabe, nicht als Beleg.
+
+> Ursache, damit die Regel ihre Behebung nicht überlebt: Was nur lokal
+> existiert, existiert für den Projektmanager nicht. Er liest das Repository.
+
 ## Was nicht den ganzen Weg geht
 
 Eine Änderung, die nur Dokumente, Prüfskripte oder den Prototyp anfasst, endet

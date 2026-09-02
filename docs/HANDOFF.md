@@ -110,9 +110,26 @@ Pull Request (dort geht es ums Zusammenführen).
   laufen **47** — einige Prüfungen stehen in Schleifen. Die Zahl wird jetzt
   vom Lauf **gezählt und ausgegeben**, nicht mehr in ein Dokument
   geschrieben. Eine Zahl in einem Dokument veraltet still.
-- `project.yml` stand auf `MARKETING_VERSION 0.1.0`, während die Marken
-  bei `v0.3.0` waren. Die App-Version wurde seit P0.1 nie mitgezogen.
-  Jetzt `0.3.1`.
+- `project.yml` stand auf `MARKETING_VERSION 0.1.0`, während der Changelog
+  bei `v0.3.0` war. Die App-Version wurde seit P0.1 nie mitgezogen.
+  Jetzt `0.3.1`, und `verify.sh` hält die beiden Orte ab sofort gegeneinander.
+
+### 7. Keine einzige Versionsmarke ist je am Remote angekommen
+
+`git ls-remote --tags origin` liefert **nichts**. Die Marken `v0.1.0` bis
+`v0.3.1` existieren nur lokal, in einem Container, der beim Sitzungsende
+verschwindet. Der Push scheitert reproduzierbar mit `HTTP 403` — diese
+Umgebung darf Zweige schieben, aber keine Marken.
+
+Das heißt: **die Versionshistorie hing an etwas, das es nicht gibt.** Drei
+Sessions lang stand in der Übergabe „Version v0.3.0", und am Repository war
+davon nichts zu sehen.
+
+Konsequenz statt Reparaturversuch: Die Version lebt dort, wo sie ohnehin
+mitgeschoben wird — in `CHANGELOG.md` und `project.yml`. Beide werden jetzt
+von `verify.sh` gegeneinander gehalten. Marken sind eine Zugabe, die du auf
+dem Mac setzen kannst (`git tag -a v0.3.1 && git push origin v0.3.1`), kein
+Träger der Wahrheit.
 
 ### 6. Neu: `--streng`
 
@@ -158,6 +175,8 @@ folgt in der nächsten Session.
 | `.github/workflows/sql-tests.yml` | Pfadfilter beim PR raus | Befund 4 |
 | `.github/workflows/prototype.yml` | Pfadfilter beim PR raus | Befund 4 |
 | `project.yml` | Version 0.1.0 → 0.3.1 | Befund 5 |
+| `scripts/verify.sh` | Changelog gegen project.yml | Befund 7 |
+| `.claude/skills/release-discipline/SKILL.md` | Marken sind nicht der Träger | Befund 7 |
 | `docs/19-branch-protection.md` | neu, 81 Zeilen | Auftrag Phase 1 |
 | `docs/HANDOFF.md` | ersetzt: nur noch aktueller Stand | Auftrag Phase 1 |
 | `docs/HANDOFF-ARCHIV.md` | neu: Sessions 1–13 wortgleich | Auftrag Phase 1 |
@@ -167,6 +186,7 @@ folgt in der nächsten Session.
 ./scripts/verify.sh schnell     # 47 Prototyp- + 14 Token-Prüfungen, ~35 s
 su postgres -c './supabase/ci/run_local.sh bq_verify'   # 11 SQL-Dateien
 ./scripts/verify.sh sql --streng; echo $?               # muss 1 sein
+git ls-remote --tags origin                             # leer: siehe Befund 7
 ```
 
 **Was sich aus dem Repository NICHT beurteilen lässt:**
@@ -185,6 +205,7 @@ su postgres -c './supabase/ci/run_local.sh bq_verify'   # 11 SQL-Dateien
 | R2 | `verify.sh` lief nie auf macOS | Der einzige Rechner, der den Xcode-Build ausführen kann, ist der einzige, auf dem das Skript nie lief. Genau dort steckte Befund 2. | Einmal `./scripts/verify.sh --melden` auf dem Mac. Danach steht eine Zeile im Zweig `pruefungen`, und die Behauptung wird ein Beleg. |
 | R3 | Kein Supabase-Projekt | Alle 35 RPCs sind gegen lokales Postgres 15 geprüft, nie gegen die echte Instanz. Auth über Sign in with Apple ist ungetestet. | Blockiert P0.4. Anlegen dauert ~15 min, kostet nichts. |
 | R4 | GitHub Pages für den Zweig `prototype` nicht eingeschaltet | Der Prototyp ist nur als Datei zugänglich. Das hat schon einmal einen Review gekostet. | Ein Schalter in den Repository-Einstellungen. |
+| R6 | Versionsmarken lassen sich aus dieser Umgebung nicht schieben (403) | Keine Marke ist je am Remote angekommen. Die Version steht jetzt in Changelog und `project.yml`, gegeneinander geprüft — das trägt. | Nichts zu entscheiden. Wer auf dem Mac Marken setzen mag: `git tag -a v0.3.1 -m "..." && git push origin v0.3.1`. |
 | R5 | Ein Test je Spielregel — auf der **Server**seite. Swift hat 11 Tests, alle für `Progression` | Die Formeln stehen zweimal (SQL und Swift) und werden von niemandem gegeneinander gehalten. Fehlerklasse 4: „Wo etwas zweimal steht, steht es früher oder später verschieden." | Kein Beschluss nötig, aber ich merke es vor: ein Test, der die Swift-Kurve gegen die SQL-Kurve hält, sobald es eine echte Instanz gibt (R3). |
 
 ---

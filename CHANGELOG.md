@@ -57,6 +57,14 @@ zugeschlagen hätten, wenn man sich darauf verlässt.
   Prüfungen"; tatsächlich laufen 47, weil einige in Schleifen stehen. Eine
   Zahl in einem Dokument veraltet still — eine, die der Lauf ausgibt, nicht.
 
+- **Keine Versionsmarke ist je am Remote angekommen.** `git ls-remote --tags
+  origin` liefert nichts; der Push scheitert reproduzierbar mit `HTTP 403`.
+  Die Marken v0.1.0–v0.3.0 existierten nur lokal, in einem Container, der
+  beim Sitzungsende verschwindet — drei Sessions lang meldete die Übergabe
+  eine Version, von der am Repository nichts zu sehen war. Die Version lebt
+  jetzt in dieser Datei und in `project.yml`, und `verify.sh` hält beide
+  gegeneinander. Eine Marke ist eine Zugabe, kein Beleg.
+
 ### Belegt
 - macOS-Build **grün**: GitHub-Lauf 33510952452, Commit 9e4ab6b, 80 s
   Testphase. Damit ist die seit Session 9 offene Frage beantwortet.

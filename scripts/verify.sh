@@ -54,6 +54,25 @@ else
   uebersprungen "Token-Abgleich (kein python3)"
 fi
 
+schritt "Version: Changelog gegen project.yml"
+# Die Version steht an zwei Orten, und wo etwas zweimal steht, steht es
+# frueher oder spaeter verschieden - project.yml stand ein halbes Jahr auf
+# 0.1.0, waehrend der Changelog bei 0.3.0 war. Eine Marke (git tag) waere
+# der dritte Ort und ist hier nutzlos: Marken lassen sich aus dieser
+# Umgebung nicht schieben (HTTP 403), sie existierten nie am Remote.
+# Also: zwei Orte, eine Pruefung, die den einen gegen den anderen haelt.
+CL=$(grep -m1 -oE '^## v[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | sed 's/^## v//')
+PY_=$(grep -m1 -oE 'MARKETING_VERSION: "[0-9.]+"' project.yml | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+if [ -z "$CL" ] || [ -z "$PY_" ]; then
+  echo "   ROT: Version nicht auffindbar (Changelog='$CL', project.yml='$PY_')"
+  FEHLER=1
+elif [ "$CL" != "$PY_" ]; then
+  echo "   ROT: Changelog sagt $CL, project.yml sagt $PY_."
+  FEHLER=1
+else
+  echo "   $CL in Changelog und project.yml"
+fi
+
 schritt "Arbeitsverzeichnis"
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   echo "   Achtung: nicht committete Aenderungen - ein Lauf 'mit Aenderungen'"
