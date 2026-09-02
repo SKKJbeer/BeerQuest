@@ -51,7 +51,7 @@ PREVIEW: `docs/prototype/index.html` — Datei im Chat, Zweig `prototype`.
 | Supabase-Projekt (echte Instanz) | **existiert nicht** | offen |
 
 **Version:** v0.4.0 · **Zweig:** `claude/beer-quest-mvp-spec-dpjh2i` ·
-25 Commits · `main` enthält nur „Initial commit".
+Alle Arbeit liegt auf dem Zweig; `main` enthält nur „Initial commit".
 
 ---
 
@@ -233,7 +233,7 @@ git ls-remote --tags origin                             # leer: Befund 7
 
 | # | Sache | Meine Einschätzung | Was ich brauche |
 |---|---|---|---|
-| **R1** | `main` enthält nur „Initial commit"; 25 Commits liegen auf dem Arbeitszweig | Ein Branch-Schutz auf leerem `main` schützt nichts. Und wer das Repository auf `main` öffnet, sieht ein leeres Projekt. | **Entscheidung: Arbeitszweig nach `main` zusammenführen?** Ich tue das nicht ungefragt. Vorschlag: ja, per Pull Request — dann laufen die drei Prüfungen einmal an einem echten PR und sind danach als „required" eintragbar. |
+| **R1** | `main` enthält nur „Initial commit"; die gesamte Arbeit liegt auf dem Arbeitszweig | Ein Branch-Schutz auf leerem `main` schützt nichts. Und wer das Repository auf `main` öffnet, sieht ein leeres Projekt. | **Entscheidung: Arbeitszweig nach `main` zusammenführen?** Ich tue das nicht ungefragt. Vorschlag: ja, per Pull Request — dann laufen die drei Prüfungen einmal an einem echten PR und sind danach als „required" eintragbar. |
 | **R2** | `verify.sh` lief nie auf macOS | Der einzige Rechner, der Xcode ausführen kann, ist der einzige, auf dem das Skript nie lief — und genau dort steckte Befund 2. | Einmal `./scripts/verify.sh --melden` auf dem Mac. Danach steht eine Zeile im Zweig `pruefungen`, und die Behauptung wird ein Beleg. |
 | **R3** | Kein Supabase-Projekt | 35 RPCs sind gegen lokales Postgres geprüft, nie gegen die echte Instanz. Sign in with Apple ist ungetestet. | Blockiert P0.4. Anlegen dauert ~15 min, kostet nichts. |
 | **R4** | GitHub Pages für Zweig `prototype` nicht eingeschaltet | Der Prototyp ist nur als Datei zugänglich. Das hat schon einmal einen Review gekostet. | Ein Schalter in den Repository-Einstellungen. |
