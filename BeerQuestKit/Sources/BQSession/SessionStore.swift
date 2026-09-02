@@ -43,4 +43,27 @@ public final class SessionStore {
     public func apply(_ newState: State) {
         state = newState
     }
+
+    /// **Attrappe bis P0.5.** Setzt den Zustand nur lokal, damit der Weg
+    /// durchs Onboarding begehbar ist, solange weder Sign in with Apple
+    /// noch der Aufruf von `complete_onboarding` existieren.
+    ///
+    /// Sie heisst absichtlich `local`: Wer sie liest, soll nicht glauben,
+    /// hier sei ein Account entstanden. Es ist keiner. Sobald P0.5 den
+    /// echten Aufruf bringt, faellt diese Methode ersatzlos weg - deshalb
+    /// steht sie hier und nicht mitten im View, wo sie jemand uebersehen
+    /// wuerde.
+    ///
+    /// Das Geburtsjahr wird bewusst **nicht** gespeichert: Es geht an den
+    /// Server, der die Altersgrenze durchsetzt, und wird danach nicht mehr
+    /// gebraucht. Was man nicht haelt, kann man nicht verlieren
+    /// (docs/05-architecture.md §11).
+    public func applyLocalOnboardingResult(username: String, birthYear: Int) {
+        state = .ready(UserProfile(id: UUID(),
+                                   username: username,
+                                   avatarKey: "mug_01",
+                                   avatarColor: "amber",
+                                   level: 1,
+                                   xp: 0))
+    }
 }

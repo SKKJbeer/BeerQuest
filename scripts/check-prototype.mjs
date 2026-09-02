@@ -73,29 +73,55 @@ note(await page.locator('.ob-step.on .btn').count() === 1,
 
 await page.locator('#ob-go').click();
 await page.waitForTimeout(200);
-note((await page.locator('.ob-step.on .display').textContent()).includes('18'),
-     'Schritt 2 ist die Altersgrenze - der Server verlangt sie');
+note((await page.locator('.ob-step.on .display').textContent()).includes('born'),
+     'Schritt 2 fragt das Geburtsjahr - genau das nimmt complete_onboarding');
 
-// Wer "Not yet" tippt, kommt nicht weiter. Sonst waere die Frage Deko.
-await page.locator('#ob-age-no').click();
-await page.waitForTimeout(150);
-note(await page.locator('#ob-age-hint').isVisible(),
-     '"Not yet" bekommt eine Antwort statt eines Durchmarschs');
-note(await page.locator('[data-ob="1"].on').isVisible(),
-     '"Not yet" fuehrt NICHT weiter');
+// Die Auswahl darf nur anbieten, was der Server annimmt. Sonst tippt
+// jemand etwas ein und bekommt die Absage nach dem letzten Schritt.
+{
+  const jahre = (await page.locator('#ob-year option').allTextContents()).map(Number);
+  const jetzt = new Date().getFullYear();
+  note(Math.max(...jahre) === jetzt - 18,
+       `Das juengste angebotene Jahr ist genau 18 Jahre her (${Math.max(...jahre)})`);
+  note(Math.min(...jahre) === jetzt - 120,
+       `Das aelteste ist 120 Jahre her (${Math.min(...jahre)})`);
+  note(!jahre.includes(jetzt - 17), 'Ein 17-Jaehriger findet sein Jahr gar nicht erst');
+  note(!await page.locator('#ob-age-next').isDisabled(),
+       'Mit einer gueltigen Vorauswahl geht es weiter');
+  // Dieselbe Vorgabe wie OnboardingRules.defaultBirthYear in BQCore.
+  // Zwei Vorgaben waeren zwei Produkte.
+  const vorgabe = Number(await page.locator('#ob-year').inputValue());
+  note(vorgabe === jetzt - 25,
+       `Die Vorauswahl steht in der Mitte des Erwartbaren (${vorgabe})`);
+}
 
-await page.locator('#ob-age-yes').click();
+await page.locator('#ob-age-next').click();
 await page.waitForTimeout(200);
 note(await page.locator('[data-ob="2"].on').isVisible(), 'Schritt 3 ist die Namenswahl');
 note(await page.locator('#ob-done').isDisabled(), 'Ohne Namen geht es nicht weiter');
 
 // Der Wortfilter des Servers, hier vorweggenommen: wer ihn erst nach dem
-// Tippen erfaehrt, tippt zweimal.
-await page.locator('#ob-name').fill('admin');
-await page.waitForTimeout(120);
-note(await page.locator('#ob-done').isDisabled(), 'Ein gesperrter Name blockiert');
+// Tippen erfaehrt, tippt zweimal. is_term_allowed prueft auf Gleichheit
+// UND auf Enthaltensein.
+for (const boese of ['admin', 'xadminx', 'beerquest', 'the_moderator']) {
+  await page.locator('#ob-name').fill(boese);
+  await page.waitForTimeout(100);
+  note(await page.locator('#ob-done').isDisabled(), `Gesperrt blockiert: ${boese}`);
+}
 note((await page.locator('#ob-name-hint').textContent()).length > 0,
      'Und er sagt auch, warum');
+
+// Der Server will ^[a-z0-9_]{3,20}$. Statt zu korrigieren, wird
+// vorgeschlagen - und der Vorschlag steht da, bevor er gespeichert wird.
+await page.locator('#ob-name').fill('Steffen M.');
+await page.waitForTimeout(120);
+note((await page.locator('#ob-handle').textContent()).includes('@steffen_m'),
+     'Aus "Steffen M." wird sichtbar der Handle @steffen_m');
+note(!await page.locator('#ob-done').isDisabled(), 'Und er gibt frei');
+
+await page.locator('#ob-name').fill('ab');
+await page.waitForTimeout(120);
+note(await page.locator('#ob-done').isDisabled(), 'Zwei Zeichen sind zu wenig');
 
 await page.locator('#ob-name').fill('steffen');
 await page.waitForTimeout(120);

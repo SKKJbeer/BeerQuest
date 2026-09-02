@@ -291,6 +291,11 @@ nav button.on{color:var(--accent)}
   font-size:17px;font-weight:700;padding:15px var(--s-m);min-height:52px}
 #ob-name:focus{outline:0;border-color:var(--accent)}
 #ob-name-hint{min-height:18px;padding:8px 2px 0}
+#ob-year{width:100%;background:var(--raised);border:1px solid var(--separator);
+  border-radius:var(--r-card);color:var(--ink-1);font-family:var(--font);
+  font-size:19px;font-weight:700;padding:15px var(--s-m);min-height:52px;
+  -webkit-appearance:none;appearance:none;text-align:center}
+#ob-year:focus{outline:0;border-color:var(--accent)}
 
 /* ============================== PASSPORT ===============================
    Sammelzustaende statt Zaehlerstaende. Ein gesperrtes Feld ist eine
@@ -374,23 +379,25 @@ nav button.on{color:var(--accent)}
       </div>
     </div>
 
-    <!-- 2. Altersgrenze. Der Server verlangt sie, also steht sie hier.
-            Zwei Antworten, keine Vorauswahl. -->
+    <!-- 2. Altersgrenze. Ein Geburtsjahr, kein Haekchen: complete_onboarding
+            nimmt `p_birth_year` entgegen und rechnet damit. Ein Ja/Nein
+            haette etwas gefragt, das der Server gar nicht verwendet - und
+            die Absage waere erst nach dem letzten Schritt gekommen.
+            Nur das Jahr, nie das volle Datum (Datenminimierung). -->
     <div class="ob-step" data-ob="1">
       <div class="scroll" style="padding:0">
         <div style="padding:var(--s-l) 0 var(--s-m)">
           <div class="label">Before we start</div>
-          <h1 class="display" style="margin:var(--s-s) 0 10px">Are you 18<br>or older?</h1>
-          <div class="cap dimmer">Beer Quest is for adults. We ask once and never again.</div>
+          <h1 class="display" style="margin:var(--s-s) 0 10px">What year were<br>you born?</h1>
+          <div class="cap dimmer">Beer Quest is for adults. We ask for the year only,
+            never the full date.</div>
         </div>
+        <select id="ob-year" aria-label="Year of birth"></select>
+        <div class="cap dimmer" id="ob-age-hint" style="padding-top:12px"></div>
       </div>
       <div class="ob-foot">
         <div class="ob-dots" role="img" aria-label="Step 2 of 3"><i></i><i class="on"></i><i></i></div>
-        <button class="btn tap" id="ob-age-yes" style="width:100%">Yes, I am 18 or older</button>
-        <button class="pill ghost tap" id="ob-age-no"
-                style="width:100%;margin-top:10px;min-height:44px;justify-content:center">Not yet</button>
-        <div class="cap dimmer" id="ob-age-hint" style="display:none;padding-top:12px;text-align:center">
-          Then Beer Quest is not for you yet. Come back on your 18th birthday.</div>
+        <button class="btn tap" id="ob-age-next" style="width:100%">Continue</button>
       </div>
     </div>
 
@@ -405,6 +412,7 @@ nav button.on{color:var(--accent)}
         </div>
         <input id="ob-name" type="text" autocomplete="off" spellcheck="false"
                maxlength="20" placeholder="steffen" aria-label="Your explorer name">
+        <div class="cap dimmer" id="ob-handle" style="position:absolute;left:-9999px"></div>
         <div class="cap" id="ob-name-hint"></div>
       </div>
       <div class="ob-foot">
@@ -741,8 +749,27 @@ const metric = m => m==='checkins' ? S.checkins : S.known[m].size;
    supabase/migrations/..._onboarding.sql: verboten wird gemeldet,
    bevor jemand auf "weiter" tippt - nicht danach.
    ============================================================== */
-const OB_VERBOTEN = ['admin','beerquest','moderator','support','fuck','shit'];
+/* Der Grundstock aus `banned_terms` (supabase/.../onboarding.sql). Die
+   vollstaendige Liste liegt als Tabelle auf dem Server - sie ist
+   Redaktionsarbeit und muss ohne App-Update pflegbar sein. */
+const OB_VERBOTEN = ['admin','administrator','moderator','support','beerquest',
+                     'beer_quest','official','staff','system','null',
+                     'undefined','anonymous'];
+const OB_MINDESTALTER = 18;
 let obSchritt = 0;
+
+/* Aus dem Getippten wird ein Handle vorgeschlagen, statt den Nutzer zu
+   korrigieren: check_username verlangt ^[a-z0-9_]{3,20}$. "Steffen M."
+   wird zu "steffen_m". */
+function obHandle(roh){
+  let out = '';
+  for(const ch of roh.toLowerCase()){
+    if(/[a-z0-9]/.test(ch)) out += ch;
+    else if(out && out.slice(-1) !== '_') out += '_';
+  }
+  while(out.slice(-1) === '_') out = out.slice(0,-1);
+  return out.slice(0,20);
+}
 
 function obZeige(n){
   obSchritt = n;
@@ -751,27 +778,62 @@ function obZeige(n){
 }
 function obNamePruefen(){
   const roh = $('#ob-name').value.trim();
+  const handle = obHandle(roh);
   const hint = $('#ob-name-hint');
-  const knapp = roh.length > 0 && roh.length < 3;
-  const boese = OB_VERBOTEN.some(w => roh.toLowerCase().includes(w));
+  const knapp = roh.length > 0 && handle.length < 3;
+  /* is_term_allowed prueft auf Gleichheit UND Enthaltensein. */
+  const boese = OB_VERBOTEN.some(w => handle.includes(w));
+  /* EINE Hinweiszeile. "You will be @steffen_m" und "Looks good."
+     standen uebereinander und sagten dasselbe zweimal. */
+  const abweichend = roh && !boese && !knapp && handle !== roh;
   hint.textContent = boese ? 'That name is taken by the house rules. Try another.'
-                   : knapp ? 'At least three characters.'
+                   : knapp ? 'Three to twenty letters, digits or underscores.'
+                   : abweichend ? 'You will be @' + handle
                    : roh ? 'Looks good.' : '';
   hint.style.color = (boese || knapp) ? 'var(--accent-deep)' : 'var(--ink-3)';
-  const ok = roh.length >= 3 && !boese;
+  /* Bleibt im Markup, damit die Pruefung eine feste Stelle hat. */
+  $('#ob-handle').textContent = abweichend ? 'You will be @' + handle : '';
+  const ok = handle.length >= 3 && !boese;
   $('#ob-done').disabled = !ok;
   $('#ob-done').style.opacity = ok ? '1' : '.45';
   return ok;
 }
-$('#ob-go').onclick      = () => obZeige(1);
-$('#ob-age-yes').onclick = () => obZeige(2);
-$('#ob-age-no').onclick  = () => { $('#ob-age-hint').style.display = 'block'; };
-$('#ob-name').oninput    = obNamePruefen;
+
+/* Die Auswahl bietet nur Jahre an, die der Server auch annimmt
+   (18 bis 120). Wer nur waehlen kann, was durchgeht, bekommt keine
+   Absage nach dem letzten Schritt. */
+function obJahreFuellen(){
+  const jetzt = new Date().getFullYear();
+  const sel = $('#ob-year');
+  for(let j = jetzt - OB_MINDESTALTER; j >= jetzt - 120; j--){
+    const o = document.createElement('option');
+    o.value = j; o.textContent = j; sel.appendChild(o);
+  }
+  sel.value = jetzt - 25;
+  obAlterPruefen();
+}
+function obAlterPruefen(){
+  const jahr = parseInt($('#ob-year').value, 10);
+  const alter = new Date().getFullYear() - jahr;
+  const ok = alter >= OB_MINDESTALTER && alter <= 120;
+  $('#ob-age-hint').textContent = ok
+    ? 'You need to be ' + OB_MINDESTALTER + ' or older.'
+    : 'Beer Quest is not for you yet. Come back on your 18th birthday.';
+  $('#ob-age-hint').style.color = ok ? 'var(--ink-3)' : 'var(--accent-deep)';
+  $('#ob-age-next').disabled = !ok;
+  $('#ob-age-next').style.opacity = ok ? '1' : '.45';
+  return ok;
+}
+$('#ob-go').onclick       = () => obZeige(1);
+$('#ob-year').onchange    = obAlterPruefen;
+$('#ob-age-next').onclick = () => { if(obAlterPruefen()) obZeige(2); };
+$('#ob-name').oninput     = obNamePruefen;
 $('#ob-name').onkeydown  = e => { if(e.key === 'Enter' && obNamePruefen()) $('#ob-done').click(); };
 $('#ob-done').onclick = () => {
   if(!obNamePruefen()) return;
-  const name = $('#ob-name').value.trim();
+  const name = obHandle($('#ob-name').value.trim());
   S.name = name;
+  S.birthYear = parseInt($('#ob-year').value, 10);
   $('#uname').textContent = name;
   $('#ava').textContent = name[0].toUpperCase();
   $$('#s-profile .avatar').forEach(a => a.textContent = name[0].toUpperCase());
@@ -780,6 +842,7 @@ $('#ob-done').onclick = () => {
   $('#onboard').classList.add('off');
   render(); show('home');
 };
+obJahreFuellen();
 obNamePruefen();
 
 /* ------------------------------------------------------ Navigation */

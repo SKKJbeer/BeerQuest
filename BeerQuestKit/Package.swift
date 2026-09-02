@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "BQCheckIn", targets: ["BQCheckIn"]),
         .library(name: "BQWorld", targets: ["BQWorld"]),
         .library(name: "BQPlay", targets: ["BQPlay"]),
+        .library(name: "BQOnboarding", targets: ["BQOnboarding"]),
     ],
     targets: [
         // Reine Domänenschicht: kein SwiftUI, kein Netzwerk, keine Apple-Frameworks
@@ -26,6 +27,7 @@ let package = Package(
         .target(name: "BQCheckIn", dependencies: ["BQCore", "BQAPI", "BQDesign", "BQSession"]),
         .target(name: "BQWorld", dependencies: ["BQCore", "BQAPI", "BQDesign", "BQSession"]),
         .target(name: "BQPlay", dependencies: ["BQCore", "BQAPI", "BQDesign", "BQSession"]),
+        .target(name: "BQOnboarding", dependencies: ["BQCore", "BQAPI", "BQDesign", "BQSession"]),
 
         .testTarget(name: "BQCoreTests", dependencies: ["BQCore"]),
     ]

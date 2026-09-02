@@ -14,6 +14,63 @@ Versionsschema: `docs/16-engineering-standard.md` §5.
 
 ---
 
+## v0.5.0 — Das Onboarding in SwiftUI, und was der Abgleich aufdeckte
+
+P0.4, erste Runde: **ein Bereich**, nicht zehn. Das Onboarding zuerst, weil
+es der einzige Weg in die App ist.
+
+### Behoben — der Prototyp versprach etwas anderes als der Server
+Beim Bauen der echten Screens fiel der Abgleich mit
+`complete_onboarding` an. Zwei Stellen liefen auseinander, und beide hätten
+den Nutzer erst **nach dem letzten Schritt** in eine Absage laufen lassen:
+
+- **Der Server will ein Geburtsjahr, der Prototyp fragte Ja/Nein.**
+  `complete_onboarding` nimmt `p_birth_year` und rechnet damit; ein Häkchen
+  liefert das nicht. Beide fragen jetzt das Jahr — und nur das Jahr, nie das
+  volle Datum (Datenminimierung, `docs/05-architecture.md` §11).
+- **Der Server will `^[a-z0-9_]{3,20}$`, der Prototyp erlaubte alles.**
+  Statt zu korrigieren wird jetzt vorgeschlagen: „Steffen M." wird sichtbar
+  zu `@steffen_m`. Der Wortfilter prüft wie der Server auf Gleichheit **und**
+  Enthaltensein (`xadminx` ist gesperrt).
+- Die Auswahl bietet nur Jahre an, die der Server annimmt. Ein
+  17-Jähriger findet sein Jahr gar nicht erst.
+
+Das ist genau das Risiko R7 aus dem letzten Handoff, eingetreten binnen
+einer Session.
+
+### Neu
+- **`BQOnboarding`** — neues Modul, drei Schritte in SwiftUI, gebaut nach dem
+  validierten Prototyp: Versprechen (vier Zeilen), Geburtsjahr (Rad),
+  Explorer-Name (mit lebendem Hinweis).
+- **`BQCore.OnboardingRules`** — die Regeln als reine, testbare Logik.
+  Sie sind eine **Kopie** des SQL, keine zweite Quelle, und die Datei sagt
+  das auch: ändert sich `check_username`, ändert sie sich im selben Commit.
+  Der Server bleibt die Instanz, die entscheidet — die App nimmt nur vorweg.
+  `taken` erzeugt der Client **nie**: das weiß nur die Datenbank.
+- **`RootView` schaltet jetzt auf den Sitzungszustand.** Vorher stand die
+  Tab-Leiste unabhängig davon da — das Onboarding wäre gebaut, aber
+  unerreichbar gewesen.
+- **`SessionStore.applyLocalOnboardingResult`** — eine Attrappe bis P0.5, und
+  sie heißt auch so. Sie legt keinen Account an; sobald der echte Aufruf
+  kommt, fällt sie ersatzlos weg.
+
+### Geprüft
+- **17 neue Swift-Tests** (`OnboardingRulesTests`) halten die Swift-Kopie
+  gegen die Fälle, die im SQL stehen: Format, Groß-/Kleinschreibung,
+  Wortfilter als Teilzeichenkette, `norm_name`, der Vorschlag, die
+  Jahresdifferenz, das Mindestalter und dass die angebotene Auswahl genau
+  die angenommene ist.
+- **91 Prototyp-Prüfungen** (von 82).
+- Beide Seiten prüfen dieselbe Vorgabe für das Standardjahr — zwei Vorgaben
+  wären zwei Produkte.
+
+### Offen
+Die vollständige Wortfilterliste (~200 Begriffe) bleibt bewusst **nur** auf
+dem Server: Sie ist Redaktionsarbeit und muss ohne App-Update pflegbar sein.
+Die App fängt nur den Grundstock ab.
+
+---
+
 ## v0.4.0 — Onboarding, Passport, Clan-Woche (UX-Slice)
 
 Phase 2 des Stabilisierungsauftrags: **ein durchgehender Weg**, nicht zehn

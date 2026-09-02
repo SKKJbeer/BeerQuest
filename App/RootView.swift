@@ -5,6 +5,7 @@ import BQSession
 import BQCheckIn
 import BQWorld
 import BQPlay
+import BQOnboarding
 
 /// Die Navigationsstruktur aus docs/05-architecture.md §9.
 /// Fuenf Tabs; der Add-Button ist bewusst kein Tab, sondern oeffnet ein Sheet -
@@ -15,6 +16,26 @@ struct RootView: View {
     @State private var isAddingCheckIn = false
 
     var body: some View {
+        // Der Sitzungszustand entscheidet, was ueberhaupt zu sehen ist.
+        // Bisher stand die Tab-Leiste unabhaengig davon da - das Onboarding
+        // waere gebaut, aber unerreichbar gewesen.
+        switch session.state {
+        case .launching:
+            ScreenBackground()
+        case .signedOut, .onboarding:
+            OnboardingFlow { result in
+                // P0.5: Hier geht `complete_onboarding` an den Server.
+                // Bis dahin wird der Zustand nur lokal gesetzt, damit der
+                // Weg begehbar ist. Das ist eine Attrappe und heisst auch so.
+                session.applyLocalOnboardingResult(username: result.username,
+                                                   birthYear: result.birthYear)
+            }
+        case .ready:
+            mainTabs
+        }
+    }
+
+    private var mainTabs: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedTab) {
                 BQPlayPlaceholder(title: "Home")
