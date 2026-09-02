@@ -17,190 +17,215 @@ Format und Regeln: `.claude/skills/handoff/SKILL.md`.
 
 ---
 
-## Session 14 — Stabilisierung der Prüfungen (Phase 1)
+## Session 14 — Stabilisierung, dann UX-Slice
 
-**Auftrag:** Vor dem nächsten UX-Schritt den technischen Unterbau
-stabilisieren: Ist der Stand reproduzierbar? Ist der macOS-Build
-*nachweisbar* grün? Taugen die Prüfmechanismen etwas? Branch-Schutz für
-`main` vorbereiten. Und die Übergabedatei entrümpeln.
+**Auftrag:** Phase 1 den technischen Unterbau stabilisieren (Reproduzierbarkeit,
+macOS-Build nachweisen, Prüfmechanismen prüfen, Branch-Schutz vorbereiten,
+Übergabe entrümpeln). Phase 2 einen durchgehenden UX-Slice mit Onboarding.
+Phase 3 Review-Gate und dann stoppen.
 
 ```
 BUILD:   GRÜN — belegt, nicht behauptet. GitHub-Lauf 33596688860,
-         macOS, Commit 7a76e13 (Stand dieser Session), mit --streng.
-         Das Protokoll sagt jetzt wörtlich:
-             11 Tests ausgefuehrt, keine Fehler.
+         macOS, Commit 7a76e13, mit --streng. Das Protokoll sagt
+         jetzt wörtlich: "11 Tests ausgefuehrt, keine Fehler."
          Vorher stand dort nur "GRUEN" und sonst nichts.
-TESTS:   PASS — 47/47 Prototyp (gezählt vom Lauf), 11/11 SQL-Regeltests,
-         14/14 Design-Tokens. Swift: 11 Testfunktionen, zuletzt auf dem
-         macOS-Runner ausgeführt.
-PREVIEW: unverändert seit Session 13 — Zweig `prototype`,
-         `docs/prototype/index.html`. In dieser Session wurde nichts an
-         der Oberfläche geändert.
+         Seit 7a76e13 wurde kein Swift geändert.
+TESTS:   PASS — 82/82 Prototyp (gezählt vom Lauf, vorher 47),
+         11/11 SQL-Regeltests, 14/14 Design-Tokens,
+         11 Swift-Tests auf dem macOS-Runner.
+PREVIEW: `docs/prototype/index.html` — Datei im Chat, Zweig `prototype`.
+         Version v0.4.0.
 ```
 
 ---
 
 ## Wo das Projekt steht
 
-**Phase:** P0 ist serverseitig fertig und geprüft. Die iOS-App ist ein
-Gerüst. Der Prototyp V2 ist der einzige Ort, an dem das Produkt zu sehen ist.
-
 | Bereich | Zustand | Bewertung |
 |---|---|---|
 | Spezifikation (`docs/`, 20 nummerierte Dokumente) | vollständig | REAL |
 | Datenbank (16 Migrationen, 35 RPCs) | vollständig, 11 Testdateien grün | REAL |
-| Prüf- und CI-Werkzeug | vollständig, in dieser Session repariert | REAL |
-| Klickbarer Prototyp V2 | Core Loop ohne Onboarding | PROTOTYPE |
+| Prüf- und CI-Werkzeug | in dieser Session repariert und belegt | REAL |
+| Klickbarer Prototyp | Onboarding + Core Loop + Passport + Clan | PROTOTYPE |
 | iOS-App (14 Swift-Dateien) | Gerüst, baut und testet grün | PLACEHOLDER |
 | Supabase-Projekt (echte Instanz) | **existiert nicht** | offen |
 
-**Version:** v0.3.1 · **Zweig:** `claude/beer-quest-mvp-spec-dpjh2i` ·
-22 Commits · `main` enthält nur „Initial commit".
+**Version:** v0.4.0 · **Zweig:** `claude/beer-quest-mvp-spec-dpjh2i` ·
+25 Commits · `main` enthält nur „Initial commit".
 
 ---
 
-## Was in dieser Session geprüft wurde — und was dabei herauskam
+# PM REVIEW NEEDED
 
-Der Auftrag lautete „prüfe die Prüfmechanismen". Das Ergebnis ist
-unbequem: **die Prüfungen hatten selbst vier Fehler**, und drei davon
-hätten genau dann zugeschlagen, wenn man sich auf sie verlässt.
+### 1. Was hat sich verändert?
 
-### 1. Der macOS-Build ist grün — der Nachweis fehlte
+**Phase 1 — Werkzeug.** Der Auftrag lautete „prüfe die Prüfmechanismen".
+Das Ergebnis ist unbequem: **sie hatten selbst sieben Fehler**, und die
+meisten hätten genau dann zugeschlagen, wenn man sich auf sie verlässt.
+Details unter „Was Phase 1 gefunden hat".
 
-Lauf 33510952452 auf `macos-latest`, Commit 9e4ab6b: erfolgreich, mit einer
-echten Testphase von 80 Sekunden. Damit ist die seit drei Sessions offene
-Frage beantwortet.
+**Phase 2 — Produkt.** Onboarding (fehlte ganz), Passport statt
+Zählerliste, Clan-Woche als Orte statt Meldungen, Clan-Vorschau auf Home.
 
-**Aber:** Das Protokoll lief mit `-quiet`. Es belegte nirgends, dass auch nur
-ein einziger Test *ausgeführt* wurde. Ein Schema ohne Testziel wäre genauso
-grün gewesen. Das ist der Unterschied zwischen „vorhanden" und „wirkt", und
-er stand hier ein halbes Dutzend Sessions unbemerkt offen.
-`verify.sh` zählt jetzt die ausgeführten Tests und wird **rot, wenn es
-null sind** — mit Hinweis, wo nachzusehen ist. Lauf 33596688860 auf dem
-echten macOS-Runner bestätigt es: „11 Tests ausgefuehrt, keine Fehler."
+### 2. Was kannst du anklicken?
 
-Nachgezogen: `scripts/**` löst den iOS-Build jetzt mit aus. Der Lauf ruft
-`verify.sh` auf — eine Änderung am Prüfskript, die den Build bricht, wäre
-sonst erst beim nächsten Swift-Commit aufgefallen, und dann beim falschen
+Den ganzen Weg, ohne Sackgasse:
+
+```
+Onboarding (3 Schritte) → Home → Discover a beer → Check-in (1 Tap)
+   → Reward → Beer World (4 Ebenen) → nächste Quest
+Home → Clan-Vorschau → Clan
+Home → Profile → Passport
+```
+
+Probier bitte ausdrücklich auch: **„Not yet"** bei der Altersfrage, und den
+Namen **`admin`** im dritten Schritt.
+
+### 3. Wo ist die Preview?
+
+- **Die Datei kommt im Chat** — das ist der Weg, der bei dir funktioniert hat.
+- Im Repository: `docs/prototype/index.html`, eine einzige Datei ohne
+  Abhängigkeiten. Herunterladen, doppelklicken.
+- Zweig `prototype` (nur was die Prüfung besteht, landet dort).
+
+### 4. Was ist REAL, was PROTOTYPE, was PLACEHOLDER?
+
+| | |
+|---|---|
+| **REAL** | Die Datenbank. 35 RPCs, gegen echtes Postgres 15 geprüft. XP-Regeln, Tages-Cap, Erst-Check-in-Ausnahme, Dedupe, Quests, Clan-XP, Passport, Karte — alles serverseitig fertig. |
+| **PROTOTYPE** | Alles, was du anklickst. HTML mit Mock-Daten. Die XP-Regeln darin spiegeln den Server, die Bierliste ist erfunden. |
+| **PLACEHOLDER** | Die iOS-App. 14 Swift-Dateien, ein Gerüst mit Navigation und Design-Tokens. Kein Screen daraus ist gebaut. |
+
+### 5. Welche Design-Entscheidungen stecken drin?
+
+- **Das Onboarding verspricht nur, was der Server kann.** Es bildet
+  `07_onboarding.sql` nach: Altersgrenze, Namenswahl, Wortfilter, erste
+  Quest. Kein Foto-Upload, kein Freundeimport, nichts, was danach
+  eingelöst werden müsste.
+- **Vier Zeilen statt Fließtext.** Discover / Collect / Progress / Compete.
+  Wer sie nicht in drei Sekunden liest, liest sie nicht.
+- **„Not yet" führt nicht weiter.** Eine Frage, die man beliebig
+  beantworten kann, ist Deko.
+- **Der Wortfilter meldet sich beim Tippen**, nicht nach „weiter". Wer ihn
+  erst danach erfährt, tippt zweimal.
+- **Passport: `Florence — Waiting`, nicht „12 von 187.000".** Das gesperrte
+  Feld zeigt, *was* dort wartet, nie *wie viel* fehlt. Eine Prüfung verbietet
+  das Muster „n von m" im Passport.
+- **Clan zeigt Orte, keine Meldungen.** „Lisa discovered Verona" ist eine
+  Nachricht; „Verona — 14" ist ein Ort, an dem etwas los ist.
+- **Die Home-Vorschau zeigt dieselbe Zeile wie der Clan-Schirm**, nicht eine
+  zweite Formulierung — die würde früher oder später etwas anderes behaupten.
+
+### 6. Was solltest du testen?
+
+1. Der Weg von ganz vorn bis „nächste Quest" — **fühlt er sich wie ein
+   Produkt an oder wie fünf Screens?**
+2. Das Passport. Ist ein gesperrtes Feld eine **Einladung**? Oder liest es
+   sich doch wie eine Bilanz?
+3. Die Clan-Woche. Erzeugt `Verona — 14` den Sog, dorthin zu wollen?
+4. Das Onboarding: Ist es zu kurz? Zu lang? Fehlt eine Frage, die die App
+   später braucht?
+
+### 7. Welche Produktfragen sind offen?
+
+| | Frage | Meine Neigung |
+|---|---|---|
+| P1 | Die **Badges** zeigen weiter `1/5` und `1/10`. Ist das dieselbe Bilanz, die wir im Passport verbannt haben? | Nein — ein Badge hat ein **endliches, sichtbares** Ziel, und das motiviert. Die Regel gilt der unbekannten Welt, nicht einem konkreten Ziel. Aber es ist eine Ermessensentscheidung; wenn du sie anders siehst, ändere ich es. |
+| P2 | Das Onboarding fragt **nicht** nach dem Heimatort. | Bewusst. Der Ort kommt vom Gerät. Eine Frage, deren Antwort man ohnehin hat, ist eine Hürde. |
+| P3 | Der Clan ist im Onboarding **kein** Schritt. | Bewusst: erst spielen, dann beitreten. Ein Clan vor dem ersten Check-in ist ein leeres Versprechen. |
+| P4 | „Mastered" heißt aktuell: 3 Biere **und** 2 Orte in einer Stadt. Zahlen frei erfunden. | Braucht deine Meinung, sobald echte Daten da sind. |
+
+---
+
+## Was Phase 1 gefunden hat
+
+Sieben Befunde. Der Reihe nach, mit dem, was jetzt dagegen steht.
+
+**1. Der macOS-Build ist grün — der Nachweis fehlte.**
+Lauf 33510952452, Commit 9e4ab6b, 80 s Testphase, erfolgreich. Damit ist die
+seit Session 9 offene Frage beantwortet. *Aber:* Der Lauf lief mit `-quiet`
+und belegte nirgends, dass auch nur **ein** Test ausgeführt wurde — ein
+Schema ohne Testziel wäre genauso grün gewesen. `verify.sh` zählt jetzt und
+wird **rot bei null**. Lauf 33596688860 bestätigt es auf dem echten Runner:
+„11 Tests ausgefuehrt, keine Fehler."
+
+**2. `verify.sh` wäre auf jedem Mac abgestürzt.**
+Bash-Arrays; `/bin/bash` auf macOS ist Version 3.2 von 2007 und bricht bei
+`${#ARRAY[@]}` mit leerem Array unter `set -u` ab. Rot geworden wäre
+ausgerechnet der **einzige Rechner, der den Xcode-Build ausführen kann** —
+ohne dass am Projekt etwas falsch gewesen wäre. Jetzt ohne Arrays.
+
+**3. Das Melden in den Zweig `pruefungen` lief auf Linux nie.**
+`[ "$WOHER" = "Darwin" ] && WOHER="Mac"` beendet unter `set -e` das Skript,
+sobald der Test falsch ist — also in **jeder Cloud-Sitzung**, wortlos. Der
+Mechanismus, der Mac und Cloud verbinden soll, war auf einer Seite tot.
+**Das ist der Grund, warum der Zweig bis heute leer ist** — es war nicht
+Nachlässigkeit.
+
+**4. Der Branch-Schutz hätte jeden Pull Request blockiert.**
+GitHub meldet für einen Ablauf, der wegen eines **Pfadfilters** gar nicht
+startet, *keinen* Status — nicht „bestanden", sondern gar nichts. Als
+„required status check" bliebe er ewig ausstehend; ein Pull Request, der nur
+Dokumentation ändert, ließe sich **nie mehr zusammenführen**. Aufgefallen
+wäre es erst nach dem Einschalten. Filter bleibt beim `push`, fällt beim
+`pull_request`.
+
+**5. Zwei Zahlen stimmten nicht.**
+Die Übergabe sagte „39 Prototyp-Prüfungen"; tatsächlich liefen 47 (heute 82).
+Die Zahl wird jetzt **vom Lauf gezählt und ausgegeben**, nicht in ein
+Dokument geschrieben. Und `project.yml` stand seit P0.1 auf `0.1.0`, während
+der Changelog bei `0.3.0` war — `verify.sh` hält beide jetzt gegeneinander.
+
+**6. `scripts/**` löste den iOS-Build nicht aus**, obwohl der Lauf
+`verify.sh` aufruft. Eine Änderung am Prüfskript, die den Build bricht, wäre
+erst beim nächsten Swift-Commit aufgefallen — und dann beim falschen
 Verdächtigen.
 
-### 2. `verify.sh` wäre auf dem Mac abgestürzt
+**7. Keine einzige Versionsmarke ist je am Remote angekommen.**
+`git ls-remote --tags origin` liefert **nichts**. Der Push scheitert
+reproduzierbar mit `HTTP 403`. `v0.1.0` bis `v0.3.0` existierten nur lokal,
+in einem Container, der beim Sitzungsende verschwindet. Drei Sessions lang
+meldete die Übergabe eine Version, von der am Repository nichts zu sehen war.
+Die Version lebt jetzt in `CHANGELOG.md` und `project.yml`, gegeneinander
+geprüft.
 
-Das Skript benutzte Bash-Arrays. Auf einem Mac ist `/bin/bash` die Version
-3.2 von 2007, und dort bricht `${#ARRAY[@]}` bei leerem Array unter `set -u`
-mit „unbound variable" ab. Das Skript wäre also ausgerechnet auf dem
-**einzigen Rechner rot geworden, der den Xcode-Build überhaupt ausführen
-kann** — ohne dass am Projekt etwas falsch gewesen wäre. Jetzt ohne Arrays.
-
-### 3. Das Melden in den Zweig `pruefungen` lief nie
-
-`melden.sh` enthielt `[ "$WOHER" = "Darwin" ] && WOHER="Mac"` unter `set -e`.
-Ist der Test falsch — also auf jedem Linux, also in **jeder Cloud-Sitzung** —
-beendet diese Zeile das Skript. Wortlos, ohne eine Zeile zu schreiben.
-Der Mechanismus, der Mac und Cloud verbinden soll, war auf einer Seite tot.
-Jetzt ein `if`; und `verify.sh` meldet, wenn das Melden scheitert.
-
-### 4. Der Branch-Schutz hätte jeden Pull Request blockiert
-
-Alle drei Abläufe hatten Pfadfilter auch beim `pull_request`. GitHub meldet
-für einen Ablauf, der wegen eines Pfadfilters **gar nicht startet**, keinen
-Status — nicht „bestanden", sondern gar nichts. Als „required status check"
-wäre er ewig ausstehend geblieben: ein Pull Request, der nur Dokumentation
-ändert, hätte sich **nie mehr zusammenführen lassen**. Die Falle wäre erst
-aufgefallen, nachdem der Schutz eingeschaltet ist.
-Pfadfilter jetzt nur noch beim `push` (dort geht es um Kosten), nicht beim
-Pull Request (dort geht es ums Zusammenführen).
-
-### 5. Zwei Zahlen stimmten nicht
-
-- Die Übergabe sagte seit Session 13 „39 Prototyp-Prüfungen". Tatsächlich
-  laufen **47** — einige Prüfungen stehen in Schleifen. Die Zahl wird jetzt
-  vom Lauf **gezählt und ausgegeben**, nicht mehr in ein Dokument
-  geschrieben. Eine Zahl in einem Dokument veraltet still.
-- `project.yml` stand auf `MARKETING_VERSION 0.1.0`, während der Changelog
-  bei `v0.3.0` war. Die App-Version wurde seit P0.1 nie mitgezogen.
-  Jetzt `0.3.1`, und `verify.sh` hält die beiden Orte ab sofort gegeneinander.
-
-### 7. Keine einzige Versionsmarke ist je am Remote angekommen
-
-`git ls-remote --tags origin` liefert **nichts**. Die Marken `v0.1.0` bis
-`v0.3.1` existieren nur lokal, in einem Container, der beim Sitzungsende
-verschwindet. Der Push scheitert reproduzierbar mit `HTTP 403` — diese
-Umgebung darf Zweige schieben, aber keine Marken.
-
-Das heißt: **die Versionshistorie hing an etwas, das es nicht gibt.** Drei
-Sessions lang stand in der Übergabe „Version v0.3.0", und am Repository war
-davon nichts zu sehen.
-
-Konsequenz statt Reparaturversuch: Die Version lebt dort, wo sie ohnehin
-mitgeschoben wird — in `CHANGELOG.md` und `project.yml`. Beide werden jetzt
-von `verify.sh` gegeneinander gehalten. Marken sind eine Zugabe, die du auf
-dem Mac setzen kannst (`git tag -a v0.3.1 && git push origin v0.3.1`), kein
-Träger der Wahrheit.
-
-### 6. Neu: `--streng`
-
-In der CI steht das Werkzeug fest. Fällt dort etwas aus, ist das kein
-Umgebungsproblem, sondern ein kaputter Ablauf. `./scripts/verify.sh ios
---streng` macht Übersprungenes zum Fehler — ein grüner Haken, hinter dem
-nichts geprüft wurde, ist schlimmer als ein roter. Lokal bleibt es beim
-alten Verhalten: Übersprungenes wird benannt, nicht bestraft.
-
----
-
-## PM REVIEW NEEDED
-
-### Was sich verändert hat
-Nur Werkzeug und Dokumentation. **Kein Produktcode, keine Oberfläche, keine
-Datenbankregel.** Wer den Prototyp anschaut, sieht denselben Stand wie nach
-Session 13.
-
-### Was du anklicken kannst
-Nichts Neues. Der Prototyp ist unverändert; die UX-Arbeit ist Phase 2 und
-folgt in der nächsten Session.
-
-### Was du prüfen solltest
-1. `docs/19-branch-protection.md` — die Tabelle ist zum Abhaken gedacht.
-   **Die Entscheidung „0 Approvals" ist meine Annahme** (Einzelperson; ein
-   Selbst-Review wäre eine Formalie). Wenn du das anders willst, sag es.
-2. Die Aufteilung in drei Dateien (oben). Sie widerspricht der früheren
-   Vorgabe „alles in HANDOFF.md" und wurde in dieser Session ausdrücklich
-   freigegeben. Prüf bitte, ob du so noch findest, was du suchst.
+**Neu dazu:** `--streng` — in der CI zählt Übersprungenes als Fehler. Ein
+grüner Haken, hinter dem nichts geprüft wurde, ist schlimmer als ein roter.
+Lokal bleibt es beim alten Verhalten.
 
 ---
 
 ## FÜR DEN REVIEW
 
 **Commit-Bereich:** `af08be6..HEAD` auf `claude/beer-quest-mvp-spec-dpjh2i`
+(4 Commits)
 
-| Datei | Was | Warum |
-|---|---|---|
-| `scripts/verify.sh` | Arrays raus, Testzählung, `--streng` | Befunde 1, 2, 6 |
-| `scripts/melden.sh` | `[ ] &&` → `if` | Befund 3 |
-| `scripts/check-prototype.mjs` | zählt die Prüfungen selbst | Befund 5 |
-| `.github/workflows/ios-build.yml` | Pfadfilter beim PR raus, `--streng` | Befunde 4, 6 |
-| `.github/workflows/sql-tests.yml` | Pfadfilter beim PR raus | Befund 4 |
-| `.github/workflows/prototype.yml` | Pfadfilter beim PR raus | Befund 4 |
-| `project.yml` | Version 0.1.0 → 0.3.1 | Befund 5 |
-| `scripts/verify.sh` | Changelog gegen project.yml | Befund 7 |
-| `.claude/skills/release-discipline/SKILL.md` | Marken sind nicht der Träger | Befund 7 |
-| `docs/19-branch-protection.md` | neu, 81 Zeilen | Auftrag Phase 1 |
-| `docs/HANDOFF.md` | ersetzt: nur noch aktueller Stand | Auftrag Phase 1 |
-| `docs/HANDOFF-ARCHIV.md` | neu: Sessions 1–13 wortgleich | Auftrag Phase 1 |
+| Datei | Was |
+|---|---|
+| `docs/prototype/index.html` | Onboarding, Passport, Clan-Woche, Home-Vorschau |
+| `scripts/check-prototype.mjs` | 47 → 82 Prüfungen; zählt sich selbst |
+| `scripts/verify.sh` | ohne Arrays, Testzählung, `--streng`, Versionsabgleich |
+| `scripts/melden.sh` | `[ ] &&` → `if` |
+| `.github/workflows/*.yml` | Pfadfilter beim PR raus, `--streng`, `scripts/**` |
+| `project.yml` | Version 0.1.0 → 0.4.0 |
+| `docs/19-branch-protection.md` | neu — zum Abhaken |
+| `docs/HANDOFF-ARCHIV.md` | neu — Sessions 1–13 wortgleich |
+| `.claude/skills/release-discipline/SKILL.md` | Marken sind nicht der Träger |
 
 **Selbst nachprüfen:**
 ```bash
-./scripts/verify.sh schnell     # 47 Prototyp- + 14 Token-Prüfungen, ~35 s
+./scripts/verify.sh schnell                             # 82 + 14, ~35 s
 su postgres -c './supabase/ci/run_local.sh bq_verify'   # 11 SQL-Dateien
 ./scripts/verify.sh sql --streng; echo $?               # muss 1 sein
-git ls-remote --tags origin                             # leer: siehe Befund 7
+git ls-remote --tags origin                             # leer: Befund 7
 ```
 
 **Was sich aus dem Repository NICHT beurteilen lässt:**
-- Ob `verify.sh` auf einem echten Mac durchläuft. Der Array-Fehler ist
-  behoben, aber **niemand hat das Skript je auf macOS gestartet.** Der
-  Zweig `pruefungen` ist bis heute leer.
+- Ob `verify.sh` auf einem echten Mac durchläuft. Befund 2 ist behoben, aber
+  **niemand hat das Skript je auf macOS gestartet.** Der Zweig `pruefungen`
+  ist leer.
 - Ob der Branch-Schutz wirkt. Er ist beschrieben, nicht eingeschaltet.
+- Ob sich der Prototyp gut anfühlt. Das entscheidest du am Gerät.
 
 ---
 
@@ -208,37 +233,38 @@ git ls-remote --tags origin                             # leer: siehe Befund 7
 
 | # | Sache | Meine Einschätzung | Was ich brauche |
 |---|---|---|---|
-| R1 | `main` enthält nur „Initial commit"; 22 Commits liegen auf dem Arbeitszweig | Ein Branch-Schutz auf einem leeren `main` schützt nichts. Und wer das Repository auf `main` öffnet, sieht ein leeres Projekt — auch du, falls du je den Standardzweig liest. | **Entscheidung: Arbeitszweig nach `main` zusammenführen?** Ich tue das nicht ungefragt. Vorschlag: ja, per Pull Request, damit die drei Prüfungen einmal an einem echten PR laufen und danach als „required" eintragbar sind. |
-| R2 | `verify.sh` lief nie auf macOS | Der einzige Rechner, der den Xcode-Build ausführen kann, ist der einzige, auf dem das Skript nie lief. Genau dort steckte Befund 2. | Einmal `./scripts/verify.sh --melden` auf dem Mac. Danach steht eine Zeile im Zweig `pruefungen`, und die Behauptung wird ein Beleg. |
-| R3 | Kein Supabase-Projekt | Alle 35 RPCs sind gegen lokales Postgres 15 geprüft, nie gegen die echte Instanz. Auth über Sign in with Apple ist ungetestet. | Blockiert P0.4. Anlegen dauert ~15 min, kostet nichts. |
-| R4 | GitHub Pages für den Zweig `prototype` nicht eingeschaltet | Der Prototyp ist nur als Datei zugänglich. Das hat schon einmal einen Review gekostet. | Ein Schalter in den Repository-Einstellungen. |
-| R6 | Versionsmarken lassen sich aus dieser Umgebung nicht schieben (403) | Keine Marke ist je am Remote angekommen. Die Version steht jetzt in Changelog und `project.yml`, gegeneinander geprüft — das trägt. | Nichts zu entscheiden. Wer auf dem Mac Marken setzen mag: `git tag -a v0.3.1 -m "..." && git push origin v0.3.1`. |
-| R5 | Ein Test je Spielregel — auf der **Server**seite. Swift hat 11 Tests, alle für `Progression` | Die Formeln stehen zweimal (SQL und Swift) und werden von niemandem gegeneinander gehalten. Fehlerklasse 4: „Wo etwas zweimal steht, steht es früher oder später verschieden." | Kein Beschluss nötig, aber ich merke es vor: ein Test, der die Swift-Kurve gegen die SQL-Kurve hält, sobald es eine echte Instanz gibt (R3). |
+| **R1** | `main` enthält nur „Initial commit"; 25 Commits liegen auf dem Arbeitszweig | Ein Branch-Schutz auf leerem `main` schützt nichts. Und wer das Repository auf `main` öffnet, sieht ein leeres Projekt. | **Entscheidung: Arbeitszweig nach `main` zusammenführen?** Ich tue das nicht ungefragt. Vorschlag: ja, per Pull Request — dann laufen die drei Prüfungen einmal an einem echten PR und sind danach als „required" eintragbar. |
+| **R2** | `verify.sh` lief nie auf macOS | Der einzige Rechner, der Xcode ausführen kann, ist der einzige, auf dem das Skript nie lief — und genau dort steckte Befund 2. | Einmal `./scripts/verify.sh --melden` auf dem Mac. Danach steht eine Zeile im Zweig `pruefungen`, und die Behauptung wird ein Beleg. |
+| **R3** | Kein Supabase-Projekt | 35 RPCs sind gegen lokales Postgres geprüft, nie gegen die echte Instanz. Sign in with Apple ist ungetestet. | Blockiert P0.4. Anlegen dauert ~15 min, kostet nichts. |
+| **R4** | GitHub Pages für Zweig `prototype` nicht eingeschaltet | Der Prototyp ist nur als Datei zugänglich. Das hat schon einmal einen Review gekostet. | Ein Schalter in den Repository-Einstellungen. |
+| **R5** | Die XP-Kurve steht **zweimal** — in SQL und in Swift — ohne Abgleich | Fehlerklasse 4. Heute stimmen sie; das ist keine Eigenschaft, sondern ein Zufall. | Kein Beschluss nötig. Ich merke einen Test vor, der beide gegeneinander hält, sobald es eine echte Instanz gibt (R3). |
+| **R6** | Versionsmarken lassen sich nicht schieben (403) | Behoben, indem die Version dorthin gezogen wurde, wo sie mitgeschoben wird. | Nichts zu entscheiden. Marken auf dem Mac: `git tag -a v0.4.0 -m "..." && git push origin v0.4.0`. |
+| **R7** | Der Prototyp bildet den Server nach — **von Hand** | Wortfilter, XP-Werte und Cap stehen jetzt an drei Orten: SQL, Swift, HTML. Ein Wert, der sich ändert, ändert sich nicht überall. | Kein Beschluss nötig, aber es wächst. Wenn P0.4 die echten Screens baut, fällt der HTML-Zweig weg — bis dahin lebe ich mit dem Risiko und benenne es. |
 
 ---
 
 ## Vorschläge und Themen von mir
 
-1. **Phase 2 beginnt in der nächsten Session**: Onboarding im Prototyp,
-   dann der durchgehende Weg Onboarding → Home → Entdecken → Check-in →
-   Reward → Beer World → nächste Quest. Nichts davon ist angefangen.
-2. **R1 zuerst entscheiden.** Ein Pull Request vom Arbeitszweig nach `main`
-   ist zugleich der Belastungstest für Befund 4 — die drei Prüfungen müssen
-   an einem echten PR sichtbar werden, sonst lassen sie sich gar nicht als
-   „required" eintragen.
-3. **Der Zweig `pruefungen` ist der wunde Punkt.** Solange dort nichts
-   steht, weiß eine Cloud-Sitzung nie, ob je ein echter Xcode-Build lief.
-   Befund 3 zeigt, dass das nicht Nachlässigkeit war, sondern ein Fehler
-   im Werkzeug.
+1. **R1 zuerst entscheiden.** Ein Pull Request nach `main` ist zugleich der
+   Belastungstest für Befund 4: Die drei Prüfungen müssen an einem echten PR
+   sichtbar werden, sonst lassen sie sich gar nicht als „required" eintragen.
+2. **Der Zweig `pruefungen` ist der wunde Punkt.** Solange dort nichts steht,
+   weiß eine Cloud-Sitzung nie, ob je ein echter Xcode-Build lief. Befund 3
+   zeigt, dass das ein Werkzeugfehler war, keine Nachlässigkeit.
+3. **Nach deinem Review wäre P0.4 dran**: die ersten echten SwiftUI-Screens,
+   und zwar in derselben Reihenfolge wie im Prototyp — Onboarding zuerst,
+   weil es der einzige Weg in die App ist. Ein Bereich pro Runde.
 4. **Redaktionelle Arbeit liegt weiter bei dir**: die Wortfilterliste
    (~200 Begriffe) und die Durchsicht der Bier-Seeds. Beides ist
    Voraussetzung für einen externen Test, nicht für P0.
+5. **Selbstkritisch:** Diese Session hat mehr Zeit im Werkzeug verbracht als
+   im Produkt. Das war der Auftrag, und die sieben Befunde rechtfertigen es —
+   aber die nächste Session sollte wieder am Produkt arbeiten, sonst pflegen
+   wir eine Werkbank, auf der nichts liegt.
 
 ---
 
 ## Was als Nächstes passiert
 
-1. **Phase 2** — Onboarding und der durchgehende UX-Slice im Prototyp
-   (nächste Session).
-2. **Phase 3** — PM-Review-Gate, danach Stopp bis zu deiner Rückmeldung.
-3. Erst danach wieder Backend oder Swift.
+**Nichts.** Auftragsgemäß Stopp bis zu deiner Rückmeldung — keine weiteren
+Screens, keine weiteren Features.
