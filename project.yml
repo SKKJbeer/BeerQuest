@@ -26,7 +26,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.beerquest.app
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "0.3.1"
         CURRENT_PROJECT_VERSION: "1"
         INFOPLIST_FILE: App/Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: App/Resources/BeerQuest.entitlements

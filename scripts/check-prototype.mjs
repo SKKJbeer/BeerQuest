@@ -13,8 +13,13 @@ import { dirname, resolve } from 'path';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const url = 'file://' + resolve(root, process.argv[2] || 'docs/prototype/index.html');
 
+// Die Zahl der Pruefungen wird GEZAEHLT, nicht aufgeschrieben. In der
+// Uebergabe stand lange "39 Pruefungen"; tatsaechlich laufen mehr, weil
+// einige note()-Aufrufe in Schleifen stehen. Eine Zahl in einem Dokument
+// veraltet still - eine, die der Lauf selbst ausgibt, kann das nicht.
+let gezaehlt = 0;
 const fails = [];
-const note = (ok, text) => { console.log((ok?'  ok   ':'  FEHL ')+text); if(!ok) fails.push(text); };
+const note = (ok, text) => { gezaehlt++; console.log((ok?'  ok   ':'  FEHL ')+text); if(!ok) fails.push(text); };
 const head = t => console.log('\n' + t);
 
 const exe = process.env.CHROMIUM_PATH;
@@ -193,6 +198,7 @@ note(await p2.locator('#s-home.on').isVisible(), 'Die App traegt auch ohne Beweg
 await reduced.close();
 
 await browser.close();
-console.log('\n' + (fails.length ? `FEHLGESCHLAGEN: ${fails.length} Pruefung(en)`
-                                 : 'Alle Pruefungen bestanden'));
+console.log('\n' + (fails.length
+  ? `FEHLGESCHLAGEN: ${fails.length} von ${gezaehlt} Pruefung(en)`
+  : `Alle ${gezaehlt} Pruefungen bestanden`));
 process.exit(fails.length ? 1 : 0);

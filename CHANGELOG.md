@@ -1,13 +1,75 @@
 # Changelog
 
-Jede Änderung mit Begründung, neueste oben. Der **laufende Zustand** steht
-dagegen in `docs/HANDOFF.md` — diese Datei ist die Historie, jene die Auskunft.
+Jede Änderung mit Begründung, neueste oben.
+
+Drei Dateien, drei Fragen — eine Frage wird an genau einer Stelle beantwortet:
+
+| Frage | Datei |
+|---|---|
+| Wo stehen wir **jetzt**? | `docs/HANDOFF.md` |
+| Was hat sich je **Version** geändert, und warum? | **diese Datei** |
+| **Wie** kam es dazu (Sessions 1–13)? | `docs/HANDOFF-ARCHIV.md` |
 
 Versionsschema: `docs/16-engineering-standard.md` §5.
 
 ---
 
-## Unveröffentlicht
+## v0.3.1 — Die Prüfungen selbst geprüft
+
+Diese Version enthält **keinen Produktcode**. Sie repariert das Werkzeug,
+mit dem geprüft wird — und das hatte vier Fehler, von denen drei genau dann
+zugeschlagen hätten, wenn man sich darauf verlässt.
+
+### Behoben
+- **`verify.sh` wäre auf jedem Mac abgestürzt.** Das Skript benutzte
+  Bash-Arrays; `/bin/bash` auf macOS ist Version 3.2 von 2007 und bricht dort
+  bei `${#ARRAY[@]}` mit leerem Array unter `set -u` ab. Rot geworden wäre
+  also ausgerechnet der einzige Rechner, der den Xcode-Build überhaupt
+  ausführen kann — ohne dass am Projekt etwas falsch gewesen wäre. Jetzt ohne
+  Arrays, mit der Ursache im Kopf der Datei.
+- **`melden.sh` lief auf Linux nie.** `[ "$WOHER" = "Darwin" ] && WOHER="Mac"`
+  beendet unter `set -e` das Skript, sobald der Test falsch ist — also in
+  jeder Cloud-Sitzung, wortlos und ohne eine Zeile zu schreiben. Der
+  Mechanismus, der Mac und Cloud verbinden soll, war auf einer Seite tot.
+  Jetzt ein `if`; ein gescheitertes Melden wird von `verify.sh` gemeldet.
+- **Pfadfilter hätten jeden Pull Request blockiert.** GitHub meldet für einen
+  Ablauf, der wegen eines Pfadfilters gar nicht startet, *keinen* Status —
+  nicht „bestanden", sondern gar nichts. Als „required status check" bliebe er
+  ewig ausstehend, und ein Pull Request, der nur Dokumentation ändert, ließe
+  sich nie zusammenführen. Der Filter bleibt beim `push` (Kosten), er fällt
+  beim `pull_request` (Zusammenführen).
+- **`MARKETING_VERSION` stand seit P0.1 auf 0.1.0**, während die Marken bei
+  v0.3.0 waren. Die App-Version wurde nie mitgezogen.
+
+### Neu
+- **Der iOS-Lauf beweist jetzt, dass Tests liefen.** Bisher lief `xcodebuild`
+  mit `-quiet`: ein Schema ohne Testziel wäre genauso grün gewesen wie eines
+  mit bestandenen Tests. `verify.sh` zählt die ausgeführten Tests und wird
+  **rot, wenn es null sind**.
+- **`--streng`**: In der CI zählt Übersprungenes als Fehler. Ein grüner Haken,
+  hinter dem nichts geprüft wurde, ist schlimmer als ein roter. Lokal bleibt
+  es beim alten Verhalten — dort ist ein fehlendes Werkzeug eine
+  Umgebungseigenheit, keine Aussage über das Projekt.
+- **`docs/19-branch-protection.md`**: die einzugebende Einstellung zum
+  Abhaken, samt der Falle oben und einem Versuch, der belegt, dass der Schutz
+  wirklich etwas verhindert.
+- **Die Prototyp-Prüfung zählt sich selbst.** In der Übergabe stand „39
+  Prüfungen"; tatsächlich laufen 47, weil einige in Schleifen stehen. Eine
+  Zahl in einem Dokument veraltet still — eine, die der Lauf ausgibt, nicht.
+
+### Belegt
+- macOS-Build **grün**: GitHub-Lauf 33510952452, Commit 9e4ab6b, 80 s
+  Testphase. Damit ist die seit Session 9 offene Frage beantwortet.
+
+### Geändert
+- `docs/HANDOFF.md` enthält nur noch den **laufenden Zustand**; die Sessions
+  1–13 stehen wortgleich in `docs/HANDOFF-ARCHIV.md`. Drei Dateien, drei
+  Fragen: *wo stehen wir jetzt* (Handoff), *was hat sich je Version geändert*
+  (hier), *wie kam es dazu* (Archiv).
+
+---
+
+## v0.3.0-prototyp — Prototyp V2 (in v0.3.1 mit veröffentlicht)
 
 ### Prototyp V2 — UI/UX-Validierungssprint
 - **Check-in von vier Schritten auf zwei Taps.** Der Bestätigungsschritt
@@ -32,7 +94,7 @@ Versionsschema: `docs/16-engineering-standard.md` §5.
   (`Set` mit normalisiertem Schlüssel). Die Weltkarte fand für „italy" keine
   Position und blieb leer. Jetzt eine `Map`: Schlüssel normalisiert, Wert in
   Anzeigeschreibweise.
-- **39 Prototyp-Prüfungen**, neu darunter: Tap-Ziele ≥ 32 px, genau eine
+- **Prototyp-Prüfungen** (damals als „39" gezählt, tatsächlich 47 — siehe v0.3.1), neu darunter: Tap-Ziele ≥ 32 px, genau eine
   Akzent-Aktion, Navigation mit Text statt nur Symbolen, Bewegungsreduktion.
   Fehlgeschlagene Netzanfragen zählen nicht mehr als Programmfehler, werden
   aber **benannt** — ohne Netz lädt die Schrift nicht.

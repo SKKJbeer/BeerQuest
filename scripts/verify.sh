@@ -14,24 +14,37 @@
 #   ./scripts/verify.sh schnell    nur die Sekunden-Pruefungen
 #   ./scripts/verify.sh sql        nur die Datenbank
 #   ./scripts/verify.sh ios        nur Xcode
+#   ./scripts/verify.sh --streng   Uebersprungenes zaehlt als Fehler (fuer die CI)
 #   ./scripts/verify.sh --melden   zusaetzlich eine Zeile in den Zweig pruefungen
+#
+# KEINE Bash-Arrays in diesem Skript. Auf einem Mac ist /bin/bash die
+# Version 3.2 von 2007, und dort bricht `${#ARRAY[@]}` bei leerem Array
+# unter `set -u` mit "unbound variable" ab. Das Skript waere also
+# ausgerechnet auf dem einzigen Rechner rot geworden, der den Xcode-Build
+# ueberhaupt ausfuehren kann - ohne dass etwas am Projekt falsch gewesen
+# waere. Eine Zeichenkette mit Zeilenumbruechen kann das nicht.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-UMFANG="alles"; MELDEN=0
+UMFANG="alles"; MELDEN=0; STRENG=0
 for a in "$@"; do
   case "$a" in
     --melden) MELDEN=1 ;;
+    --streng) STRENG=1 ;;
     schnell|sql|ios|alles) UMFANG="$a" ;;
     *) echo "Unbekannt: $a"; exit 2 ;;
   esac
 done
 
 START=$(date +%s)
-declare -a UEBERSPRUNGEN=()
+UEBERSPRUNGEN=""
 FEHLER=0
 schritt(){ printf '\n\033[1m== %s\033[0m\n' "$1"; }
-uebersprungen(){ UEBERSPRUNGEN+=("$1"); printf '   uebersprungen: %s\n' "$1"; }
+uebersprungen(){
+  UEBERSPRUNGEN="${UEBERSPRUNGEN}${1}
+"
+  printf '   uebersprungen: %s\n' "$1"
+}
 
 # ---------------------------------------------- 1. Sekunden (immer zuerst)
 schritt "Tokens: App gegen Prototyp"
@@ -89,9 +102,37 @@ if [ "$UMFANG" = "alles" ] || [ "$UMFANG" = "ios" ]; then
     SIM=$(xcrun simctl list devices available -j | python3 -c \
       "import json,sys;d=json.load(sys.stdin)['devices'];print(next(x['name'] for v in d.values() for x in v if 'iPhone' in x['name']))")
     echo "   Simulator: $SIM"
+
+    # Nicht `-quiet`: Ein stiller Lauf beweist nicht, dass ein einziger Test
+    # ausgefuehrt wurde. Ein Schema ohne Testziel ist genauso gruen wie eines
+    # mit bestandenen Tests, und das ist der Unterschied zwischen "vorhanden"
+    # und "wirkt". Die Ausgabe geht in eine Datei, hierher kommt nur die
+    # Bilanz.
+    mkdir -p .build
+    PROTOKOLL=.build/xcodebuild.log
     xcodebuild test -project BeerQuest.xcodeproj -scheme BeerQuest \
       -destination "platform=iOS Simulator,name=$SIM" \
-      CODE_SIGNING_ALLOWED=NO -quiet || FEHLER=1
+      CODE_SIGNING_ALLOWED=NO > "$PROTOKOLL" 2>&1 || FEHLER=1
+
+    ANZAHL=$(grep -oE 'Executed [0-9]+ test' "$PROTOKOLL" 2>/dev/null \
+             | grep -oE '[0-9]+' | sort -rn | head -1)
+    ANZAHL="${ANZAHL:-0}"
+    if [ "$FEHLER" -ne 0 ]; then
+      echo "   Build oder Tests fehlgeschlagen. Letzte Zeilen:"
+      grep -E 'error:|failed|FAILED|\*\* TEST' "$PROTOKOLL" | tail -20 | sed 's/^/   /'
+      echo "   Vollstaendig: $PROTOKOLL"
+    elif [ "$ANZAHL" -eq 0 ]; then
+      # Gruen ohne einen einzigen Test ist kein Ergebnis, sondern eine
+      # Luecke. Lieber hier rot und die Ursache nachsehen, als monatelang
+      # ein Haekchen, hinter dem nichts steht.
+      echo "   ROT: Build gruen, aber kein ausgefuehrter Test nachweisbar."
+      echo "   Entweder haengt kein Testziel im Schema BeerQuest (project.yml),"
+      echo "   oder xcodebuild formuliert seine Bilanz anders als erwartet."
+      echo "   Nachsehen: grep -i 'test' $PROTOKOLL | tail -40"
+      FEHLER=1
+    else
+      echo "   $ANZAHL Tests ausgefuehrt, keine Fehler."
+    fi
   else
     uebersprungen "iOS-Build und Swift-Tests (kein xcodebuild - kein macOS)"
   fi
@@ -99,21 +140,38 @@ fi
 
 # ---------------------------------------------- Ergebnis
 DAUER=$(( $(date +%s) - START ))
+
+# --streng: In der CI steht das Werkzeug fest. Faellt dort etwas aus, ist das
+# keine Umgebungseigenheit, sondern ein kaputter Ablauf - und ein gruener
+# Haken, hinter dem nichts geprueft wurde, ist schlimmer als ein roter.
+if [ $STRENG -eq 1 ] && [ -n "$UEBERSPRUNGEN" ]; then
+  echo
+  echo "   --streng: Uebersprungenes zaehlt hier als Fehler."
+  FEHLER=1
+fi
+
 ERGEBNIS=$([ $FEHLER -eq 0 ] && echo GRUEN || echo ROT)
 printf '\n\033[1m== ERGEBNIS\033[0m\n'
 echo "Umfang:  $UMFANG"
 echo "Dauer:   ${DAUER}s"
 echo "Status:  $ERGEBNIS"
-if [ ${#UEBERSPRUNGEN[@]} -gt 0 ]; then
+if [ -n "$UEBERSPRUNGEN" ]; then
   echo "Nicht geprueft:"
-  for u in "${UEBERSPRUNGEN[@]}"; do echo "  - $u"; done
+  printf '%s' "$UEBERSPRUNGEN" | while IFS= read -r u; do
+    [ -n "$u" ] && echo "  - $u"
+  done
 fi
 echo
 echo "Fuer den Handoff:"
 echo "  BUILD:  $(command -v xcodebuild >/dev/null && echo "$ERGEBNIS" || echo 'NICHT AUSGEFUEHRT (kein macOS)')"
 echo "  TESTS:  $ERGEBNIS"
 
-[ $MELDEN -eq 1 ] && scripts/melden.sh "$ERGEBNIS" "$UMFANG" "$DAUER" \
-  "$(IFS=,; echo "${UEBERSPRUNGEN[*]:-nichts}")"
+if [ $MELDEN -eq 1 ]; then
+  # Ein fehlgeschlagenes Melden darf nicht stillschweigend untergehen -
+  # sonst sieht der Mac aus wie ein Rechner, der nie geprueft hat.
+  scripts/melden.sh "$ERGEBNIS" "$UMFANG" "$DAUER" \
+    "$(printf '%s' "${UEBERSPRUNGEN:-nichts}" | tr '\n' ',' | sed 's/,$//')" \
+    || echo "   Achtung: Melden in den Zweig pruefungen ist fehlgeschlagen."
+fi
 
 exit $FEHLER

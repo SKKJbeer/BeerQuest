@@ -15,7 +15,12 @@ cd "$(dirname "$0")/.."
 ERGEBNIS="${1:?}"; UMFANG="${2:?}"; DAUER="${3:?}"; UEBERSPRUNGEN="${4:-nichts}"
 STAND=$(git rev-parse --short HEAD)
 [ -z "$(git status --porcelain --untracked-files=no)" ] || STAND="$STAND+aenderungen"
-WOHER=$(uname -s); [ "$WOHER" = "Darwin" ] && WOHER="Mac"
+# Kein `[ ... ] && ...` als eigenstaendiger Befehl: Unter `set -e` beendet
+# eine solche Liste das Skript, sobald der Test falsch ist. Auf Linux - also
+# in jeder Cloud-Sitzung - ist `uname -s` eben nicht "Darwin", und das Melden
+# brach genau hier ab, ohne eine Zeile zu schreiben und ohne eine Meldung.
+WOHER=$(uname -s)
+if [ "$WOHER" = "Darwin" ]; then WOHER="Mac"; fi
 ZEILE="$(date -u +'%Y-%m-%d %H:%M UTC') | $STAND | $ERGEBNIS | $UMFANG | ${DAUER}s | $WOHER | ohne: $UEBERSPRUNGEN"
 
 WORK=$(mktemp -d); trap 'rm -rf "$WORK"' EXIT

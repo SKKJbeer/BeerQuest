@@ -19,10 +19,14 @@ on:
       - "docs/prototype/**"
       - "scripts/check-prototype.mjs"
       - ".github/workflows/prototype.yml"
+  # KEIN Pfadfilter beim Pull Request - und das ist Absicht.
+  # Ein Ablauf, der wegen eines Pfadfilters gar nicht erst startet, meldet
+  # GitHub auch keinen Status. Als "required status check" im Branch-Schutz
+  # bleibt er damit auf ewig ausstehend, und ein Pull Request, der nur
+  # Dokumentation aendert, laesst sich nie mehr zusammenfuehren. Beim `push`
+  # bleibt der Filter, denn dort kommen die meisten Laeufe her; ein Pull
+  # Request ist selten genug, um ihn vollstaendig zu pruefen.
   pull_request:
-    paths:
-      - "docs/prototype/**"
-      - "scripts/check-prototype.mjs"
   workflow_dispatch:
 
 permissions:
