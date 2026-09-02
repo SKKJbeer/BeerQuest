@@ -25,10 +25,11 @@ stabilisieren: Ist der Stand reproduzierbar? Ist der macOS-Build
 `main` vorbereiten. Und die Übergabedatei entrümpeln.
 
 ```
-BUILD:   GRÜN — belegt, nicht behauptet: GitHub-Lauf 33510952452,
-         macOS, Commit 9e4ab6b, 80 s Testphase, Ergebnis "success".
-         In DIESER Session wurde kein Swift geändert; der Nachweis
-         gilt dem Stand 9e4ab6b.
+BUILD:   GRÜN — belegt, nicht behauptet. GitHub-Lauf 33596688860,
+         macOS, Commit 7a76e13 (Stand dieser Session), mit --streng.
+         Das Protokoll sagt jetzt wörtlich:
+             11 Tests ausgefuehrt, keine Fehler.
+         Vorher stand dort nur "GRUEN" und sonst nichts.
 TESTS:   PASS — 47/47 Prototyp (gezählt vom Lauf), 11/11 SQL-Regeltests,
          14/14 Design-Tokens. Swift: 11 Testfunktionen, zuletzt auf dem
          macOS-Runner ausgeführt.
@@ -75,7 +76,13 @@ ein einziger Test *ausgeführt* wurde. Ein Schema ohne Testziel wäre genauso
 grün gewesen. Das ist der Unterschied zwischen „vorhanden" und „wirkt", und
 er stand hier ein halbes Dutzend Sessions unbemerkt offen.
 `verify.sh` zählt jetzt die ausgeführten Tests und wird **rot, wenn es
-null sind** — mit Hinweis, wo nachzusehen ist.
+null sind** — mit Hinweis, wo nachzusehen ist. Lauf 33596688860 auf dem
+echten macOS-Runner bestätigt es: „11 Tests ausgefuehrt, keine Fehler."
+
+Nachgezogen: `scripts/**` löst den iOS-Build jetzt mit aus. Der Lauf ruft
+`verify.sh` auf — eine Änderung am Prüfskript, die den Build bricht, wäre
+sonst erst beim nächsten Swift-Commit aufgefallen, und dann beim falschen
+Verdächtigen.
 
 ### 2. `verify.sh` wäre auf dem Mac abgestürzt
 

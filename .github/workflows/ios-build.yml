@@ -15,6 +15,11 @@ on:
       - "project.yml"
       - "Config.xcconfig.example"
       - ".github/workflows/ios-build.yml"
+      # scripts/** gehoert dazu, obwohl dort kein Swift liegt: Der Lauf
+      # ruft verify.sh auf. Eine Aenderung am Pruefskript, die den Build
+      # bricht, waere sonst erst beim naechsten Swift-Commit aufgefallen -
+      # und dann beim falschen Verdaechtigen.
+      - "scripts/**"
   # KEIN Pfadfilter beim Pull Request - und das ist Absicht.
   # Ein Ablauf, der wegen eines Pfadfilters gar nicht erst startet, meldet
   # GitHub auch keinen Status. Als "required status check" im Branch-Schutz
