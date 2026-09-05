@@ -17,24 +17,22 @@ Format und Regeln: `.claude/skills/handoff/SKILL.md`.
 
 ---
 
-## Session 14 — Stabilisierung, dann UX-Slice
+## Session 14 — Stabilisierung, UX-Slice, erste echte Screens
 
-**Auftrag:** Phase 1 den technischen Unterbau stabilisieren (Reproduzierbarkeit,
-macOS-Build nachweisen, Prüfmechanismen prüfen, Branch-Schutz vorbereiten,
-Übergabe entrümpeln). Phase 2 einen durchgehenden UX-Slice mit Onboarding.
-Phase 3 Review-Gate und dann stoppen.
+**Auftrag:** Phase 1 den Unterbau stabilisieren, Phase 2 einen durchgehenden
+UX-Slice mit Onboarding, Phase 3 Review-Gate. Danach auf Zuruf weiter:
+P0.4, erste Runde — das Onboarding als echte SwiftUI-Screens.
 
 ```
-BUILD:   GRÜN — belegt, nicht behauptet. GitHub-Lauf 33596688860,
-         macOS, Commit 7a76e13, mit --streng. Das Protokoll sagt
-         jetzt wörtlich: "11 Tests ausgefuehrt, keine Fehler."
-         Vorher stand dort nur "GRUEN" und sonst nichts.
-         Seit 7a76e13 wurde kein Swift geändert.
-TESTS:   PASS — 82/82 Prototyp (gezählt vom Lauf, vorher 47),
-         11/11 SQL-Regeltests, 14/14 Design-Tokens,
-         11 Swift-Tests auf dem macOS-Runner.
+BUILD:   GRÜN — belegt, nicht behauptet. GitHub-Lauf 33673637210,
+         macOS, Commit fed3fab, mit --streng. Das Protokoll sagt
+         wörtlich: "23 Tests ausgefuehrt, keine Fehler."
+         Das neue SwiftUI-Modul kompiliert beim ersten Versuch.
+TESTS:   PASS — 91/91 Prototyp (gezählt vom Lauf), 11/11 SQL-Regeltests,
+         14/14 Design-Tokens. Swift: 23 Testfunktionen (11 Progression,
+         12 Onboarding-Regeln).
 PREVIEW: `docs/prototype/index.html` — Datei im Chat, Zweig `prototype`.
-         Version v0.4.0.
+         Version v0.5.0.
 ```
 
 ---
@@ -47,10 +45,11 @@ PREVIEW: `docs/prototype/index.html` — Datei im Chat, Zweig `prototype`.
 | Datenbank (16 Migrationen, 35 RPCs) | vollständig, 11 Testdateien grün | REAL |
 | Prüf- und CI-Werkzeug | in dieser Session repariert und belegt | REAL |
 | Klickbarer Prototyp | Onboarding + Core Loop + Passport + Clan | PROTOTYPE |
-| iOS-App (14 Swift-Dateien) | Gerüst, baut und testet grün | PLACEHOLDER |
+| **iOS: Onboarding** | drei Schritte, 12 Regeltests, Build grün | **REAL** |
+| iOS: alles andere | Gerüst mit Navigation und Tokens | PLACEHOLDER |
 | Supabase-Projekt (echte Instanz) | **existiert nicht** | offen |
 
-**Version:** v0.4.0 · **Zweig:** `claude/beer-quest-mvp-spec-dpjh2i` ·
+**Version:** v0.5.0 · **Zweig:** `claude/beer-quest-mvp-spec-dpjh2i` ·
 Alle Arbeit liegt auf dem Zweig; `main` enthält nur „Initial commit".
 
 ---
@@ -67,6 +66,11 @@ Details unter „Was Phase 1 gefunden hat".
 **Phase 2 — Produkt.** Onboarding (fehlte ganz), Passport statt
 Zählerliste, Clan-Woche als Orte statt Meldungen, Clan-Vorschau auf Home.
 
+**Danach P0.4, erste Runde — die ersten echten Screens.** Das Onboarding
+in SwiftUI, weil es der einzige Weg in die App ist. Dabei fiel der Abgleich
+mit dem Server an, und der deckte auf, dass **der Prototyp etwas anderes
+versprach, als der Server tut** — siehe „Was der Abgleich aufdeckte".
+
 ### 2. Was kannst du anklicken?
 
 Den ganzen Weg, ohne Sackgasse:
@@ -78,8 +82,9 @@ Home → Clan-Vorschau → Clan
 Home → Profile → Passport
 ```
 
-Probier bitte ausdrücklich auch: **„Not yet"** bei der Altersfrage, und den
-Namen **`admin`** im dritten Schritt.
+Probier bitte ausdrücklich auch: im zweiten Schritt nach einem Jahr suchen,
+in dem du **17 wärst** (es steht nicht in der Liste), und im dritten den
+Namen **`admin`** sowie **`Steffen M.`** (wird zu `@steffen_m`).
 
 ### 3. Wo ist die Preview?
 
@@ -94,7 +99,12 @@ Namen **`admin`** im dritten Schritt.
 |---|---|
 | **REAL** | Die Datenbank. 35 RPCs, gegen echtes Postgres 15 geprüft. XP-Regeln, Tages-Cap, Erst-Check-in-Ausnahme, Dedupe, Quests, Clan-XP, Passport, Karte — alles serverseitig fertig. |
 | **PROTOTYPE** | Alles, was du anklickst. HTML mit Mock-Daten. Die XP-Regeln darin spiegeln den Server, die Bierliste ist erfunden. |
-| **PLACEHOLDER** | Die iOS-App. 14 Swift-Dateien, ein Gerüst mit Navigation und Design-Tokens. Kein Screen daraus ist gebaut. |
+| **REAL, neu** | Das **Onboarding in der iOS-App** (`BQOnboarding`). Drei echte SwiftUI-Screens, dieselben Regeln wie der Server, 12 Tests, Build auf macOS grün. Nur der Abschluss ist noch eine Attrappe: Es entsteht kein Account, weil es weder Sign in with Apple noch eine Supabase-Instanz gibt (P0.5). |
+| **PLACEHOLDER** | Der Rest der iOS-App. Ein Gerüst mit Navigation und Design-Tokens; Home, World, Quests, Clan und Profile sind leere Hüllen. |
+
+> **Sehen kannst du die App noch nicht** — dafür braucht es einen Mac mit
+> Xcode. Was der Prototyp zeigt, ist die Vorlage, nach der sie gebaut ist;
+> die Design-Tokens werden zwischen beiden automatisch abgeglichen.
 
 ### 5. Welche Design-Entscheidungen stecken drin?
 
@@ -125,6 +135,10 @@ Namen **`admin`** im dritten Schritt.
 3. Die Clan-Woche. Erzeugt `Verona — 14` den Sog, dorthin zu wollen?
 4. Das Onboarding: Ist es zu kurz? Zu lang? Fehlt eine Frage, die die App
    später braucht?
+5. **Neu:** Das Geburtsjahr statt Ja/Nein. Es ist ein Schritt mehr Arbeit
+   für den Nutzer — aber der einzige, den der Server verwerten kann. Wenn du
+   das anders willst, muss `complete_onboarding` mit geändert werden, nicht
+   nur der Screen.
 
 ### 7. Welche Produktfragen sind offen?
 
@@ -134,6 +148,32 @@ Namen **`admin`** im dritten Schritt.
 | P2 | Das Onboarding fragt **nicht** nach dem Heimatort. | Bewusst. Der Ort kommt vom Gerät. Eine Frage, deren Antwort man ohnehin hat, ist eine Hürde. |
 | P3 | Der Clan ist im Onboarding **kein** Schritt. | Bewusst: erst spielen, dann beitreten. Ein Clan vor dem ersten Check-in ist ein leeres Versprechen. |
 | P4 | „Mastered" heißt aktuell: 3 Biere **und** 2 Orte in einer Stadt. Zahlen frei erfunden. | Braucht deine Meinung, sobald echte Daten da sind. |
+
+---
+
+## Was der Abgleich aufdeckte
+
+Beim Bauen der echten Screens musste ich `complete_onboarding` Zeile für
+Zeile lesen. Zwei Stellen liefen auseinander — und **beide hätten den
+Nutzer erst nach dem letzten Schritt in eine Absage laufen lassen**:
+
+**Der Server will ein Geburtsjahr, der Prototyp fragte Ja/Nein.**
+`complete_onboarding` nimmt `p_birth_year` und rechnet damit. Ein Häkchen
+liefert kein Jahr. Beide fragen jetzt das Jahr — und nur das Jahr, nie das
+volle Datum. Die Auswahl bietet außerdem **nur Jahre an, die der Server
+annimmt**: ein 17-Jähriger findet sein Jahr gar nicht erst.
+
+**Der Server will `^[a-z0-9_]{3,20}$`, der Prototyp erlaubte alles.**
+Statt zu korrigieren wird jetzt vorgeschlagen: „Steffen M." wird sichtbar
+zu `@steffen_m`. Der Wortfilter prüft wie `is_term_allowed` auf Gleichheit
+**und** Enthaltensein — `xadminx` ist gesperrt.
+
+Das ist genau Risiko **R7** aus dem letzten Handoff („der Prototyp bildet
+den Server von Hand nach"), eingetreten binnen einer Session. Die Antwort
+darauf ist keine Mahnung, sondern eine Prüfung: `OnboardingRules` in
+`BQCore` sagt im Dateikopf, dass sie eine **Kopie** ist und im selben
+Commit mitzuändern ist, und 12 Tests halten sie gegen die Fälle aus dem
+SQL.
 
 ---
 
@@ -211,6 +251,11 @@ Lokal bleibt es beim alten Verhalten.
 | `docs/19-branch-protection.md` | neu — zum Abhaken |
 | `docs/HANDOFF-ARCHIV.md` | neu — Sessions 1–13 wortgleich |
 | `.claude/skills/release-discipline/SKILL.md` | Marken sind nicht der Träger |
+| `BQCore/OnboardingRules.swift` | **neu** — die Regeln als testbare Kopie des SQL |
+| `BQOnboarding/OnboardingFlow.swift` | **neu** — drei SwiftUI-Schritte |
+| `BQCoreTests/OnboardingRulesTests.swift` | **neu** — 12 Tests gegen die SQL-Fälle |
+| `App/RootView.swift` | schaltet auf den Sitzungszustand |
+| `App/BeerQuestApp.swift`, `BQSession` | Attrappe bis P0.5, benannt als solche |
 
 **Selbst nachprüfen:**
 ```bash
@@ -239,7 +284,8 @@ git ls-remote --tags origin                             # leer: Befund 7
 | **R4** | GitHub Pages für Zweig `prototype` nicht eingeschaltet | Der Prototyp ist nur als Datei zugänglich. Das hat schon einmal einen Review gekostet. | Ein Schalter in den Repository-Einstellungen. |
 | **R5** | Die XP-Kurve steht **zweimal** — in SQL und in Swift — ohne Abgleich | Fehlerklasse 4. Heute stimmen sie; das ist keine Eigenschaft, sondern ein Zufall. | Kein Beschluss nötig. Ich merke einen Test vor, der beide gegeneinander hält, sobald es eine echte Instanz gibt (R3). |
 | **R6** | Versionsmarken lassen sich nicht schieben (403) | Behoben, indem die Version dorthin gezogen wurde, wo sie mitgeschoben wird. | Nichts zu entscheiden. Marken auf dem Mac: `git tag -a v0.4.0 -m "..." && git push origin v0.4.0`. |
-| **R7** | Der Prototyp bildet den Server nach — **von Hand** | Wortfilter, XP-Werte und Cap stehen jetzt an drei Orten: SQL, Swift, HTML. Ein Wert, der sich ändert, ändert sich nicht überall. | Kein Beschluss nötig, aber es wächst. Wenn P0.4 die echten Screens baut, fällt der HTML-Zweig weg — bis dahin lebe ich mit dem Risiko und benenne es. |
+| **R7** | Der Prototyp bildet den Server nach — von Hand. **Eingetreten.** | Zwei Divergenzen gefunden und behoben (Geburtsjahr, Handle-Format). Die Regeln liegen jetzt in `BQCore.OnboardingRules`, ausdrücklich als Kopie markiert, mit 12 Tests gegen die SQL-Fälle. Das entschärft es, beseitigt es aber nicht: Der HTML-Prototyp bleibt eine dritte Stelle. | Kein Beschluss nötig. Ich prüfe bei jedem weiteren Screen zuerst die zugehörige RPC — dieser Abgleich hat gerade zwei Fehler gefunden, die sonst erst im TestFlight aufgefallen wären. |
+| **R8** | In dieser Umgebung steht **kein Swift-Compiler**. Die macOS-CI ist die einzige Gegenprobe. | Diesmal ging es beim ersten Versuch grün durch, aber das ist kein Verfahren, sondern Glück plus Sorgfalt. Ein Tippfehler kostet einen vollen CI-Zyklus. | Nichts zu entscheiden, solange R2 offen ist. Sobald du einmal auf dem Mac `./scripts/verify.sh --melden` laufen lässt, gibt es wieder eine schnelle Schleife. |
 
 ---
 
@@ -266,5 +312,9 @@ git ls-remote --tags origin                             # leer: Befund 7
 
 ## Was als Nächstes passiert
 
-**Nichts.** Auftragsgemäß Stopp bis zu deiner Rückmeldung — keine weiteren
-Screens, keine weiteren Features.
+Ein Bereich pro Runde, in der Reihenfolge des Prototyps. Als Nächstes
+**Home** — Hero, Fortschritt, nächstes Ziel, Weltausschnitt, Clan-Vorschau.
+
+Vorher aber, und das ist wichtiger: **R1 und R3.** Ohne Supabase-Instanz
+bleibt jeder weitere Screen an einer Attrappe hängen, und ohne einen
+Zusammenführen-Entscheid steht `main` weiter leer.

@@ -55,7 +55,7 @@ einer Session.
   kommt, fällt sie ersatzlos weg.
 
 ### Geprüft
-- **17 neue Swift-Tests** (`OnboardingRulesTests`) halten die Swift-Kopie
+- **12 neue Swift-Tests** (`OnboardingRulesTests`) halten die Swift-Kopie
   gegen die Fälle, die im SQL stehen: Format, Groß-/Kleinschreibung,
   Wortfilter als Teilzeichenkette, `norm_name`, der Vorschlag, die
   Jahresdifferenz, das Mindestalter und dass die angebotene Auswahl genau
@@ -63,6 +63,12 @@ einer Session.
 - **91 Prototyp-Prüfungen** (von 82).
 - Beide Seiten prüfen dieselbe Vorgabe für das Standardjahr — zwei Vorgaben
   wären zwei Produkte.
+
+### Belegt
+macOS-Lauf 33673637210, Commit `fed3fab`, mit `--streng`: „23 Tests
+ausgefuehrt, keine Fehler." Das neue Modul kompiliert beim ersten Versuch —
+was hier nicht selbstverständlich ist, weil in der Arbeitsumgebung **kein
+Swift-Compiler** steht und die CI die einzige Gegenprobe ist.
 
 ### Offen
 Die vollständige Wortfilterliste (~200 Begriffe) bleibt bewusst **nur** auf
